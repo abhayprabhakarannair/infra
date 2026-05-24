@@ -26,6 +26,7 @@
   systemd.tmpfiles.rules = [
     "d /mnt/games 0755 abhay users - -"
   ];
+  myStorage.swapSize = "32G";
 
   # --- Hostname ---
   networking.hostName = "devil";
