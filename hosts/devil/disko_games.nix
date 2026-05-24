@@ -13,7 +13,7 @@
             subvolumes = {
               "@games" = {
                 mountpoint = "/mnt/games";
-                mountOptions = ["compress=zstd" "noatime" "space_cache=v2"];
+                mountOptions = ["compress=zstd" "noatime" "space_cache=v2" "nofail"];
               };
             };
           };
