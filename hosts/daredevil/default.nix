@@ -14,6 +14,7 @@
     "${inputs.self}/modules/desktop"
     "${inputs.self}/modules/desktop/silentboot.nix"
     "${inputs.self}/modules/desktop/environment.nix"
+    "${inputs.self}/modules/desktop/virtualmachine.nix"
 
     "${inputs.self}/users/abhay"
   ];
