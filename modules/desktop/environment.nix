@@ -1,7 +1,12 @@
 {pkgs, ...}: {
   # --- Swapping to a lightweight DM ---
   services.displayManager.sddm.enable = false;
-  services.displayManager.ly.enable = true;
+  services.displayManager.ly = {
+	enable = true;
+	settings = {
+	   session_log = "/dev/null";
+	};
+  };
   services.displayManager.defaultSession = "plasma";
 
   # --- Fix PAM and stuffs ---
