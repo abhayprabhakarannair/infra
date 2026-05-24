@@ -19,8 +19,8 @@
 
     shellAliases = {
       ll = "ls -larth";
-      nrs = "sudo nixos-rebuild switch --flake /etc/nixos/nixos-dotfiles#\$(cat /etc/hostname)";
-      nrb = "sudo nixos-rebuild boot --flake /etc/nixos/nixos-dotfiles#\$(cat /etc/hostname)";
+      nrs = "sudo nixos-rebuild switch --flake ~/Projects/infra#\$(cat /etc/hostname)";
+      nrb = "sudo nixos-rebuild boot --flake ~/Projects/infra#\$(cat /etc/hostname)";
       ve = "nvim .";
     };
 
