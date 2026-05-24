@@ -20,6 +20,7 @@
 
   # --- Default Drive ---
   disko.devices.disk.main.device = "/dev/nvme0n1";
+  myStorage.swapSize = "32G";
 
   # --- Hostname ---
   networking.hostName = "daredevil";

@@ -1,5 +1,15 @@
-{lib, ...}: {
-  disko.devices.disk.main = {
+{lib, config, ...}: {
+
+  options = {
+    myStorage.swapSize = lib.mkOption {
+      type = lib.types.str;
+      default = "4G";
+      description = "The size of the Btrfs swapfile.";
+    };
+  };
+
+  config = {
+   disko.devices.disk.main = {
     type = "disk";
     device = lib.mkDefault "/dev/vda";
     content = {
@@ -41,7 +51,7 @@
                 "@swap" = {
                   mountpoint = "/swap";
                   mountOptions = ["noatime"];
-                  swap.swapfile.size = "32G";
+                  swap.swapfile.size = config.myStorage.swapSize;
                 };
               };
             };
@@ -49,5 +59,6 @@
         };
       };
     };
+  };
   };
 }

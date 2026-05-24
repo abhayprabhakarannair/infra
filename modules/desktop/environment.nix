@@ -14,9 +14,21 @@
   services.desktopManager.plasma6.enable = true;
   services.xserver.enable = false;
 
-  # System packages
+  # --- System packages ---
   environment.systemPackages = with pkgs; [
-    kdePackages.bluedevil
-    kdePackages.plasma-browser-integration
+   vivaldi
+   kdePackages.bluedevil
+   kdePackages.plasma-browser-integration
   ];
+
+  # --- System wide envs ---
+  environment.sessionVariables = {
+   NIXOS_OZONE_WL = "1";
+  };
+  
+  # --- KDE connection ---
+  programs.chromium = {
+    enable = true;
+    enablePlasmaBrowserIntegration = true;
+  };
 }
