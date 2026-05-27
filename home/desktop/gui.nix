@@ -13,5 +13,4 @@
     neovim
     wl-clipboard
   ];
-
 }

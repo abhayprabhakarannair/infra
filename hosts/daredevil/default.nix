@@ -13,7 +13,7 @@
     "${inputs.self}/modules/core"
     "${inputs.self}/modules/desktop"
     "${inputs.self}/modules/desktop/silentboot.nix"
-    "${inputs.self}/modules/desktop/environment.nix"
+    "${inputs.self}/modules/desktop/gnome.nix"
     "${inputs.self}/modules/desktop/virtualmachine.nix"
 
     "${inputs.self}/users/abhay"
@@ -57,10 +57,12 @@
   };
   services.udisks2.enable = true;
 
-  # --- Fingerprint (Disabled for login) ---
+  # --- Fingerprint (Disabled for login) - use password on cold boots for max security ---
   services.fprintd.enable = true;
   security.pam.services.login.fprintAuth = false;
   security.pam.services.kde.fprintAuth = pkgs.lib.mkForce true;
+  security.pam.services.sudo.fprintAuth = true;
+  security.pam.services.polkit-1.fprintAuth = true;
 
   # --- Enable Home Manager ---
   home-manager = {
