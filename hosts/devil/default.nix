@@ -14,7 +14,7 @@
     "${inputs.self}/modules/core"
     "${inputs.self}/modules/desktop"
     "${inputs.self}/modules/desktop/silentboot.nix"
-    "${inputs.self}/modules/desktop/environment.nix"
+    "${inputs.self}/modules/desktop/kde.nix"
     "${inputs.self}/modules/desktop/gaming.nix"
     "${inputs.self}/modules/desktop/virtualmachine.nix"
 
