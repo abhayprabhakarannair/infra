@@ -24,3 +24,9 @@ fi
 echo "Enrolling TPM2 for $HOSTNAME on partition $LUKS_PARTITION..."
 sudo systemd-cryptenroll --tpm2-device=auto --tpm2-pcrs=0+7 "$LUKS_PARTITION"
 echo "TPM2 enrollment complete."
+
+echo "Adding SOPS Decryption Setup..."
+mkdir -p ~/.config/sops/age
+sudo ssh-to-age -private-key -i /etc/ssh/ssh_host_ed25519_key > /tmp/keys.txt
+mv /tmp/keys.txt ~/.config/sops/age/keys.txt
+echo "SOPS Setup completed."
