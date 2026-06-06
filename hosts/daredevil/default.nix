@@ -6,15 +6,20 @@
   imports = [
     inputs.disko.nixosModules.disko
     inputs.home-manager.nixosModules.home-manager
+    inputs.sops-nix.nixosModules.sops
 
     ./hardware.nix
-    "${inputs.self}/hosts/shared/disko_os.nix"
+    "${inputs.self}/hosts/shared/disko_os_encrypted.nix"
 
     "${inputs.self}/modules/core"
     "${inputs.self}/modules/desktop"
+    "${inputs.self}/modules/desktop/variables.nix"
     "${inputs.self}/modules/desktop/silentboot.nix"
     "${inputs.self}/modules/desktop/gnome.nix"
     "${inputs.self}/modules/desktop/virtualmachine.nix"
+    "${inputs.self}/modules/desktop/controlroom.nix"
+
+    "${inputs.self}/modules/kitty"
 
     "${inputs.self}/users/abhay"
   ];
@@ -57,12 +62,13 @@
   };
   services.udisks2.enable = true;
 
-  # --- Fingerprint (Disabled for login) - use password on cold boots for max security ---
+  # --- Fingerprint Authentication (Disabled for cold boot) ---
   services.fprintd.enable = true;
-  security.pam.services.login.fprintAuth = false;
-  security.pam.services.kde.fprintAuth = pkgs.lib.mkForce true;
   security.pam.services.sudo.fprintAuth = true;
   security.pam.services.polkit-1.fprintAuth = true;
+  security.pam.services.kscreenlocker.fprintAuth = true;
+  security.pam.services.plasma-login-manager.fprintAuth = false;
+  security.pam.services.login.fprintAuth = false;
 
   # --- Enable Home Manager ---
   home-manager = {
@@ -73,5 +79,5 @@
   };
 
   # --- State Version ---
-  system.stateVersion = "25.11";
+  system.stateVersion = "26.05";
 }

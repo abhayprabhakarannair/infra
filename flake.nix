@@ -2,11 +2,11 @@
   description = "Abhay's Infrastructure";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.11";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-26.05";
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
 
     home-manager = {
-      url = "github:nix-community/home-manager/release-25.11";
+      url = "github:nix-community/home-manager/release-26.05";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
@@ -15,8 +15,13 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    dms = {
-      url = "github:AvengeMedia/DankMaterialShell/stable";
+    sops-nix = {
+      url = "github:Mic92/sops-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    wrappers = {
+      url = "github:BirdeeHub/nix-wrapper-modules";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
@@ -26,6 +31,8 @@
     nixpkgs,
     nixpkgs-unstable,
     home-manager,
+    sops-nix,
+    wrappers,
     ...
   } @ inputs: let
     # --- Default username & WSL host ---
@@ -35,18 +42,27 @@
     supportedSystems = ["x86_64-linux"];
     forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
 
+    # --- SHARED NIXPKGS CONFIGURATION ---
+    sharedConfig = {
+      allowUnfree = true;
+    };
+
     # --- THE OVERLAY (Unstable and custom packages w/non-free) ---
     systemOverlay = final: prev: {
       unstable = import nixpkgs-unstable {
         system = prev.stdenv.hostPlatform.system;
-        config.allowUnfree = true;
+        config = sharedConfig;
       };
 
       install-infra = final.callPackage ./pkgs/install-infra {};
     };
     globalConfig = {
       nixpkgs.overlays = [systemOverlay];
-      nixpkgs.config.allowUnfree = true;
+      nixpkgs.config = sharedConfig;
+      home-manager = {
+        useGlobalPkgs = true;
+        useUserPackages = true;
+      };
     };
   in {
     # --- CUSTOM PACKAGES EXPORT ---
@@ -55,7 +71,7 @@
       system: let
         pkgs = import nixpkgs {
           inherit system;
-          config.allowUnfree = true;
+          config = sharedConfig;
           overlays = [systemOverlay];
         };
       in {
@@ -91,7 +107,7 @@
       "${username}@${wslHostname}" = home-manager.lib.homeManagerConfiguration {
         pkgs = import nixpkgs {
           system = "x86_64-linux";
-          config.allowUnfree = true;
+          config = sharedConfig;
           overlays = [systemOverlay];
         };
         extraSpecialArgs = {inherit inputs;};

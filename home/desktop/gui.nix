@@ -7,10 +7,10 @@
 
   # --- Essential apps ---
   home.packages = with pkgs.unstable; [
-    bitwarden-desktop
     vlc
     fastfetch
-    neovim
     wl-clipboard
+    tela-icon-theme
   ];
+
 }
