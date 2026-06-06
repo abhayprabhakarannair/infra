@@ -9,13 +9,16 @@
 
     remotePlay.openFirewall = true;
     dedicatedServer.openFirewall = true;
+
+    extraCompatPackages = with pkgs.unstable; [
+       proton-ge-bin
+    ];
   };
 
-  environment.systemPackages = [
-    pkgs.unstable.protonup-qt
-
-    pkgs.unstable.mangohud
-    pkgs.unstable.goverlay
+  environment.systemPackages = with pkgs.unstable; [
+    mangohud
+    goverlay
+    gamescope-wsi
   ];
 
   programs.gamemode = {

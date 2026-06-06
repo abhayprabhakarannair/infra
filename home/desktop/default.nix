@@ -5,16 +5,17 @@
 }: {
   imports = ["${inputs.self}/home/core.nix"];
 
-  # --- ZSH Configuration ---
-  programs.zsh = {
+  # --- FISH Configuration ---
+  programs.fish = {
     enable = true;
-    enableCompletion = true;
-    autosuggestion = {enable = true;};
-    syntaxHighlighting = {enable = true;};
-    history = {
-      size = 10000;
-      path = "$HOME/.zsh_history";
-      ignoreAllDups = true;
+
+    functions = {
+     fish_prompt = ''
+      set_color cyan
+      echo -n (prompt_pwd)
+      set_color normal
+      echo -n " => "
+     '';
     };
 
     shellAliases = {
@@ -24,10 +25,51 @@
       ve = "nvim .";
     };
 
-    sessionVariables = {
-      EDITOR = "nvim";
-      SSH_AUTH_SOCK = "${config.home.homeDirectory}/.bitwarden-ssh-agent.sock";
-      NIXOS_OZONE_WL = "1";
-    };
+    interactiveShellInit = ''
+     set -g fish_greeting
+    '';
   };
+
+  programs.ssh = {
+   enable = true;
+   enableDefaultConfig = false;
+
+  includes = [
+    "/run/secrets/ssh-secret-ips"
+  ];
+
+  settings = {
+    "*" = {
+      ServerAliveInterval = 60;
+    };
+
+    "homelab-one" = {
+      User = "abhay";
+      Port = 2442;
+      IdentityFile = "/run/secrets/ssh-private-keys/homelab";
+      IdentitiesOnly = "yes";
+    };
+
+    "homelab-two" = {
+      User = "abhay";
+      Port = 2442;
+      IdentityFile = "/run/secrets/ssh-private-keys/homelab";
+      IdentitiesOnly = "yes";
+    };
+
+    "old-devil" = {
+      User = "abhay";
+      IdentityFile = "/run/secrets/ssh-private-keys/homelab";
+      IdentitiesOnly = "yes";
+    };
+
+    "github.com" = {
+      User = "abhay";
+      IdentityFile = "/run/secrets/ssh-private-keys/github";
+      IdentitiesOnly = "yes";
+    };
+
+   };
+  };
+
 }

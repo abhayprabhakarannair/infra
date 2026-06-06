@@ -12,6 +12,15 @@ fi
 TARGET=$1
 IP=$2
 PORT=${3:-22} # Defaults to 22 if the 3rd argument is left blank
+BOOTSTRAP_DIR="$HOME/.server-bootstrap/$TARGET"
+
+# Fail if the bootstrap directory is not present
+if [ ! -d "$BOOTSTRAP_DIR" ]; then
+    echo "❌ Error: Bootstrap folder missing!"
+    echo "Expected it here: $BOOTSTRAP_DIR"
+    echo "Please generate the host keys for $TARGET first (script -> prepare-bootstrap.sh)."
+    exit 1
+fi
 
 echo "Deploying $TARGET to $IP on SSH port $PORT..."
 
@@ -19,4 +28,5 @@ nixos-anywhere \
     --ssh-port "$PORT" \
     --flake ".#$TARGET" \
     --generate-hardware-config nixos-generate-config "./hosts/$TARGET/hardware.nix" \
+    --extra-files "$BOOTSTRAP_DIR" \
     "root@$IP"

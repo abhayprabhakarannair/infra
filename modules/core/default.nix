@@ -1,7 +1,19 @@
-{pkgs, ...}: {
+{pkgs, inputs, ...}: {
   # --- Timezone and Locale ---
   time.timeZone = "Asia/Kolkata";
   i18n.defaultLocale = "en_US.UTF-8";
+
+  i18n.extraLocaleSettings = {
+    LC_ADDRESS = "en_IN";
+    LC_IDENTIFICATION = "en_IN";
+    LC_MEASUREMENT = "en_IN";
+    LC_MONETARY = "en_IN";
+    LC_NAME = "en_IN";
+    LC_NUMERIC = "en_IN";
+    LC_PAPER = "en_IN";
+    LC_TELEPHONE = "en_IN";
+    LC_TIME = "en_IN";
+  };
 
   # --- Essential System Packages ---
   environment.systemPackages = with pkgs; [
@@ -9,11 +21,27 @@
     curl
     git
     jq
+    tree
+    sops
+    age
+    ssh-to-age
+    mkpasswd
+    ripgrep
   ];
 
-  # --- ZSH across all ---
-  programs.zsh.enable = true;
-  users.defaultUserShell = pkgs.zsh;
+  # --- Secrets ---
+  sops.defaultSopsFile = "${inputs.self}/secrets/system-secrets.yaml";
+  sops.defaultSopsFormat = "yaml";
+  sops.age.sshKeyPaths = [ "/etc/ssh/ssh_host_ed25519_key" ];
+
+  # --- Passwords ---
+  sops.secrets."abhay-password" = {
+    neededForUsers = true;
+  };
+
+  # --- FISH across all ---
+  programs.fish.enable = true;
+  users.defaultUserShell = pkgs.fish;
 
   # --- SSH ---
   services.openssh = {

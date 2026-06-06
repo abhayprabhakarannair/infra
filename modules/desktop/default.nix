@@ -1,8 +1,11 @@
-{pkgs, ...}: {
+{pkgs, inputs, ...}: {
+
+ imports =  [ "${inputs.self}/modules/neovim" ];
+
+
   # --- Global fonts ---
   fonts = {
     packages = with pkgs; [
-      inter
       nerd-fonts.jetbrains-mono
       noto-fonts-color-emoji
     ];

@@ -26,7 +26,6 @@
   environment.systemPackages = with pkgs; [
     vivaldi
     gnome-browser-connector
-    ptyxis
 
     # --- GNOME Essentials ---
     nautilus
@@ -49,9 +48,4 @@
     gnome-console
     gnome-terminal
   ];
-
-  # --- System wide envs ---
-  environment.sessionVariables = {
-    NIXOS_OZONE_WL = "1";
-  };
 }

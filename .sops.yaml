@@ -1,0 +1,16 @@
+keys:
+  # Shared keys
+  - &github_key age1lvgr9hjh4t9qw0w79hxkpygqa9d4temq70lalksupe7tq38zm3jqy4u99x
+  - &homelab_key age1qnmt7leg98qd75szl3sytd4clvj48t8tnqednjl9d8hszqjp7dmsge4pq4
+
+  # Machine keys
+  - &devil age1k9rk8rlcccpdw5gslm3rsw4t2nvvluwa77d8j8vrmmyvft047pys32l0xt
+  - &daredevil age1t363efchn7yahsnwg65vnkculygqzk9vacl55eyd3e47a0mw29dqw3mquh
+creation_rules:
+  - path_regex: secrets/.*\.yaml$
+    key_groups:
+    - age:
+      - *github_key
+      - *homelab_key
+      - *devil
+      - *daredevil

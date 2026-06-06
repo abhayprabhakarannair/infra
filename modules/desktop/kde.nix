@@ -1,22 +1,7 @@
 {pkgs, ...}: {
-  # --- Swapping to a lightweight DM ---
-  services.displayManager.sddm.enable = false;
-  services.displayManager.ly = {
-	enable = true;
-	settings = {
-	   session_log = "/dev/null";
-	};
-  };
-  services.displayManager.defaultSession = "plasma";
-
-  # --- Fix PAM and stuffs ---
-  security.pam.services.ly.kwallet = {
-    enable = true;
-    package = pkgs.kdePackages.kwallet-pam;
-  };
-
   # --- Enable KDE ---
   services.desktopManager.plasma6.enable = true;
+  services.displayManager.plasma-login-manager.enable = true;
   services.xserver.enable = false;
 
   # --- System packages ---
@@ -26,10 +11,9 @@
    kdePackages.plasma-browser-integration
   ];
 
-  # --- System wide envs ---
-  environment.sessionVariables = {
-   NIXOS_OZONE_WL = "1";
-  };
+  environment.plasma6.excludePackages = with pkgs.kdePackages; [
+    konsole
+  ];
   
   # --- KDE connection ---
   programs.chromium = {
