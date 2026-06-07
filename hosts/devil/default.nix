@@ -30,6 +30,7 @@
   disko.devices.disk.main.device = "/dev/nvme1n1";
   disko.devices.disk.games.device = "/dev/nvme0n1";
   systemd.tmpfiles.rules = [
+    "d /var/tmp 1777 root root -"
     "d /mnt/games 0755 abhay users - -"
   ];
   myStorage.swapSize = "32G";

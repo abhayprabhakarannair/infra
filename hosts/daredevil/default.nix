@@ -27,6 +27,9 @@
   # --- Default Drive ---
   disko.devices.disk.main.device = "/dev/nvme0n1";
   myStorage.swapSize = "32G";
+  systemd.tmpfiles.rules = [
+    "d /var/tmp 1777 root root -"
+  ];
 
   # --- Hostname ---
   networking.hostName = "daredevil";
