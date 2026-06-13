@@ -4,6 +4,17 @@
   services.desktopManager.gnome.enable = true;
   services.xserver.enable = false;
 
+  # --- Autologin Configuration ---
+  services.displayManager.autoLogin.enable = true;
+  services.displayManager.autoLogin.user = "abhay";
+
+  # --- Keyring fix for gnome autologin ---
+  services.gnome.gnome-keyring.enable = true;
+  security.pam.services.gdm-password.enableGnomeKeyring = true;
+  systemd.user.services.gnome-keyring-daemon = {
+    wantedBy = ["default.target"];
+  };
+
   # --- Remove initial bloat ---
   services.gnome.core-apps.enable = false;
   services.gnome.core-developer-tools.enable = false;
@@ -18,9 +29,6 @@
     platformTheme = "gnome";
     style = "adwaita-dark";
   };
-
-  # --- Keyring Setup ---
-  services.gnome.gnome-keyring.enable = true;
 
   # --- System packages ---
   environment.systemPackages = with pkgs; [

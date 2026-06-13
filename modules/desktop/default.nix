@@ -1,6 +1,6 @@
 {pkgs, inputs, ...}: {
 
- imports =  [ "${inputs.self}/modules/neovim" ];
+ imports =  [ "${inputs.self}/modules/neovim" "${inputs.self}/modules/kitty" ];
 
 
   # --- Global fonts ---
@@ -10,6 +10,23 @@
       noto-fonts-color-emoji
     ];
   };
+
+  # --- Essential System Packages ---
+  environment.systemPackages = with pkgs; [
+    jq
+    tree
+    sops
+    age
+    ssh-to-age
+    mkpasswd
+    ripgrep
+    git
+  ];
+
+
+  # --- FISH across all desktops ---
+  programs.fish.enable = true;
+  users.defaultUserShell = pkgs.fish;
 
   # --- Add firmware upgrades ---
   services.fwupd.enable = true;

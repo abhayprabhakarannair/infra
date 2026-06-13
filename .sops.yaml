@@ -6,6 +6,7 @@ keys:
   # Machine keys
   - &devil age1k9rk8rlcccpdw5gslm3rsw4t2nvvluwa77d8j8vrmmyvft047pys32l0xt
   - &daredevil age1t363efchn7yahsnwg65vnkculygqzk9vacl55eyd3e47a0mw29dqw3mquh
+  - &homelab_one age1lkeyp8n597el6jeeyremqaayrlr5j8zqln92ddr0zxs2h9khuqdq0wmgwe
 creation_rules:
   - path_regex: secrets/.*\.yaml$
     key_groups:
@@ -14,3 +15,4 @@ creation_rules:
       - *homelab_key
       - *devil
       - *daredevil
+      - *homelab_one
