@@ -19,8 +19,6 @@
     "${inputs.self}/modules/desktop/virtualmachine.nix"
     "${inputs.self}/modules/desktop/controlroom.nix"
 
-    "${inputs.self}/modules/kitty"
-
     "${inputs.self}/users/abhay"
   ];
 
@@ -69,8 +67,6 @@
   services.fprintd.enable = true;
   security.pam.services.sudo.fprintAuth = true;
   security.pam.services.polkit-1.fprintAuth = true;
-  security.pam.services.kscreenlocker.fprintAuth = true;
-  security.pam.services.plasma-login-manager.fprintAuth = false;
   security.pam.services.login.fprintAuth = false;
 
   # --- Enable Home Manager ---

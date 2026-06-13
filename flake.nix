@@ -100,6 +100,17 @@
           ./hosts/devil/default.nix
         ];
       };
+
+
+      # Gaming PC
+      homelab-two = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        specialArgs = {inherit inputs;};
+        modules = [
+          globalConfig
+          ./hosts/homelab-two/default.nix
+        ];
+      };
     };
 
     # --- WSL STANDALONE CONFIG ---

@@ -2,18 +2,16 @@
   imports = [
     inputs.disko.nixosModules.disko
     inputs.home-manager.nixosModules.home-manager
+    inputs.sops-nix.nixosModules.sops
 
-    # Absolute paths from flake root
+    ./hardware.nix
     "${inputs.self}/users/abhay"
     "${inputs.self}/modules/server/podman.nix"
 
-    # side config
-    ./hardware-configuration.nix
   ];
 
   networking.hostName = "homelab-one";
 
-  # Setup Home Manager for this specific host
   home-manager = {
     useGlobalPkgs = true;
     useUserPackages = true;

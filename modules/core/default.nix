@@ -1,4 +1,4 @@
-{pkgs, inputs, ...}: {
+{pkgs, inputs, config, ...}: {
   # --- Timezone and Locale ---
   time.timeZone = "Asia/Kolkata";
   i18n.defaultLocale = "en_US.UTF-8";
@@ -19,14 +19,7 @@
   environment.systemPackages = with pkgs; [
     wget
     curl
-    git
-    jq
-    tree
-    sops
-    age
-    ssh-to-age
-    mkpasswd
-    ripgrep
+    rclone
   ];
 
   # --- Secrets ---
@@ -38,10 +31,6 @@
   sops.secrets."abhay-password" = {
     neededForUsers = true;
   };
-
-  # --- FISH across all ---
-  programs.fish.enable = true;
-  users.defaultUserShell = pkgs.fish;
 
   # --- SSH ---
   services.openssh = {
@@ -61,8 +50,18 @@
   networking.firewall = {
     enable = true;
     allowedTCPPorts = [2442 80 443];
-    allowedUDPPorts = [3478];
+    allowedUDPPorts = [ config.services.tailscale.port ];
+    trustedInterfaces = [ config.services.tailscale.interfaceName ];
   };
+
+  # --- TailScale ---
+  services.tailscale.enable = true;
+  networking.nftables.enable = true;
+  systemd.services.tailscaled.serviceConfig.Environment = [
+    "TS_DEBUG_FIREWALL_MODE=nftables"
+  ];
+  systemd.network.wait-online.enable = false;
+  boot.initrd.systemd.network.wait-online.enable = false;
 
   # --- Logging Constraints ---
   services.journald.extraConfig = ''
