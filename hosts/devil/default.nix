@@ -13,6 +13,7 @@
     ./disko_games.nix
 
     "${inputs.self}/modules/core"
+    "${inputs.self}/modules/core/storage.nix"
     "${inputs.self}/modules/desktop"
     "${inputs.self}/modules/desktop/variables.nix"
     "${inputs.self}/modules/desktop/silentboot.nix"
