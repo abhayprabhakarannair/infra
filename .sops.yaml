@@ -7,6 +7,7 @@ keys:
   - &devil age1k9rk8rlcccpdw5gslm3rsw4t2nvvluwa77d8j8vrmmyvft047pys32l0xt
   - &daredevil age1t363efchn7yahsnwg65vnkculygqzk9vacl55eyd3e47a0mw29dqw3mquh
   - &homelab_one age1lkeyp8n597el6jeeyremqaayrlr5j8zqln92ddr0zxs2h9khuqdq0wmgwe
+  - &old_devil age1y8ruw5f80t4ga4uuqsqmx85uacf0yn37ly5hdmxe0z9q083udpmsw5hpfx
 creation_rules:
   - path_regex: secrets/.*\.yaml$
     key_groups:
@@ -16,3 +17,4 @@ creation_rules:
       - *devil
       - *daredevil
       - *homelab_one
+      - *old_devil

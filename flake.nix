@@ -102,13 +102,13 @@
       };
 
 
-      # Gaming PC
-      homelab-two = nixpkgs.lib.nixosSystem {
+      # Old Laptop
+      old-devil = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
         specialArgs = {inherit inputs;};
         modules = [
           globalConfig
-          ./hosts/homelab-two/default.nix
+          ./hosts/old-devil/default.nix
         ];
       };
     };
