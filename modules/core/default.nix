@@ -20,7 +20,8 @@
     wget
     curl
     rclone
-    pkgs.unstable.kitty.terminfo
+    unstable.kitty.terminfo
+    wakeonlan
   ];
 
   # --- Secrets ---
@@ -46,6 +47,19 @@
   users.users."root".openssh.authorizedKeys.keys = [
     "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIF+mIhyn0WleD0sBHsS6IARv9y0KAXpi+0rTc0K0vZTD"
   ];
+
+  # --- Sudo config (Run commands without root) ---
+  security.sudo.extraRules = [
+  {
+    users = [ "abhay" ];
+    commands = [
+      {
+        command = "/run/current-system/sw/bin/wakeonlan";
+        options = [ "NOPASSWD" ];
+      }
+    ];
+  }
+ ];
 
   # --- Firewall ---
   networking.firewall = {

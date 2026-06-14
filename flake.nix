@@ -111,6 +111,17 @@
           ./hosts/old-devil/default.nix
         ];
       };
+
+
+      # Homelab One (Hetzner alpha node)
+      homelab-one = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        specialArgs = {inherit inputs;};
+        modules = [
+          globalConfig
+          ./hosts/homelab-one/default.nix
+        ];
+      };
     };
 
     # --- WSL STANDALONE CONFIG ---
