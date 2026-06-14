@@ -20,6 +20,7 @@
     wget
     curl
     rclone
+    pkgs.unstable.kitty.terminfo
   ];
 
   # --- Secrets ---
