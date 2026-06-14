@@ -50,15 +50,13 @@
       IdentitiesOnly = "yes";
     };
 
-    "homelab-two" = {
+    "old-devil" = {
       User = "abhay";
-      Port = 2442;
       IdentityFile = "/run/secrets/ssh-private-keys/homelab";
       IdentitiesOnly = "yes";
     };
 
-    "old-devil" = {
-      User = "abhay";
+    "homelab-storage-one" = {
       IdentityFile = "/run/secrets/ssh-private-keys/homelab";
       IdentitiesOnly = "yes";
     };

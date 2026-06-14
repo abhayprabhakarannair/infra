@@ -17,12 +17,6 @@
     mode = "0400";
   };
 
-  sops.secrets."ssh-private-keys/homelab" = {
-    owner = config.users.users.abhay.name;
-    group = config.users.users.abhay.group;
-    mode = "0400";
-  };
-
   systemd.services.rclone-media = {
     description = "Rclone mount for Hetzner Storage Box";
     after = [ "network-online.target" ];
@@ -31,13 +25,13 @@
     preStart = "${pkgs.coreutils}/bin/mkdir -p /mnt/media";
 
     serviceConfig = {
-      Type = "simple";
       TimeoutStartSec = "30";
+      ExecStartPre = "${pkgs.coreutils}/bin/env";
       ExecStart = ''
-        ${pkgs.rclone}/bin/rclone mount u588200-sub1:/ /mnt/media \
+        ${pkgs.rclone}/bin/rclone mount homelab-storage-one-media:/ /mnt/media \
           --config=${config.sops.secrets."rclone-conf".path} \
           --vfs-cache-mode=full \
-          --vfs-cache-max-size=50G \
+          --vfs-cache-max-size=100G \
           --allow-other \
           --log-level=INFO
       '';
