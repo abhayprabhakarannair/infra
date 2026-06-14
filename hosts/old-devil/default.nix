@@ -8,6 +8,7 @@
     "${inputs.self}/hosts/shared/disko_os_server.nix"
 
     "${inputs.self}/modules/core"
+    "${inputs.self}/modules/core/webhook.nix"
     "${inputs.self}/modules/server/podman.nix"
     "${inputs.self}/modules/services/omada-controller.nix"
     "${inputs.self}/modules/services/technitium.nix"
@@ -74,7 +75,7 @@
     config.services.tailscale.port 19810 27001 29810 53 
   ];
   networking.firewall.allowedTCPPorts = [ 
-    2442 80 443 8043 8088 8843 29811 29812 29813 29814 29815 29816 29817 8085 53 
+    2442 80 443 8043 8088 8843 29811 29812 29813 29814 29815 29816 29817 8085 53 9000
   ];
 
 
