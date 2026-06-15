@@ -22,12 +22,17 @@
     rclone-media = {
      description = "Rclone mount for Encrypted Media";
      after = [ "network-online.target" ];
+     wants = [ "network-online.target" ];
      wantedBy = [ "multi-user.target" ];
 
-     preStart = "${pkgs.coreutils}/bin/mkdir -p /mnt/media";
+     preStart = ''
+        ${pkgs.util-linux}/bin/umount -l /mnt/media || true
+        ${pkgs.coreutils}/bin/mkdir -p /mnt/media
+      '';
 
      serviceConfig = {
-      TimeoutStartSec = "30";
+      TimeoutStartSec = "600";
+      ExecStartPost = "${pkgs.bash}/bin/bash -c 'while ! ${pkgs.util-linux}/bin/mountpoint -q /mnt/media; do sleep 1; done'";
       ExecStart = ''
         ${pkgs.rclone}/bin/rclone mount homelab-storage-one-media:/ /mnt/media \
           --config=${config.sops.secrets."rclone-conf".path} \
@@ -37,6 +42,7 @@
           --log-level=INFO
       '';
       ExecStop = "${pkgs.fuse}/bin/fusermount -u /mnt/media";
+      ExecStopPost = "-${pkgs.util-linux}/bin/umount -l /mnt/media";
       Restart = "always";
       RestartSec = "10";
      };

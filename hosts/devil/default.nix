@@ -25,6 +25,7 @@
     "${inputs.self}/modules/services/jellyfin.nix"
     "${inputs.self}/modules/services/navidrome.nix"
     "${inputs.self}/modules/services/stash.nix"
+    "${inputs.self}/modules/services/arr-stack.nix"
 
     "${inputs.self}/users/abhay"
   ];
@@ -41,7 +42,16 @@
   # --- Hostname ---
   networking.hostName = "devil";
 
-  networking.networkmanager.enable = true;
+  # --- Networking and Wake on LAN ---
+  networking.interfaces.enp14s0.wakeOnLan.enable = true;
+  networking.networkmanager = {
+  	enable = true;
+  	settings = {
+    	connection = {
+      		"ethernet.wake-on-lan" = "magic";
+    		};
+  	};
+  };
 
   # -- Boot & Kernel configurations ---
   boot = {

@@ -22,6 +22,7 @@
     rclone
     unstable.kitty.terminfo
     wakeonlan
+    ethtool
   ];
 
   # --- Secrets ---

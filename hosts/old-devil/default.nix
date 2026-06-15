@@ -8,8 +8,9 @@
     "${inputs.self}/hosts/shared/disko_os_server.nix"
 
     "${inputs.self}/modules/core"
-    "${inputs.self}/modules/core/webhook.nix"
+    "${inputs.self}/modules/webhook"
     "${inputs.self}/modules/server/podman.nix"
+    "${inputs.self}/modules/desktop/controlroom.nix"
     "${inputs.self}/modules/services/omada-controller.nix"
     "${inputs.self}/modules/services/technitium.nix"
 

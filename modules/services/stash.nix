@@ -24,7 +24,7 @@
     ];
   };
 
-  systemd.services.podman-jellyfin = {
+  systemd.services.podman-stash = {
     after = [ "rclone-media.service" ];
     requires = [ "rclone-media.service" ];
   };
