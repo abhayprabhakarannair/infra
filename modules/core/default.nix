@@ -58,6 +58,11 @@
         command = "/run/current-system/sw/bin/wakeonlan";
         options = [ "NOPASSWD" ];
       }
+      {
+        # Using the absolute path is required for NixOS sudo rules
+        command = "/run/current-system/sw/bin/systemctl poweroff";
+        options = [ "NOPASSWD" ];
+      }
     ];
   }
  ];

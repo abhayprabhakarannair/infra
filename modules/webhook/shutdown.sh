@@ -6,4 +6,10 @@ if [[ "$TARGET" != "devil" && "$TARGET" != "daredevil" ]]; then
   exit 1
 fi
 
-ssh -o StrictHostKeyChecking=accept-new -o ConnectTimeout=5 "root@$TARGET" 'systemctl poweroff'
+ssh -i /run/secrets/webhook-ssh-key \
+    -p 2442 \
+    -o BatchMode=yes \
+    -o StrictHostKeyChecking=no \
+    -o UserKnownHostsFile=/dev/null \
+    -o ConnectTimeout=5 \
+    "abhay@$TARGET" 'sudo /run/current-system/sw/bin/systemctl poweroff'
