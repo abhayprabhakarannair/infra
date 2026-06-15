@@ -57,6 +57,20 @@
       IdentitiesOnly = "yes";
     };
 
+    "daredevil" = {
+      User = "abhay";
+      Port = 2442;
+      IdentityFile = "/run/secrets/ssh-private-keys/homelab";
+      IdentitiesOnly = "yes";
+    };
+
+    "devil" = {
+      User = "abhay";
+      Port = 2442;
+      IdentityFile = "/run/secrets/ssh-private-keys/homelab";
+      IdentitiesOnly = "yes";
+    };
+
     "homelab-storage-one" = {
       IdentityFile = "/run/secrets/ssh-private-keys/homelab";
       IdentitiesOnly = "yes";
