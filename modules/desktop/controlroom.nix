@@ -17,9 +17,4 @@
     mode = "0400";
   };
 
-  sops.secrets."webhook-ssh-key" = {
-  key = "ssh-private-keys/homelab"; 
-  owner = "webhook";
-  mode = "0400";
-  };
 }

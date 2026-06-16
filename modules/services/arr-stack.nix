@@ -1,6 +1,12 @@
 { config, pkgs, ... }:
 
 {
+  sops.secrets."gluetun-env" = {
+    mode = "0440";
+    uid = 1000;
+    gid = 1000;
+  };
+
   systemd.tmpfiles.rules = [
     "d /srv/prowlarr 0755 1000 1000 - -"
     "d /srv/sonarr 0755 1000 1000 - -"
@@ -8,9 +14,38 @@
     "d /srv/sabnzbd 0755 1000 1000 - -"
     "d /srv/downloads 0755 1000 1000 - -"
     "d /srv/whisparr 0755 1000 1000 - -"
+    "d /srv/gluetun 0755 1000 1000 - -"
+    "d /srv/qbittorrent 0755 1000 1000 - -"
+    "d /srv/seerr 0755 1000 1000 - -"
   ];
 
   virtualisation.oci-containers.containers = {
+
+    gluetun = {
+      image = "qmcgaw/gluetun:latest";
+      autoRemoveOnStop = false;
+      ports = [ "8090:8090" ]; 
+      volumes = [ 
+        "/srv/gluetun:/gluetun" 
+	"/srv/gluetun/wg0.conf:/gluetun/wireguard/wg0.conf"
+      ];
+      
+      environmentFiles = [ config.sops.secrets."gluetun-env".path ];
+
+      environment = {
+        VPN_SERVICE_PROVIDER = "custom";
+        VPN_TYPE = "wireguard";
+        VPN_PORT_FORWARDING = "on";
+        VPN_PORT_FORWARDING_PROVIDER = "private internet access";
+	SERVER_NAME = "Server-11666-3a";
+      };
+      extraOptions = [
+        "--restart=always"
+        "--cap-add=NET_ADMIN"
+        "--device=/dev/net/tun:/dev/net/tun"
+      ];
+    };
+
     prowlarr = {
       image = "lscr.io/linuxserver/prowlarr:latest";
       autoRemoveOnStop = false;
@@ -74,6 +109,58 @@
       environment = { PUID = "1000"; PGID = "1000"; TZ = "Asia/Kolkata"; };
       extraOptions = [ "--restart=always" ];
     };
+
+    qbittorrent = {
+      image = "lscr.io/linuxserver/qbittorrent:latest";
+      autoRemoveOnStop = false;
+      volumes = [ 
+        "/srv/qbittorrent:/config"
+        "/srv/downloads:/downloads" 
+      ];
+      environment = { 
+        PUID = "1000"; 
+        PGID = "1000"; 
+        TZ = "Asia/Kolkata"; 
+        WEBUI_PORT = "8090";
+      };
+      extraOptions = [ 
+        "--restart=always"
+        "--network=container:gluetun"
+      ];
+    };
+
+    seerr = {
+      image = "ghcr.io/seerr-team/seerr:latest";
+      autoRemoveOnStop = false;
+      ports = [ "5055:5055" ];
+      volumes = [ "/srv/seerr:/app/config" ];
+      environment = {
+        PUID = "1000";
+        PGID = "1000";
+        TZ = "Asia/Kolkata";
+        LOG_LEVEL = "info";
+      };
+      extraOptions = [ "--restart=always" ];
+    };
+
+    flaresolverr = {
+      image = "ghcr.io/flaresolverr/flaresolverr:latest";
+      autoRemoveOnStop = false;
+      ports = [ "8191:8191" ];
+      environment = {
+        LOG_LEVEL = "info";
+      };
+      extraOptions = [ "--restart=always" ];
+    };
+  };
+
+  systemd.services.podman-gluetun = {
+    before = [ "podman-qbittorrent.service" ];
+  };
+
+  systemd.services.podman-qbittorrent = {
+    after = [ "podman-gluetun.service" ];
+    requires = [ "podman-gluetun.service" ];
   };
 
   systemd.services.podman-whisparr = {
