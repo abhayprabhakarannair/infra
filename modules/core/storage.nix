@@ -18,6 +18,7 @@
   };
 
   systemd.services = {
+
     rclone-media = {
       description = "Rclone mount for Encrypted Media";
       after = [ "network-online.target" ];
@@ -51,31 +52,71 @@
       };
     };
 
+    rclone-immich = {
+      description = "Rclone mount for Encrypted Immich Data";
+      after = [ "network-online.target" ];
+      wants = [ "network-online.target" ];
+      wantedBy = [ "multi-user.target" ];
 
-   #  rclone-immich = {
-   #   description = "Rclone mount for Encrypted Immich Library";
-   #   after = [ "network-online.target" ];
-   #   wantedBy = [ "multi-user.target" ];
-   #
-   #   preStart = "${pkgs.coreutils}/bin/mkdir -p /mnt/immich";
-   #
-   #   serviceConfig = {
-   #    TimeoutStartSec = "30";
-   #    ExecStart = ''
-   #      ${pkgs.rclone}/bin/rclone mount homelab-storage-one-immich:/ /mnt/immich \
-   #        --config=${config.sops.secrets."rclone-conf".path} \
-   #        --vfs-cache-mode=full \
-   #        --vfs-cache-max-size=30G \
-   #        --allow-other \
-   #        --log-level=INFO
-   #    '';
-   #    ExecStop = "${pkgs.fuse}/bin/fusermount -u /mnt/immich";
-   #    Restart = "always";
-   #    RestartSec = "10";
-   #   };
-   # };
-   #
-   #
+      preStart = ''
+        ${pkgs.util-linux}/bin/umount -l /mnt/immich || true
+        ${pkgs.coreutils}/bin/mkdir -p /mnt/immich
+      '';
+
+      serviceConfig = {
+        TimeoutStartSec = "600";
+        ExecStartPost = "${pkgs.bash}/bin/bash -c 'while ! ${pkgs.util-linux}/bin/mountpoint -q /mnt/immich; do sleep 1; done'";
+        ExecStart = ''
+          ${pkgs.rclone}/bin/rclone mount homelab-storage-one-immich:/ /mnt/immich \
+            --config=${config.sops.secrets."rclone-conf".path} \
+            --vfs-cache-mode=full \
+            --vfs-cache-max-size=40G \
+            --vfs-read-chunk-size=16M \
+            --vfs-read-chunk-size-limit=512M \
+            --vfs-read-ahead=128M \
+            --buffer-size=32M \
+            --allow-other \
+            --log-level=INFO
+        '';
+        ExecStop = "${pkgs.fuse}/bin/fusermount -u /mnt/immich";
+        ExecStopPost = "-${pkgs.util-linux}/bin/umount -l /mnt/immich";
+        Restart = "always";
+        RestartSec = "10";
+      };
+    };
+
+    rclone-private = {
+      description = "Rclone mount for Encrypted Private Data";
+      after = [ "network-online.target" ];
+      wants = [ "network-online.target" ];
+      wantedBy = [ "multi-user.target" ];
+
+      preStart = ''
+        ${pkgs.util-linux}/bin/umount -l /mnt/private || true
+        ${pkgs.coreutils}/bin/mkdir -p /mnt/private
+      '';
+
+      serviceConfig = {
+        TimeoutStartSec = "600";
+        ExecStartPost = "${pkgs.bash}/bin/bash -c 'while ! ${pkgs.util-linux}/bin/mountpoint -q /mnt/private; do sleep 1; done'";
+        ExecStart = ''
+          ${pkgs.rclone}/bin/rclone mount homelab-storage-one-private:/ /mnt/private \
+            --config=${config.sops.secrets."rclone-conf".path} \
+            --vfs-cache-mode=full \
+            --vfs-cache-max-size=5G \
+            --vfs-read-chunk-size=16M \
+            --vfs-read-chunk-size-limit=512M \
+            --vfs-read-ahead=128M \
+            --buffer-size=32M \
+            --allow-other \
+            --log-level=INFO
+        '';
+        ExecStop = "${pkgs.fuse}/bin/fusermount -u /mnt/private";
+        ExecStopPost = "-${pkgs.util-linux}/bin/umount -l /mnt/private";
+        Restart = "always";
+        RestartSec = "10";
+      };
+    };
 
     rclone-shared = {
      description = "Rclone mount for Unncrypted Sharing Files";
@@ -100,28 +141,6 @@
      };
    };
 
-   rclone-shared-crypt = {
-     description = "Rclone mount for Encrypted Sharing Files";
-     after = [ "network-online.target" ];
-     wantedBy = [ "multi-user.target" ];
-
-     preStart = "${pkgs.coreutils}/bin/mkdir -p /mnt/shared-crypt";
-
-     serviceConfig = {
-      TimeoutStartSec = "30";
-      ExecStart = ''
-        ${pkgs.rclone}/bin/rclone mount homelab-storage-one-shared-crypt:/ /mnt/shared-crypt \
-          --config=${config.sops.secrets."rclone-conf".path} \
-          --vfs-cache-mode=full \
-          --vfs-cache-max-size=5G \
-          --allow-other \
-          --log-level=INFO
-      '';
-      ExecStop = "${pkgs.fuse}/bin/fusermount -u /mnt/shared-crypt";
-      Restart = "always";
-      RestartSec = "10";
-     };
-   };
 
   };
 }
