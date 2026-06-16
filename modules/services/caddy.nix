@@ -69,5 +69,17 @@
       '';
     };
 
+    virtualHosts."qbittorrent.iamabhay.fyi" = {
+      extraConfig = ''
+        reverse_proxy devil:8090
+      '';
+    };
+
+    virtualHosts."seerr.iamabhay.fyi" = {
+      extraConfig = ''
+        reverse_proxy devil:5055
+      '';
+    };
+
   };
 }

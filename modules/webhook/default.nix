@@ -22,6 +22,12 @@ in
     "daredevil-mac-address".owner = "webhook";
   };
 
+  sops.secrets."webhook-ssh-key" = {
+    key = "ssh-private-keys/homelab"; 
+    owner = "webhook";
+    mode = "0400";
+  };
+
   services.webhook = {
     enable = true;
     port = 9000;

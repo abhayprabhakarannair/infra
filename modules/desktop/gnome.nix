@@ -49,6 +49,9 @@
     evince
     gnome-text-editor
     gnome-calculator
+     
+    # --- Extra Apps ---
+    telegram-desktop
   ];
 
   # --- Exclude GNOME defaults ---

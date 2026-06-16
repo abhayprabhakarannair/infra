@@ -18,35 +18,38 @@
   };
 
   systemd.services = {
-
     rclone-media = {
-     description = "Rclone mount for Encrypted Media";
-     after = [ "network-online.target" ];
-     wants = [ "network-online.target" ];
-     wantedBy = [ "multi-user.target" ];
+      description = "Rclone mount for Encrypted Media";
+      after = [ "network-online.target" ];
+      wants = [ "network-online.target" ];
+      wantedBy = [ "multi-user.target" ];
 
-     preStart = ''
+      preStart = ''
         ${pkgs.util-linux}/bin/umount -l /mnt/media || true
         ${pkgs.coreutils}/bin/mkdir -p /mnt/media
       '';
 
-     serviceConfig = {
-      TimeoutStartSec = "600";
-      ExecStartPost = "${pkgs.bash}/bin/bash -c 'while ! ${pkgs.util-linux}/bin/mountpoint -q /mnt/media; do sleep 1; done'";
-      ExecStart = ''
-        ${pkgs.rclone}/bin/rclone mount homelab-storage-one-media:/ /mnt/media \
-          --config=${config.sops.secrets."rclone-conf".path} \
-          --vfs-cache-mode=full \
-          --vfs-cache-max-size=100G \
-          --allow-other \
-          --log-level=INFO
-      '';
-      ExecStop = "${pkgs.fuse}/bin/fusermount -u /mnt/media";
-      ExecStopPost = "-${pkgs.util-linux}/bin/umount -l /mnt/media";
-      Restart = "always";
-      RestartSec = "10";
-     };
-   };
+      serviceConfig = {
+        TimeoutStartSec = "600";
+        ExecStartPost = "${pkgs.bash}/bin/bash -c 'while ! ${pkgs.util-linux}/bin/mountpoint -q /mnt/media; do sleep 1; done'";
+        ExecStart = ''
+          ${pkgs.rclone}/bin/rclone mount homelab-storage-one-media:/ /mnt/media \
+            --config=${config.sops.secrets."rclone-conf".path} \
+            --vfs-cache-mode=full \
+            --vfs-cache-max-size=100G \
+            --vfs-read-chunk-size=16M \
+            --vfs-read-chunk-size-limit=512M \
+            --vfs-read-ahead=128M \
+            --buffer-size=32M \
+            --allow-other \
+            --log-level=INFO
+        '';
+        ExecStop = "${pkgs.fuse}/bin/fusermount -u /mnt/media";
+        ExecStopPost = "-${pkgs.util-linux}/bin/umount -l /mnt/media";
+        Restart = "always";
+        RestartSec = "10";
+      };
+    };
 
 
    #  rclone-immich = {
@@ -73,28 +76,52 @@
    # };
    #
    #
-   #  rclone-shared = {
-   #   description = "Rclone mount for Unencrypted Sharing Files";
-   #   after = [ "network-online.target" ];
-   #   wantedBy = [ "multi-user.target" ];
-   #
-   #   preStart = "${pkgs.coreutils}/bin/mkdir -p /mnt/shared";
-   #
-   #   serviceConfig = {
-   #    TimeoutStartSec = "30";
-   #    ExecStart = ''
-   #      ${pkgs.rclone}/bin/rclone mount homelab-storage-one:/shared /mnt/shared \
-   #        --config=${config.sops.secrets."rclone-conf".path} \
-   #        --vfs-cache-mode=full \
-   #        --vfs-cache-max-size=5G \
-   #        --allow-other \
-   #        --log-level=INFO
-   #    '';
-   #    ExecStop = "${pkgs.fuse}/bin/fusermount -u /mnt/shared";
-   #    Restart = "always";
-   #    RestartSec = "10";
-   #   };
-   # };
+
+    rclone-shared = {
+     description = "Rclone mount for Unncrypted Sharing Files";
+     after = [ "network-online.target" ];
+     wantedBy = [ "multi-user.target" ];
+
+     preStart = "${pkgs.coreutils}/bin/mkdir -p /mnt/shared";
+
+     serviceConfig = {
+      TimeoutStartSec = "30";
+      ExecStart = ''
+        ${pkgs.rclone}/bin/rclone mount homelab-storage-one-shared:/ /mnt/shared \
+          --config=${config.sops.secrets."rclone-conf".path} \
+          --vfs-cache-mode=full \
+          --vfs-cache-max-size=5G \
+          --allow-other \
+          --log-level=INFO
+      '';
+      ExecStop = "${pkgs.fuse}/bin/fusermount -u /mnt/shared";
+      Restart = "always";
+      RestartSec = "10";
+     };
+   };
+
+   rclone-shared-crypt = {
+     description = "Rclone mount for Encrypted Sharing Files";
+     after = [ "network-online.target" ];
+     wantedBy = [ "multi-user.target" ];
+
+     preStart = "${pkgs.coreutils}/bin/mkdir -p /mnt/shared-crypt";
+
+     serviceConfig = {
+      TimeoutStartSec = "30";
+      ExecStart = ''
+        ${pkgs.rclone}/bin/rclone mount homelab-storage-one-shared-crypt:/ /mnt/shared-crypt \
+          --config=${config.sops.secrets."rclone-conf".path} \
+          --vfs-cache-mode=full \
+          --vfs-cache-max-size=5G \
+          --allow-other \
+          --log-level=INFO
+      '';
+      ExecStop = "${pkgs.fuse}/bin/fusermount -u /mnt/shared-crypt";
+      Restart = "always";
+      RestartSec = "10";
+     };
+   };
 
   };
 }
