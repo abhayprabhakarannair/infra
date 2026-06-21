@@ -48,6 +48,8 @@
     
     extraOptions = [
       "--no-healthcheck"
+      "--security-opt"
+      "label=disable"
     ];
   };
 }
