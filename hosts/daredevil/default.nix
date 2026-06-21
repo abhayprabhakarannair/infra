@@ -12,13 +12,18 @@
     "${inputs.self}/hosts/shared/disko_os_encrypted.nix"
 
     "${inputs.self}/modules/core"
-    "${inputs.self}/modules/core/storage.nix"
     "${inputs.self}/modules/desktop"
     "${inputs.self}/modules/desktop/variables.nix"
     "${inputs.self}/modules/desktop/silentboot.nix"
     "${inputs.self}/modules/desktop/gnome.nix"
     "${inputs.self}/modules/desktop/virtualmachine.nix"
     "${inputs.self}/modules/desktop/controlroom.nix"
+
+    "${inputs.self}/modules/storage"
+    "${inputs.self}/modules/storage/private.nix"
+    "${inputs.self}/modules/storage/shared.nix"
+
+    "${inputs.self}/scripts/storage-sync"
 
     "${inputs.self}/users/abhay"
   ];

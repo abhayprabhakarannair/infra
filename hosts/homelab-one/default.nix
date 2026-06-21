@@ -12,6 +12,8 @@
 
     "${inputs.self}/modules/services/caddy.nix"
     "${inputs.self}/modules/services/vaultwarden.nix"
+    "${inputs.self}/modules/services/grafana"
+    "${inputs.self}/modules/services/grafana/alloy-hub.nix"
 
     "${inputs.self}/users/abhay"
   ];
@@ -56,7 +58,13 @@
 
   # -- Boot & Kernel configurations ---
   boot = {
+    kernelModules = [ "tcp_bbr" ];
     kernelPackages = pkgs.linuxPackages;
+    
+    kernel.sysctl = {
+      "net.core.default_qdisc" = "fq";
+      "net.ipv4.tcp_congestion_control" = "bbr";
+    };
 
     loader = {
       systemd-boot.enable = false;
