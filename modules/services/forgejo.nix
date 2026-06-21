@@ -9,6 +9,11 @@
     "d /srv/forgejo 0750 1000 1000 -"
   ];
 
+  environment.etc."forgejo-gitconfig".text = ''
+    [gpg]
+      format = ssh
+  '';
+
   virtualisation.oci-containers.containers.forgejo = {
     image = "codeberg.org/forgejo/forgejo:15";
     autoRemoveOnStop = false;
@@ -35,6 +40,7 @@
       "/srv/forgejo:/data"
       "/etc/localtime:/etc/localtime:ro"
       "/run/secrets/ssh-private-keys/forgejo-server-key:/data/forgejo-server-key:ro"
+      "/etc/forgejo-gitconfig:/etc/gitconfig:ro"
     ];
     
     extraOptions = [
