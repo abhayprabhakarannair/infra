@@ -3,7 +3,7 @@
 {
   sops.secrets."ssh-private-keys/forgejo-server-key" = {
     owner = "abhay";
-    mode = "0440"; 
+    mode = "0400"; 
   };
 
   systemd.tmpfiles.rules = [
