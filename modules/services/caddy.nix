@@ -1,5 +1,25 @@
 { config, pkgs, ... }:
 
+let
+  proxyServices = {
+    "jellyfin.iamabhay.fyi"    = "devil:8096";
+    "music.iamabhay.fyi"       = "devil:4533";
+    "stash.iamabhay.fyi"       = "devil:9999";
+    "sonarr.iamabhay.fyi"      = "devil:8989";
+    "radarr.iamabhay.fyi"      = "devil:7878";
+    "sabnzbd.iamabhay.fyi"     = "devil:8080";
+    "prowlarr.iamabhay.fyi"    = "devil:9696";
+    "whisparr.iamabhay.fyi"    = "devil:6969";
+    "qbittorrent.iamabhay.fyi" = "devil:8090";
+    "seerr.iamabhay.fyi"       = "devil:5055";
+    "photos.iamabhay.fyi"      = "devil:2283";
+    
+    "vault.iamabhay.fyi"       = "127.0.0.1:8222";
+    "grafana.iamabhay.fyi"     = "127.0.0.1:3000";
+    "loki.iamabhay.fyi"        = "127.0.0.1:3100";
+    "prometheus.iamabhay.fyi"  = "127.0.0.1:9090";
+  };
+in
 {
   sops.secrets."caddy-basic-auth" = {
     owner = config.services.caddy.user;
@@ -10,76 +30,14 @@
   services.caddy = {
     enable = true;
 
-    virtualHosts."vault.iamabhay.fyi" = {
+    virtualHosts = builtins.mapAttrs (domain: backend: {
       extraConfig = ''
-        reverse_proxy 127.0.0.1:8222
+        reverse_proxy ${backend}
+        
+        log {
+            format json
+        }
       '';
-    };
-
-    virtualHosts."jellyfin.iamabhay.fyi" = {
-      extraConfig = ''
-        reverse_proxy devil:8096
-      '';
-    };
-
-    virtualHosts."music.iamabhay.fyi" = {
-      extraConfig = ''
-        reverse_proxy devil:4533
-      '';
-    };
-
-   
-    virtualHosts."stash.iamabhay.fyi" = {
-      extraConfig = ''
-        reverse_proxy devil:9999
-      '';
-    };
-
-
-    virtualHosts."sonarr.iamabhay.fyi" = {
-      extraConfig = ''
-        reverse_proxy devil:8989
-      '';
-    };
-
-
-    virtualHosts."radarr.iamabhay.fyi" = {
-      extraConfig = ''
-        reverse_proxy devil:7878
-      '';
-    };
-
-
-    virtualHosts."sabnzbd.iamabhay.fyi" = {
-      extraConfig = ''
-        reverse_proxy devil:8080
-      '';
-    };
-
-
-    virtualHosts."prowlarr.iamabhay.fyi" = {
-      extraConfig = ''
-        reverse_proxy devil:9696
-      '';
-    };
-
-    virtualHosts."whisparr.iamabhay.fyi" = {
-      extraConfig = ''
-        reverse_proxy devil:6969
-      '';
-    };
-
-    virtualHosts."qbittorrent.iamabhay.fyi" = {
-      extraConfig = ''
-        reverse_proxy devil:8090
-      '';
-    };
-
-    virtualHosts."seerr.iamabhay.fyi" = {
-      extraConfig = ''
-        reverse_proxy devil:5055
-      '';
-    };
-
+    }) proxyServices;
   };
 }

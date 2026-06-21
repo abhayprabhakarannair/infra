@@ -51,7 +51,6 @@
     gnome-calculator
      
     # --- Extra Apps ---
-    telegram-desktop
   ];
 
   # --- Exclude GNOME defaults ---
@@ -59,4 +58,5 @@
     gnome-console
     gnome-terminal
   ];
+
 }

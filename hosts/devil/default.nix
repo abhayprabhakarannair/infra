@@ -13,7 +13,6 @@
     ./disko_games.nix
 
     "${inputs.self}/modules/core"
-    "${inputs.self}/modules/core/storage.nix"
     "${inputs.self}/modules/desktop"
     "${inputs.self}/modules/desktop/variables.nix"
     "${inputs.self}/modules/desktop/silentboot.nix"
@@ -22,10 +21,20 @@
     "${inputs.self}/modules/desktop/virtualmachine.nix"
     "${inputs.self}/modules/desktop/controlroom.nix"
 
+    "${inputs.self}/modules/storage"
+    "${inputs.self}/modules/storage/media.nix"
+    "${inputs.self}/modules/storage/immich.nix"
+    "${inputs.self}/modules/storage/private.nix"
+    "${inputs.self}/modules/storage/shared.nix"
+
+    "${inputs.self}/scripts/storage-sync"
+
     "${inputs.self}/modules/services/jellyfin.nix"
     "${inputs.self}/modules/services/navidrome.nix"
     "${inputs.self}/modules/services/stash.nix"
     "${inputs.self}/modules/services/arr-stack.nix"
+    "${inputs.self}/modules/services/immich.nix"
+    "${inputs.self}/modules/services/grafana/alloy-node.nix"
 
     "${inputs.self}/users/abhay"
   ];
@@ -55,8 +64,15 @@
 
   # -- Boot & Kernel configurations ---
   boot = {
+    kernelModules = [ "tcp_bbr" ];
     kernelParams = ["amd_pstate=active"];
     kernelPackages = pkgs.linuxPackages_zen;
+
+    kernel.sysctl = {
+      "net.core.default_qdisc" = "fq";
+      "net.ipv4.tcp_congestion_control" = "bbr";
+    };
+
     loader = {
       efi.canTouchEfiVariables = true;
 
