@@ -12,6 +12,7 @@
 
     "${inputs.self}/modules/services/caddy.nix"
     "${inputs.self}/modules/services/vaultwarden.nix"
+    "${inputs.self}/modules/services/forgejo.nix"
     "${inputs.self}/modules/services/grafana"
     "${inputs.self}/modules/services/grafana/alloy-hub.nix"
 
@@ -29,6 +30,9 @@
   networking.useNetworkd = true;
   systemd.network.enable = true;
   networking.enableIPv6 = true;
+  networking.firewall.allowedTCPPorts = [ 
+    2442 80 443 2222
+  ];
 
   # --- WAN (Public Internet Interface) ---
   systemd.network.networks."10-wan" = {
