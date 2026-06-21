@@ -12,6 +12,8 @@
   environment.etc."forgejo-gitconfig".text = ''
     [gpg]
       format = ssh
+    [user]
+      signingkey = /data/forgejo-server-key
   '';
 
   virtualisation.oci-containers.containers.forgejo = {
@@ -40,8 +42,8 @@
       "/srv/forgejo:/data"
       "/etc/localtime:/etc/localtime:ro"
       "/run/secrets/ssh-private-keys/forgejo-server-key:/data/forgejo-server-key:ro"
-      "/etc/forgejo-gitconfig:/etc/gitconfig:ro"
-    ];
+      "/etc/forgejo-gitconfig:/data/git/.gitconfig:ro"   
+      ];
     
     extraOptions = [
       "--no-healthcheck"
