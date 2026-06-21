@@ -15,6 +15,7 @@ let
     "photos.iamabhay.fyi"      = "devil:2283";
     
     "vault.iamabhay.fyi"       = "127.0.0.1:8222";
+    "git.iamabhay.fyi"         = "127.0.0.1:3333";
     "grafana.iamabhay.fyi"     = "127.0.0.1:3000";
     "loki.iamabhay.fyi"        = "127.0.0.1:3100";
     "prometheus.iamabhay.fyi"  = "127.0.0.1:9090";

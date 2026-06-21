@@ -64,6 +64,13 @@
       IdentitiesOnly = "yes";
     };
 
+    "git.iamabhay.fyi" = {
+      User = "abhay";
+      Port = 2222;
+      IdentityFile = "/run/secrets/ssh-private-keys/forge";
+      IdentitiesOnly = "yes";
+    };
+
    };
   };
 

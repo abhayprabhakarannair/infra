@@ -17,4 +17,10 @@
     mode = "0400";
   };
 
+  sops.secrets."ssh-private-keys/forge" = {
+    owner = config.users.users.abhay.name;
+    group = config.users.users.abhay.group;
+    mode = "0400";
+  };
+
 }
