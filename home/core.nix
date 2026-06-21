@@ -5,9 +5,19 @@
       user = {
         name = "abhayprabhakarannair";
         email = "abhayprabhakarannair@gmail.com";
+	signingkey = "/run/secrets/ssh-private-keys/forge";
       };
       init = {
         defaultBranch = "main";
+      };
+      gpg = {
+        format = "ssh";
+	ssh = {
+          allowedSignersFile = "/etc/git/allowed_signers";
+        };
+      };
+      commit = {
+        gpgsign = true;
       };
     };
   };
