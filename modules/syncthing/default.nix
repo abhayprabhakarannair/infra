@@ -23,16 +23,17 @@ in
     settings = {
       devices = {
         "devil" = { id = devices.devil; };
+        "daredevil" = { id = devices.daredevil; };
         "oneplus-13" = { id = devices.oneplus13; };
       };
       folders = {
         "Private" = {
           path = "/home/${username}/Sync/Private";
-          devices = [ "devil" "oneplus-13" ];
+          devices = [ "devil" "daredevil" "oneplus-13" ];
         };
         "Shared" = {
           path = "/home/${username}/Sync/Shared";
-          devices = [ "devil" "oneplus-13" ];
+          devices = [ "devil" "daredevil" "oneplus-13" ];
         };
       };
     };
