@@ -21,7 +21,7 @@
     
     volumes = [
       "/srv/navidrome:/data"
-      "/mnt/media/music:/music:ro"
+      "/mnt/homelab/media/music:/music:ro"
     ];
     
     extraOptions = [
@@ -31,7 +31,7 @@
   };
 
   systemd.services.podman-navidrome = {
-    after = [ "rclone-media.service" ];
-    requires = [ "rclone-media.service" ];
+    after = [ "rclone-homelab.service" ];
+    requires = [ "rclone-homelab.service" ];
   };
 }

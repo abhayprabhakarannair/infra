@@ -11,6 +11,7 @@
     ./hardware.nix
     "${inputs.self}/hosts/shared/disko_os_encrypted.nix"
     ./disko_games.nix
+    ./storage.nix
 
     "${inputs.self}/modules/core"
     "${inputs.self}/modules/desktop"
@@ -20,14 +21,6 @@
     "${inputs.self}/modules/desktop/gaming.nix"
     "${inputs.self}/modules/desktop/virtualmachine.nix"
     "${inputs.self}/modules/desktop/controlroom.nix"
-
-    "${inputs.self}/modules/storage"
-    "${inputs.self}/modules/storage/media.nix"
-    "${inputs.self}/modules/storage/immich.nix"
-    "${inputs.self}/modules/storage/private.nix"
-    "${inputs.self}/modules/storage/shared.nix"
-
-    "${inputs.self}/scripts/storage-sync"
 
     "${inputs.self}/modules/services/jellyfin.nix"
     "${inputs.self}/modules/services/navidrome.nix"
@@ -51,15 +44,15 @@
   # --- Hostname ---
   networking.hostName = "devil";
 
-  # --- Networking and Wake on LAN ---
+  # --- Networking & Wake on LAN ---
   networking.interfaces.enp14s0.wakeOnLan.enable = true;
   networking.networkmanager = {
-  	enable = true;
-  	settings = {
-    	connection = {
-      		"ethernet.wake-on-lan" = "magic";
-    		};
-  	};
+    enable = true;
+    settings = {
+    connection = {
+	"ethernet.wake-on-lan" = "magic";
+      };
+    };
   };
 
   # -- Boot & Kernel configurations ---

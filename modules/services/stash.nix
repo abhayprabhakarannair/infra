@@ -15,7 +15,7 @@
     
     volumes = [
       "/srv/stash:/root/.stash"
-      "/mnt/media/.spice:/data:ro"
+      "/mnt/homelab/media/.spice:/data:ro"
     ];
     
     extraOptions = [
@@ -25,7 +25,7 @@
   };
 
   systemd.services.podman-stash = {
-    after = [ "rclone-media.service" ];
-    requires = [ "rclone-media.service" ];
+    after = [ "rclone-homelab.service" ];
+    requires = [ "rclone-homelab.service" ];
   };
 }

@@ -1,7 +1,8 @@
-{ config, pkgs, ... }:
+{ config, pkgs, inputs, ... }:
 
 {
-  sops.secrets."gluetun-env" = {
+  sops.secrets."gluetun/env" = {
+    sopsFile = "${inputs.self}/secrets/service-secrets.yaml";
     mode = "0440";
     uid = 1000;
     gid = 1000;
@@ -30,7 +31,7 @@
 	"/srv/gluetun/wg0.conf:/gluetun/wireguard/wg0.conf"
       ];
       
-      environmentFiles = [ config.sops.secrets."gluetun-env".path ];
+      environmentFiles = [ config.sops.secrets."gluetun/env".path ];
 
       environment = {
         VPN_SERVICE_PROVIDER = "custom";
@@ -77,7 +78,7 @@
       ports = [ "8989:8989" ];
       volumes = [ 
         "/srv/sonarr:/config"
-        "/mnt/media:/media"         
+        "/mnt/homelab/media:/media"         
         "/srv/downloads:/downloads" 
       ];
       environment = { PUID = "1000"; PGID = "1000"; TZ = "Asia/Kolkata"; };
@@ -90,7 +91,7 @@
       ports = [ "7878:7878" ];
       volumes = [ 
         "/srv/radarr:/config"
-        "/mnt/media:/media"         
+        "/mnt/homelab/media:/media"         
         "/srv/downloads:/downloads" 
       ];
       environment = { PUID = "1000"; PGID = "1000"; TZ = "Asia/Kolkata"; };
@@ -103,7 +104,7 @@
       ports = [ "6969:6969" ];
       volumes = [ 
         "/srv/whisparr:/config"
-        "/mnt/media:/media"         
+        "/mnt/homelab/media:/media"         
         "/srv/downloads:/downloads" 
       ];
       environment = { PUID = "1000"; PGID = "1000"; TZ = "Asia/Kolkata"; };
@@ -164,17 +165,17 @@
   };
 
   systemd.services.podman-whisparr = {
-    after = [ "rclone-media.service" ];
-    requires = [ "rclone-media.service" ];
+    after = [ "rclone-homelab.service" ];
+    requires = [ "rclone-homelab.service" ];
   };
 
   systemd.services.podman-sonarr = {
-    after = [ "rclone-media.service" ];
-    requires = [ "rclone-media.service" ];
+    after = [ "rclone-homelab.service" ];
+    requires = [ "rclone-homelab.service" ];
   };
 
   systemd.services.podman-radarr = {
-    after = [ "rclone-media.service" ];
-    requires = [ "rclone-media.service" ];
+    after = [ "rclone-homelab.service" ];
+    requires = [ "rclone-homelab.service" ];
   };
 }

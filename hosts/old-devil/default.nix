@@ -6,6 +6,7 @@
 
     ./hardware.nix
     "${inputs.self}/hosts/shared/disko_os_server.nix"
+    ./storage.nix
 
     "${inputs.self}/modules/core"
     "${inputs.self}/modules/webhook"
@@ -79,6 +80,20 @@
     2442 80 443 8043 8088 8843 29811 29812 29813 29814 29815 29816 29817 8085 53 9000
   ];
 
+
+  # Temp
+  systemd.services.wol-relay = {
+    description = "Wake-on-LAN UDP Relay (Tailscale to Physical LAN)";
+    after = [ "network-online.target" "tailscaled.service" ];
+    wants = [ "network-online.target" ];
+    wantedBy = [ "multi-user.target" ];
+    serviceConfig = {
+      Type = "simple";
+      ExecStart = "${pkgs.socat}/bin/socat UDP4-LISTEN:9,fork UDP4-DATAGRAM:192.168.0.255:9,broadcast";
+      Restart = "always";
+      RestartSec = "10s";
+    };
+  };
 
   # --- File system & cleanups ---
   services.btrfs.autoScrub = {

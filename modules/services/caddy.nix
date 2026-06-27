@@ -22,7 +22,8 @@ let
   };
 in
 {
-  sops.secrets."caddy-basic-auth" = {
+  sops.secrets."caddy/basic-auth-password" = {
+    sopsFile = "${inputs.self}/secrets/service-secrets.yaml";
     owner = config.services.caddy.user;
     group = config.services.caddy.group;
     restartUnits = [ "caddy.service" ]; 

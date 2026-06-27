@@ -78,6 +78,7 @@
       };
     };
   };
+
   # --- File system & cleanups ---
   services.btrfs.autoScrub = {
     enable = true;

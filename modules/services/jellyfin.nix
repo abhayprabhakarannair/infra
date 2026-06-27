@@ -15,7 +15,7 @@
     
     volumes = [
       "/srv/jellyfin:/config"
-      "/mnt/media:/media" 
+      "/mnt/homelab/media:/media" 
     ];
     
     extraOptions = [
@@ -26,7 +26,7 @@
   };
 
   systemd.services.podman-jellyfin = {
-    after = [ "rclone-media.service" ];
-    requires = [ "rclone-media.service" ];
+    after = [ "rclone-homelab.service" ];
+    requires = [ "rclone-homelab.service" ];
   };
 }

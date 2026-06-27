@@ -1,20 +1,22 @@
-{ config, pkgs, ... }:
+{ config, pkgs, inputs, ... }:
 
 let
   immichVersion = "v2";
   
-  uploadLocation = "/mnt/immich/library"; 
+  uploadLocation = "/mnt/homelab/immich/library"; 
   
   dbDataLocation = "/srv/immich/postgres";
   modelCacheLocation = "/srv/immich/model-cache";
 in
 {
-  sops.secrets."immich-db-password" = {};
+  sops.secrets."immich/db-password" = {
+    sopsFile = "${inputs.self}/secrets/service-secrets.yaml";
+  };
 
   sops.templates."immich.env" = {
     content = ''
-      DB_PASSWORD=${config.sops.placeholder."immich-db-password"}
-      POSTGRES_PASSWORD=${config.sops.placeholder."immich-db-password"}
+      DB_PASSWORD=${config.sops.placeholder."immich/db-password"}
+      POSTGRES_PASSWORD=${config.sops.placeholder."immich/db-password"}
     '';
     restartUnits = [ 
       "podman-immich-database.service" 
@@ -96,20 +98,20 @@ in
   };
 
   systemd.services.podman-immich-server = {
-    after = [ "rclone-immich.service" ];
-    requires = [ "rclone-immich.service" ];
-    bindsTo = [ "rclone-immich.service" ];
+    after = [ "rclone-homelab.service" ];
+    requires = [ "rclone-homelab.service" ];
+    bindsTo = [ "rclone-homelab.service" ];
     unitConfig = {
-      RequiresMountsFor = "/mnt/immich";
+      RequiresMountsFor = "/mnt/homelab/immich";
     };  
   };
 
   systemd.services.podman-immich-machine-learning = {
-    after = [ "rclone-immich.service" ];
-    requires = [ "rclone-immich.service" ];
-    bindsTo = [ "rclone-immich.service" ];
+    after = [ "rclone-homelab.service" ];
+    requires = [ "rclone-homelab.service" ];
+    bindsTo = [ "rclone-homelab.service" ];
     unitConfig = {
-      RequiresMountsFor = "/mnt/immich";
+      RequiresMountsFor = "/mnt/homelab/immich";
     };  
   };
 }
