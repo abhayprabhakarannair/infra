@@ -24,16 +24,17 @@ in
       devices = {
         "devil" = { id = devices.devil; };
         "daredevil" = { id = devices.daredevil; };
+        "old-devil" = { id = devices.oldDevil; };
         "oneplus-13" = { id = devices.oneplus13; };
       };
       folders = {
         "Private" = {
           path = "/home/${username}/Sync/Private";
-          devices = [ "devil" "daredevil" "oneplus-13" ];
+          devices = [ "devil" "daredevil" "old-devil" "oneplus-13" ];
         };
         "Shared" = {
           path = "/home/${username}/Sync/Shared";
-          devices = [ "devil" "daredevil" "oneplus-13" ];
+          devices = [ "devil" "daredevil" "old-devil" "oneplus-13" ];
         };
       };
     };

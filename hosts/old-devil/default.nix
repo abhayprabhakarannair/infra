@@ -14,7 +14,7 @@
     "${inputs.self}/modules/desktop/controlroom.nix"
     "${inputs.self}/modules/services/omada-controller.nix"
     "${inputs.self}/modules/services/technitium.nix"
-
+    "${inputs.self}/modules/services/grafana/alloy-node.nix"
 
     "${inputs.self}/users/abhay"
   ];
