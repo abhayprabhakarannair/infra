@@ -6,6 +6,7 @@
 
     ./hardware.nix
     "${inputs.self}/hosts/shared/disko_os_server_bios.nix"
+    ./storage.nix
 
     "${inputs.self}/modules/core"
     "${inputs.self}/modules/server/podman.nix"

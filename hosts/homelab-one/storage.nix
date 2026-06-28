@@ -1,4 +1,4 @@
-{conifg, pkgs, inputs, ...}:
+{config, pkgs, inputs, ...}:
 
 {
   imports = [
@@ -21,7 +21,7 @@
       Type = "oneshot";
       ExecStart = ''
         ${pkgs.rclone}/bin/rclone sync homelab-storage-one:/ b2-storage:homelab-storage-one-replica/ \
-          --config=${config.sops.secrets."rclone-vps.conf".path} \
+          --config=${config.sops.secrets."rclone-backup-node.conf".path} \
           --fast-list \
           --transfers 4 \
           --checkers 8 \
