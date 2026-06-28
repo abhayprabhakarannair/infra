@@ -16,6 +16,7 @@
     "${inputs.self}/modules/services/forgejo.nix"
     "${inputs.self}/modules/services/grafana"
     "${inputs.self}/modules/services/grafana/alloy-hub.nix"
+    "${inputs.self}/modules/services/open-web-ui.nix"
 
     "${inputs.self}/users/abhay"
   ];

@@ -28,6 +28,7 @@
     "${inputs.self}/modules/services/arr-stack.nix"
     "${inputs.self}/modules/services/immich.nix"
     "${inputs.self}/modules/services/grafana/alloy-node.nix"
+    "${inputs.self}/modules/services/ollama.nix"
 
     "${inputs.self}/users/abhay"
   ];
