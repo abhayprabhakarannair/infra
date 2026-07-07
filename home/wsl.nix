@@ -2,6 +2,27 @@
 
   programs.git = {
     enable = true;
+    ignores = [
+      # Editor artifacts
+      ".vscode/"
+      ".idea/"
+      "*.swp"
+      "*.swo"
+      
+      # Nix specific
+      "result"
+      "result-*"
+      ".direnv/"
+      
+      # OS specific
+      ".DS_Store"
+      "Thumbs.db"
+
+      # Custom
+      ".github"
+      "AI_*.md"
+      "package-lock.json"
+    ];
     settings = {
       user = {
         name = "Abhay Nair";
