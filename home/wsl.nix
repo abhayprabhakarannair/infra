@@ -108,6 +108,12 @@
     };
   };
 
+  # --- Mise-En-Place ---
+  programs.mise = {
+    enable = true;
+    enableFishIntegration = true;
+  };
+
   home.username = "abhay";
   home.homeDirectory = "/home/abhay";
 
