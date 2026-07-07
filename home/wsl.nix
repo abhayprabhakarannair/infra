@@ -13,6 +13,8 @@
       "result"
       "result-*"
       ".direnv/"
+      "mise.toml"
+      ".envrc"
       
       # OS specific
       ".DS_Store"
