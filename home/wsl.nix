@@ -6,7 +6,7 @@
       user = {
         name = "Abhay Nair";
         email = "anair@korewireless.com";
-	signingkey = "${config.home.homeDirectory}/.ssh/id_ed25519_github.pub";
+	signingkey = "${config.home.homeDirectory}/.ssh/id_ed25519_git.pub";
       };
       init = {
         defaultBranch = "main";
@@ -38,7 +38,7 @@
 
     "gitlab.com" = {
       User = "git";
-      identityFile = "${config.home.homeDirectory}/.ssh/id_ed25519_github";
+      identityFile = "${config.home.homeDirectory}/.ssh/id_ed25519_git";
       IdentitiesOnly = "yes";
       AddKeysToAgent = "yes";
     };

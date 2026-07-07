@@ -133,7 +133,7 @@
           overlays = [systemOverlay];
         };
         extraSpecialArgs = {inherit inputs;};
-        modules = [./home/desktop/wsl.nix];
+        modules = [./home/wsl.nix];
       };
     };
   };
