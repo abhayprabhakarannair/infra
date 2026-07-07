@@ -116,6 +116,12 @@
     enableFishIntegration = true;
   };
 
+
+  # --- Packages ---
+  home.packages = with pkgs [
+   icu
+  ];
+
   home.username = "abhay";
   home.homeDirectory = "/home/abhay";
 
