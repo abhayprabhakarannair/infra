@@ -28,21 +28,22 @@
       ports = [ "8090:8090" ]; 
       volumes = [ 
         "/srv/gluetun:/gluetun" 
-	"/srv/gluetun/wg0.conf:/gluetun/wireguard/wg0.conf"
       ];
       
       environmentFiles = [ config.sops.secrets."gluetun/env".path ];
 
       environment = {
-        VPN_SERVICE_PROVIDER = "custom";
-        VPN_TYPE = "wireguard";
+        VPN_SERVICE_PROVIDER = "private internet access";
+        VPN_TYPE = "openvpn";
+	SERVER_REGIONS = "Netherlands";
         VPN_PORT_FORWARDING = "on";
-        VPN_PORT_FORWARDING_PROVIDER = "private internet access";
-	SERVER_NAME = "Server-11666-3a";
+        OPENVPN_MSSFIX = "1280";
+	OPENVPN_CUSTOM_OPTIONS = "--tun-mtu 1300 --mssfix 1260";
       };
       extraOptions = [
         "--restart=always"
         "--cap-add=NET_ADMIN"
+	"--cap-add=NET_RAW"
         "--device=/dev/net/tun:/dev/net/tun"
       ];
     };

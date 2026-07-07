@@ -29,6 +29,7 @@
     "${inputs.self}/modules/services/immich.nix"
     "${inputs.self}/modules/services/grafana/alloy-node.nix"
     "${inputs.self}/modules/services/ollama.nix"
+    "${inputs.self}/modules/services/net-ups-server.nix"
 
     "${inputs.self}/users/abhay"
   ];

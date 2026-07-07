@@ -2,6 +2,8 @@
 
 let
   proxyServices = {
+    "home.iamabhay.fyi"        = "old-devil:8123";
+
     "jellyfin.iamabhay.fyi"    = "devil:8096";
     "music.iamabhay.fyi"       = "devil:4533";
     "stash.iamabhay.fyi"       = "devil:9999";

@@ -15,6 +15,8 @@
     "${inputs.self}/modules/services/omada-controller.nix"
     "${inputs.self}/modules/services/technitium.nix"
     "${inputs.self}/modules/services/grafana/alloy-node.nix"
+    "${inputs.self}/modules/services/net-ups-client.nix"
+    "${inputs.self}/modules/services/home-assistant.nix"
 
     "${inputs.self}/users/abhay"
   ];
