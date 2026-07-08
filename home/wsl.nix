@@ -125,7 +125,7 @@
 
   # --- ENV Variables ---
   home.sessionVariables = {
-  }
+  };
 
   home.username = "abhay";
   home.homeDirectory = "/home/abhay";
