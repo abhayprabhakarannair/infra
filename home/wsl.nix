@@ -122,6 +122,11 @@
    icu
   ];
 
+  # --- ENV Variables ---
+  home.sessionVariables = {
+    LD_LIBRARY_PATH = "$HOME/.nix-profile/lib";
+  }
+
   home.username = "abhay";
   home.homeDirectory = "/home/abhay";
 
