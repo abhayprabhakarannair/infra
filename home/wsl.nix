@@ -87,7 +87,6 @@
       ll = "ls -larth";
       hrs = "home-manager switch --flake ~/Projects/infra#$(whoami)@$(cat /etc/hostname)";
       ve = "nvim .";
-      mise = "env LD_LIBRARY_PATH=$HOME/.nix-profile/lib:$LD_LIBRARY_PATH mise";
     };
 
     interactiveShellInit = ''
@@ -125,6 +124,7 @@
 
   # --- ENV Variables ---
   home.sessionVariables = {
+    LD_LIBRARY_PATH = "${config.home.profileDirectory}/lib:${"$"}{LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}";
   };
 
   home.username = "abhay";
