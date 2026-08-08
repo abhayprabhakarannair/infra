@@ -1,15 +1,20 @@
-{ config, pkgs, ... }:
+{ config, pkgs, inputs, ... }:
 
 let
   runnerData = "/srv/forgejo-runner";
   hostname = config.networking.hostName;
 in {
-  sops.secrets."forgejo/${hostname}-uuid" = {};
-  sops.secrets."forgejo/${hostname}-token" = {};
+  sops.secrets."forgejo/${hostname}-uuid" = {
+    sopsFile = "${inputs.self}/secrets/service-secrets.yaml";
+  };
+  sops.secrets."forgejo/${hostname}-token" = {
+    sopsFile = "${inputs.self}/secrets/service-secrets.yaml";
+  };
 
   systemd.services.forgejo-runner = {
     description = "Forgejo Actions Runner";
     after = [ "network-online.target" ];
+    wants = [ "network-online.target" ];
     wantedBy = [ "multi-user.target" ];
     path = [ pkgs.git pkgs.nodejs_24 ];
 
