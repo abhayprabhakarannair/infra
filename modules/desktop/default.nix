@@ -1,7 +1,9 @@
-{pkgs, inputs, ...}: {
-
- imports =  [ "${inputs.self}/modules/neovim" "${inputs.self}/modules/kitty" ];
-
+{
+  pkgs,
+  inputs,
+  ...
+}: {
+  imports = ["${inputs.self}/modules/desktop/nixvim.nix" "${inputs.self}/modules/kitty"];
 
   # --- Global fonts ---
   fonts = {
@@ -21,8 +23,14 @@
     mkpasswd
     ripgrep
     git
+    gcc
+    gnumake
+    rustup
+    unzip
+    curl
+    alejandra
+    stylua
   ];
-
 
   # --- FISH across all desktops ---
   programs.fish.enable = true;
@@ -56,4 +64,7 @@
     alsa.support32Bit = true;
     pulse.enable = true;
   };
+
+  # --- LD ---
+  programs.nix-ld.enable = true;
 }

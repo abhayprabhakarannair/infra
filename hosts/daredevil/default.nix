@@ -7,6 +7,7 @@
     inputs.disko.nixosModules.disko
     inputs.home-manager.nixosModules.home-manager
     inputs.sops-nix.nixosModules.sops
+    inputs.nixvim.nixosModules.nixvim
 
     ./hardware.nix
     "${inputs.self}/hosts/shared/disko_os_encrypted.nix"

@@ -68,4 +68,22 @@
       };
     };
   };
+
+  # --- Mise-En-Place ---
+  programs.mise = {
+    enable = true;
+    enableFishIntegration = true;
+    globalConfig = {
+             tools = {
+            node = "lts";
+            python = ["latest"];
+          };
+   
+        };
+  };
+
+home.sessionPath = [
+    "$HOME/.cargo/bin"
+  ];
+
 }

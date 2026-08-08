@@ -1,15 +1,12 @@
-{ pkgs, inputs, ... }:
-
-let
-  wrappedNeovim = inputs.wrappers.wrappers.neovim.wrap {
-    pkgs = pkgs.unstable;
-    settings.config_directory = ./.;
-    runtimePkgs = with pkgs.unstable; [ nixd ];
-  };
-in
 {
-  environment.systemPackages = [
-    wrappedNeovim
-  ];
+  imports = [
+    ./options.nix
+    ./keymaps.nix
 
+    ./plugins/lsp.nix
+    ./plugins/conform.nix
+    ./plugins/blink.nix
+    ./plugins/mini.nix
+    ./plugins/lualine.nix
+  ];
 }

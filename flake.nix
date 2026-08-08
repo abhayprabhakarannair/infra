@@ -24,6 +24,10 @@
       url = "github:BirdeeHub/nix-wrapper-modules";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    nixvim = {
+      url = "github:nix-community/nixvim";
+    };
   };
 
   outputs = {
@@ -33,6 +37,7 @@
     home-manager,
     sops-nix,
     wrappers,
+    nixvim,
     ...
   } @ inputs: let
     # --- Default username & WSL host ---
@@ -101,7 +106,6 @@
         ];
       };
 
-
       # Old Laptop
       old-devil = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
@@ -111,7 +115,6 @@
           ./hosts/old-devil/default.nix
         ];
       };
-
 
       # Homelab One (Hetzner alpha node)
       homelab-one = nixpkgs.lib.nixosSystem {
