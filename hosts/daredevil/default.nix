@@ -21,6 +21,8 @@
     "${inputs.self}/modules/desktop/virtualmachine.nix"
     "${inputs.self}/modules/desktop/controlroom.nix"
 
+    "${inputs.self}/modules/services/forgejo-runner.nix"
+
     "${inputs.self}/users/abhay"
   ];
 

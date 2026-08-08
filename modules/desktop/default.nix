@@ -30,6 +30,7 @@
     curl
     alejandra
     stylua
+    zlib
   ];
 
   # --- FISH across all desktops ---
@@ -65,6 +66,4 @@
     pulse.enable = true;
   };
 
-  # --- LD ---
-  programs.nix-ld.enable = true;
 }

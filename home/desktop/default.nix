@@ -60,8 +60,8 @@
   # --- DIR Env ---
   programs.direnv = {
     enable = true;
-    nix-direnv.enable = true; 
-    
+    nix-direnv.enable = true;
+
     config = {
       global = {
         hide_env_diff = true;
@@ -69,21 +69,7 @@
     };
   };
 
-  # --- Mise-En-Place ---
-  programs.mise = {
-    enable = true;
-    enableFishIntegration = true;
-    globalConfig = {
-             tools = {
-            node = "lts";
-            python = ["latest"];
-          };
-   
-        };
-  };
-
-home.sessionPath = [
+  home.sessionPath = [
     "$HOME/.cargo/bin"
   ];
-
 }

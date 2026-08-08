@@ -11,6 +11,9 @@
     fastfetch
     wl-clipboard
     tela-icon-theme
+    nodejs_24
+  python314
+  pi-coding-agent
   ];
 
 
