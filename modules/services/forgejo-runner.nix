@@ -6,9 +6,13 @@ let
 in {
   sops.secrets."forgejo/${hostname}-uuid" = {
     sopsFile = "${inputs.self}/secrets/service-secrets.yaml";
+    owner = "1000";
+    mode = "0400";
   };
   sops.secrets."forgejo/${hostname}-token" = {
     sopsFile = "${inputs.self}/secrets/service-secrets.yaml";
+    owner = "1000";
+    mode = "0400";
   };
 
   systemd.services.forgejo-runner = {
