@@ -45,7 +45,7 @@ CONFIG_EOF
       ExecStart = "${pkgs.forgejo-runner}/bin/forgejo-runner daemon -c ${runnerData}/config.yml";
       WorkingDirectory = runnerData;
       User = "1000";
-      Group = "1000";
+      Group = "users";
       Restart = "always";
       RestartSec = 5;
     };
