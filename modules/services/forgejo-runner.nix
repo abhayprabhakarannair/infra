@@ -4,8 +4,8 @@ let
   runnerData = "/srv/forgejo-runner";
   hostname = config.networking.hostName;
 in {
-  sops.secrets."forgejo-runner-${hostname}-uuid" = {};
-  sops.secrets."forgejo-runner-${hostname}-token" = {};
+  sops.secrets."forgejo/${hostname}-uuid" = {};
+  sops.secrets."forgejo/${hostname}-token" = {};
 
   systemd.services.forgejo-runner = {
     description = "Forgejo Actions Runner";
@@ -29,8 +29,8 @@ server:
   connections:
     default:
       url: https://git.iamabhay.fyi
-      uuid: "$(cat ${config.sops.secrets."forgejo-runner-${hostname}-uuid".path})"
-      token: "$(cat ${config.sops.secrets."forgejo-runner-${hostname}-token".path})"
+      uuid: "$(cat ${config.sops.secrets."forgejo/${hostname}-uuid".path})"
+      token: "$(cat ${config.sops.secrets."forgejo/${hostname}-token".path})"
       labels:
         - "ubuntu-latest:host"
 CONFIG_EOF
