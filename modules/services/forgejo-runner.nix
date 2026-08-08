@@ -18,7 +18,7 @@ in {
     after = [ "network-online.target" ];
     wants = [ "network-online.target" ];
     wantedBy = [ "multi-user.target" ];
-    path = [ pkgs.git pkgs.nodejs_24 ];
+    path = [ pkgs.git pkgs.nodejs_24 pkgs.bash pkgs.coreutils ];
 
     preStart = ''
       cat > ${runnerData}/config.yml << CONFIG_EOF
