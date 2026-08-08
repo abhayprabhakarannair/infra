@@ -6,13 +6,11 @@ let
 in {
   sops.secrets."forgejo/${hostname}-uuid" = {
     sopsFile = "${inputs.self}/secrets/service-secrets.yaml";
-    owner = "1000";
-    mode = "0400";
+    owner = "abhay";
   };
   sops.secrets."forgejo/${hostname}-token" = {
     sopsFile = "${inputs.self}/secrets/service-secrets.yaml";
-    owner = "1000";
-    mode = "0400";
+    owner = "abhay";
   };
 
   systemd.services.forgejo-runner = {
@@ -56,6 +54,6 @@ CONFIG_EOF
   };
 
   systemd.tmpfiles.rules = [
-    "d ${runnerData} 0750 1000 1000 -"
+    "d ${runnerData} 0750 1000 users -"
   ];
 }

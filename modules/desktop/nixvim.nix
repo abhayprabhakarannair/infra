@@ -4,6 +4,7 @@
     defaultEditor = true;
     viAlias = true;
     vimAlias = true;
+    nixpkgs.source = inputs.nixvim.inputs.nixpkgs;
     imports = [
       "${inputs.self}/modules/neovim"
     ];
