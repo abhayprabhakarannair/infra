@@ -6,7 +6,7 @@
   ];
 
   virtualisation.oci-containers.containers.stash = {
-    image = "stashapp/stash:latest";
+    image = "stashapp/stash:latest@sha256:736e7cd8f61c815c08fd3048792982a61e619735bb1808cd279f0f2fa857c4b0";
     autoRemoveOnStop = false;
     
     ports = [

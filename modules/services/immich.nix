@@ -1,8 +1,6 @@
 { config, pkgs, inputs, ... }:
 
 let
-  immichVersion = "v3";
-  
   uploadLocation = "/mnt/homelab/immich/library"; 
   
   dbDataLocation = "/srv/immich/postgres";
@@ -32,7 +30,7 @@ in
   virtualisation.oci-containers.containers = {
     
     immich-database = {
-      image = "ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0@sha256:bcf63357191b76a916ae5eb93464d65c07511da41e3bf7a8416db519b40b1c23";
+      image = "ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0@sha256:b1d33572a9a0634aa6d344077467ad32847812a37fa3859f702952cba22a2f55";
       environmentFiles = [ config.sops.templates."immich.env".path ];
       autoRemoveOnStop = false;
       environment = {
@@ -50,7 +48,7 @@ in
     };
 
     immich-redis = {
-      image = "docker.io/valkey/valkey:9@sha256:4963247afc4cd33c7d3b2d2816b9f7f8eeebab148d29056c2ca4d7cbc966f2d9";
+      image = "docker.io/valkey/valkey:9@sha256:2f4a4b0a42a72569b40567fae9016dc54aa76736250be28120b5fced8050c0f0";
       autoRemoveOnStop = false;
       extraOptions = [
         "--restart=always"
@@ -59,7 +57,7 @@ in
     };
 
     immich-server = {
-      image = "ghcr.io/immich-app/immich-server:${immichVersion}";
+      image = "ghcr.io/immich-app/immich-server:v3@sha256:079cc990b26a88d71f96027341c67329cb11829d4c341ce33b3718fe0f84cbfa";
       dependsOn = [ "immich-database" "immich-redis" ];
       autoRemoveOnStop = false;
       environmentFiles = [ config.sops.templates."immich.env".path ];
@@ -84,7 +82,7 @@ in
     };
 
     immich-machine-learning = {
-      image = "ghcr.io/immich-app/immich-machine-learning:${immichVersion}";
+      image = "ghcr.io/immich-app/immich-machine-learning:v3@sha256:a25ddad7d6d2ab18a161176731dc171bb7e39c0e9dd3884fb1ec629dab535d05";
       autoRemoveOnStop = false;
       volumes = [
         "${modelCacheLocation}:/cache"

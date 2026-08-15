@@ -10,7 +10,7 @@
 
 
   virtualisation.oci-containers.containers.omada-controller = {
-      image = "mbentley/omada-controller:latest";
+      image = "mbentley/omada-controller:latest@sha256:a26d3decc71a63ab8b8eb96d5c7d159bef75fcc790ea7d2fa803bccc6a71bf57";
       autoRemoveOnStop = false;
       
       extraOptions = [

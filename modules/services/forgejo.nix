@@ -15,7 +15,7 @@
   '';
 
   virtualisation.oci-containers.containers.forgejo = {
-    image = "codeberg.org/forgejo/forgejo:15";
+    image = "codeberg.org/forgejo/forgejo:15@sha256:a788b5091352b309cbb85d987b48b2972d2536c6ac59fc2b01288358ba78d66a";
     autoRemoveOnStop = false;
     
     environment = {

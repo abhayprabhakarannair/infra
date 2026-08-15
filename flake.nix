@@ -96,6 +96,7 @@
       deploy = {
         type = "app";
         program = "${self.packages.${system}.deploy-rs}/bin/deploy";
+        meta.description = "Deploy NixOS configurations with auto-rollback";
       };
     });
 

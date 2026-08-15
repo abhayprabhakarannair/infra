@@ -10,7 +10,7 @@
   virtualisation.oci-containers.containers = {
     
     grafana = {
-      image = "grafana/grafana:latest";
+      image = "grafana/grafana:latest@sha256:e27e68cfd5795c1bea54950766078a02e84dfa3bafe0a4d0e5382f713dfd8e4e";
       autoRemoveOnStop = false;
       volumes = [ 
         "/srv/grafana:/var/lib/grafana"
@@ -20,7 +20,7 @@
     };
 
     loki = {
-      image = "grafana/loki:latest";
+      image = "grafana/loki:latest@sha256:83c76da7858a8f4f88117ac521864ac33896fdae7a352a1df4068556e7513f64";
       user = "root";
       autoRemoveOnStop = false;
       volumes = [
@@ -32,7 +32,7 @@
     };
 
     prometheus = {
-      image = "prom/prometheus:latest";
+      image = "prom/prometheus:latest@sha256:1147c92841726a6fef55fe6124491d6f85480f8de204f7d420304ca5bbd0a8f7";
       user = "root";
       autoRemoveOnStop = false;
       volumes = [ 
