@@ -228,11 +228,11 @@
         "nixvim": "nixvim_2"
       },
       "locked": {
-        "lastModified": 1786777233,
-        "narHash": "sha256-bTaUXMcUnpjRXOMvHgtvET5EgSwiGV4J1CyGQSYzgKg=",
+        "lastModified": 1786781965,
+        "narHash": "sha256-dgXbOoJT2+3Esgppc04jwqhPCRs9A76gxLalTIlVZaE=",
         "ref": "refs/heads/main",
-        "rev": "0390220b44fa904b027d7cd71cc0052e6ded8cfd",
-        "revCount": 5,
+        "rev": "8ed13a2a9d0d1540c6a7b6b4dd81720d6d1fa05c",
+        "revCount": 7,
         "type": "git",
         "url": "https://git.iamabhay.fyi/abhay/nixvim-config.git"
       },
