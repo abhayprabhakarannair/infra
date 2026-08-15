@@ -6,7 +6,7 @@
     vimAlias = true;
     nixpkgs.source = inputs.nixvim.inputs.nixpkgs;
     imports = [
-      "${inputs.self}/modules/neovim"
+      inputs.nixvim-config.nixvimModules.default
     ];
 
     extraConfigLua = ''

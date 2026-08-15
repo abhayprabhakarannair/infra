@@ -15,6 +15,7 @@
   python314
   pi-coding-agent
   deploy-rs
+  tea
   ];
 
 

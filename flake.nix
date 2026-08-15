@@ -33,6 +33,10 @@
       url = "github:serokell/deploy-rs";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    nixvim-config = {
+      url = "git+https://git.iamabhay.fyi/abhay/nixvim-config.git";
+    };
   };
 
   outputs = {
@@ -44,6 +48,7 @@
     wrappers,
     nixvim,
     deploy-rs,
+    nixvim-config,
     ...
   } @ inputs: let
     # --- Default username ---
