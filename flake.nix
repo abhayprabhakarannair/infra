@@ -46,9 +46,8 @@
     deploy-rs,
     ...
   } @ inputs: let
-    # --- Default username & WSL host ---
+    # --- Default username ---
     username = "abhay";
-    wslHostname = "ANair-1082";
 
     supportedSystems = ["x86_64-linux"];
     forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
@@ -140,19 +139,6 @@
           globalConfig
           ./hosts/homelab-one/default.nix
         ];
-      };
-    };
-
-    # --- WSL STANDALONE CONFIG ---
-    homeConfigurations = {
-      "${username}@${wslHostname}" = home-manager.lib.homeManagerConfiguration {
-        pkgs = import nixpkgs {
-          system = "x86_64-linux";
-          config = sharedConfig;
-          overlays = [systemOverlay];
-        };
-        extraSpecialArgs = {inherit inputs;};
-        modules = [./home/wsl.nix];
       };
     };
 
