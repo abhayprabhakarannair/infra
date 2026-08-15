@@ -21,7 +21,6 @@ let
     "grafana.iamabhay.fyi"     = "127.0.0.1:3000";
     "loki.iamabhay.fyi"        = "127.0.0.1:3100";
     "prometheus.iamabhay.fyi"  = "127.0.0.1:9090";
-    "chat.iamabhay.fyi"        = "127.0.0.1:8448";
   };
 in
 {

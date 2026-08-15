@@ -55,4 +55,48 @@
       };
     };
   };
+
+  systemd.services.backup-devil-srv = {
+    description = "Backup Immich DB, Jellyfin, Navidrome to StorageBox";
+    wants = [ "network-online.target" ];
+    after = [ "network-online.target" "podman-immich-database.service" ];
+    requires = [ "podman-immich-database.service" ];
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = let
+        script = pkgs.writeShellScript "backup-devil-srv" ''
+          set -euo pipefail
+
+          # Immich DB — clean dump via pg_dump (consistent snapshot, safe during writes)
+          # Restore:
+          #   gunzip -c /tmp/immich-db.sql.gz | podman exec -i immich-database psql -U postgres immich
+          ${pkgs.podman}/bin/podman exec immich-database pg_dump -U postgres immich \
+            | ${pkgs.gzip}/bin/gzip > /tmp/immich-db.sql.gz
+
+          # Sync to StorageBox
+          ${pkgs.rclone}/bin/rclone copy /tmp/immich-db.sql.gz backups:/srv/immich/ \
+            --config=${config.sops.secrets."rclone-main.conf".path}
+
+          ${pkgs.rclone}/bin/rclone sync /srv/jellyfin backups:/srv/jellyfin/ \
+            --config=${config.sops.secrets."rclone-main.conf".path} \
+            --fast-list --transfers 4 --checkers 8
+
+          ${pkgs.rclone}/bin/rclone sync /srv/navidrome backups:/srv/navidrome/ \
+            --config=${config.sops.secrets."rclone-main.conf".path} \
+            --fast-list --transfers 4 --checkers 8
+
+          # Clean up
+          rm -f /tmp/immich-db.sql.gz
+        '';
+      in "${script}";
+    };
+  };
+
+  systemd.timers.backup-devil-srv = {
+    wantedBy = [ "timers.target" ];
+    timerConfig = {
+      OnCalendar = "daily";
+      Persistent = true;
+    };
+  };
 }

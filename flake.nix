@@ -28,6 +28,11 @@
     nixvim = {
       url = "github:nix-community/nixvim";
     };
+
+    deploy-rs = {
+      url = "github:serokell/deploy-rs";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = {
@@ -38,6 +43,7 @@
     sops-nix,
     wrappers,
     nixvim,
+    deploy-rs,
     ...
   } @ inputs: let
     # --- Default username & WSL host ---
@@ -81,8 +87,17 @@
         };
       in {
         inherit (pkgs) install-infra;
+        deploy-rs = pkgs.deploy-rs;
       }
     );
+
+    # --- APPS ---
+    apps = forAllSystems (system: {
+      deploy = {
+        type = "app";
+        program = "${self.packages.${system}.deploy-rs}/bin/deploy";
+      };
+    });
 
     # --- NIXOS CONFIGURATIONS ---
     nixosConfigurations = {
@@ -139,5 +154,46 @@
         modules = [./home/wsl.nix];
       };
     };
+
+    # --- DEPLOYMENTS ---
+    deploy.nodes = {
+      daredevil = {
+        hostname = "daredevil";
+        sshUser = "root";
+        profiles.system = {
+          sshUser = "root";
+          path = deploy-rs.lib.x86_64-linux.activate.nixos self.nixosConfigurations.daredevil;
+        };
+      };
+
+      devil = {
+        hostname = "devil";
+        sshUser = "root";
+        profiles.system = {
+          sshUser = "root";
+          path = deploy-rs.lib.x86_64-linux.activate.nixos self.nixosConfigurations.devil;
+        };
+      };
+
+      old-devil = {
+        hostname = "old-devil";
+        sshUser = "root";
+        profiles.system = {
+          sshUser = "root";
+          path = deploy-rs.lib.x86_64-linux.activate.nixos self.nixosConfigurations.old-devil;
+        };
+      };
+
+      homelab-one = {
+        hostname = "homelab-one";
+        sshUser = "root";
+        profiles.system = {
+          sshUser = "root";
+          path = deploy-rs.lib.x86_64-linux.activate.nixos self.nixosConfigurations.homelab-one;
+        };
+      };
+    };
+
+    checks = builtins.mapAttrs (system: deployLib: deployLib.deployChecks self.deploy) deploy-rs.lib;
   };
 }

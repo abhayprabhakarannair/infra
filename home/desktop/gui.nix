@@ -14,6 +14,7 @@
     nodejs_24
   python314
   pi-coding-agent
+  deploy-rs
   ];
 
 

@@ -6,7 +6,7 @@
   ];
 
   virtualisation.oci-containers.containers.vaultwarden = {
-    image = "vaultwarden/server:latest";
+    image = "vaultwarden/server:1.37.1@sha256:ebdfe70701c60ac0c28c697e787cea767d7972940b786037b29fe0d507f821e8";
     autoRemoveOnStop = false;
     
     environment = {
