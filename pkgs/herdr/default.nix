@@ -6,7 +6,7 @@ stdenvNoCC.mkDerivation rec {
 
   src = fetchurl {
     url = "https://github.com/herdrdev/herdr/releases/download/v${version}/herdr-linux-x86_64";
-    hash = "sha256-3RUKFKSMGpgLHS0nS0fYLnNI5mDyAH8FQb2yM0b2PBc=";
+    hash = "sha256-l2FQoU1JDJSyQ+ouGn6y37Z/EuNrGC25CTb2co5q7PQ=";
   };
 
   dontUnpack = true;
