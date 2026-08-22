@@ -38,9 +38,6 @@
       url = "git+https://git.iamabhay.fyi/abhay/nixvim-config.git";
     };
 
-    herdr = {
-      url = "github:herdrdev/herdr/v0.8.2";
-    };
   };
 
   outputs = {
@@ -74,8 +71,7 @@
       };
 
       install-infra = final.callPackage ./pkgs/install-infra {};
-
-      herdr = inputs.herdr.packages.${prev.stdenv.hostPlatform.system}.default;
+      herdr = final.callPackage ./pkgs/herdr {};
     };
     globalConfig = {
       nixpkgs.overlays = [systemOverlay];
