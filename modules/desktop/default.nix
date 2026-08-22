@@ -31,6 +31,7 @@
     alejandra
     stylua
     zlib
+    herdr
   ];
 
   # --- FISH across all desktops ---
