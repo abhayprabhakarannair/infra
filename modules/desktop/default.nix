@@ -10,6 +10,10 @@
     packages = with pkgs; [
       nerd-fonts.jetbrains-mono
       noto-fonts-color-emoji
+      noto-fonts
+      smc-manjari
+      smc-chilanka
+      lohit-fonts.malayalam
     ];
   };
 
