@@ -4,25 +4,18 @@ on:
     branches:
       - main
 
-env:
-  PATH: /run/current-system/sw/bin:/etc/profiles/per-user/abhay/bin:/usr/bin:/bin
-
 jobs:
-  build-hosts:
+  build-all:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        host:
-          - daredevil
-          - devil
-          - old-devil
-          - homelab-one
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Build ${{ matrix.host }}
+      - name: Build all hosts
         run: |
-          nix build .#nixosConfigurations.${{ matrix.host }}.config.system.build.toplevel \
-            --print-build-logs \
-            --option accept-flake-config true
+          for host in daredevil devil old-devil homelab-one; do
+            echo "=== Building $host ==="
+            nix build .#nixosConfigurations.$host.config.system.build.toplevel \
+              --print-build-logs \
+              --option accept-flake-config true
+          done

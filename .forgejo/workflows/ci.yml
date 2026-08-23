@@ -5,33 +5,20 @@ on:
       - main
   pull_request:
 
-env:
-  PATH: /run/current-system/sw/bin:/etc/profiles/per-user/abhay/bin:/usr/bin:/bin
-
 jobs:
-  check-eval:
+  check:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        host:
-          - daredevil
-          - devil
-          - old-devil
-          - homelab-one
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Eval ${{ matrix.host }}
+      - name: Eval all hosts
         run: |
-          nix eval .#nixosConfigurations.${{ matrix.host }}.config.system.build.toplevel.name \
-            --option accept-flake-config true
-
-  format:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+          for host in daredevil devil old-devil homelab-one; do
+            echo "=== Eval $host ==="
+            nix eval .#nixosConfigurations.$host.config.system.build.toplevel.name \
+              --option accept-flake-config true
+          done
 
       - name: Check formatting (alejandra)
         run: |
