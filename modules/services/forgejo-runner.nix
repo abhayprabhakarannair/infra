@@ -31,6 +31,8 @@ runner:
   timeout: 3h
   fetch_timeout: 30s
   fetch_interval: 2s
+  env:
+    PATH: /run/current-system/sw/bin:/etc/profiles/per-user/abhay/bin:/usr/bin:/bin
 
 server:
   connections:

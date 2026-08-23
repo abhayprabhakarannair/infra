@@ -5,20 +5,30 @@ on:
       - main
   pull_request:
 
-env:
-  PATH: /run/current-system/sw/bin:/etc/profiles/per-user/abhay/bin:/usr/bin:/bin
-
 jobs:
-  check:
+  check-eval:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        host:
+          - daredevil
+          - devil
+          - old-devil
+          - homelab-one
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: nix flake check
+      - name: Eval ${{ matrix.host }}
         run: |
-          nix flake check --print-build-logs \
+          nix eval .#nixosConfigurations.${{ matrix.host }}.config.system.build.toplevel.name \
             --option accept-flake-config true
+
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Check formatting (alejandra)
         run: |
