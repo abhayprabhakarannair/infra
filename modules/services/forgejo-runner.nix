@@ -30,7 +30,7 @@ in {
         job_level: info
 
       runner:
-        capacity: 1
+        capacity: 3
         timeout: 3h
         fetch_timeout: 30s
         fetch_interval: 2s
