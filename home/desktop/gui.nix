@@ -39,7 +39,7 @@
 
       config.font = wez.font('JetBrainsMono Nerd Font', { weight = 'Medium' })
       config.font_size = 13.0
-      config.color_scheme = 'Catppuccin Mocha'
+      config.color_scheme = 'Kanagawa (Gogh)'
       config.window_padding = { left = 8, right = 8, top = 8, bottom = 8 }
       config.enable_tab_bar = false
       config.hide_mouse_cursor_when_typing = true
