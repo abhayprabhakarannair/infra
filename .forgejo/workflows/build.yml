@@ -1,0 +1,25 @@
+name: Build
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-hosts:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        host:
+          - daredevil
+          - devil
+          - old-devil
+          - homelab-one
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build ${{ matrix.host }}
+        run: |
+          nix build .#nixosConfigurations.${{ matrix.host }}.config.system.build.toplevel \
+            --print-build-logs \
+            --option accept-flake-config true

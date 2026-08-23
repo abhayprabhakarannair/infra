@@ -5,9 +5,6 @@ on:
       - main
   pull_request:
 
-env:
-  NIX_PATH: nixpkgs=channel:nixos-26.05
-
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -23,23 +20,3 @@ jobs:
       - name: Check formatting (alejandra)
         run: |
           nix run nixpkgs#alejandra -- --check .
-
-  build-hosts:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        host:
-          - daredevil
-          - devil
-          - old-devil
-          - homelab-one
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Build ${{ matrix.host }}
-        run: |
-          nix build .#nixosConfigurations.${{ matrix.host }}.config.system.build.toplevel \
-            --print-build-logs \
-            --option accept-flake-config true
