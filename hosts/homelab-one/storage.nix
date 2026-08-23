@@ -1,12 +1,15 @@
-{config, pkgs, inputs, ...}:
-
 {
+  config,
+  pkgs,
+  inputs,
+  ...
+}: {
   imports = [
-   "${inputs.self}/modules/storage/backup-node.nix"
+    "${inputs.self}/modules/storage/backup-node.nix"
   ];
 
   systemd.timers.backup-homelab-storage-one = {
-    wantedBy = [ "timers.target" ];
+    wantedBy = ["timers.target"];
     timerConfig = {
       OnCalendar = "*-*-* 02:00:00";
       Persistent = true;
@@ -15,8 +18,8 @@
 
   systemd.services.backup-homelab-storage-one = {
     description = "Backup /srv/ services + mirror StorageBox to B2";
-    wants = [ "network-online.target" ];
-    after = [ "network-online.target" ];
+    wants = ["network-online.target"];
+    after = ["network-online.target"];
     serviceConfig = {
       Type = "oneshot";
       ExecStart = let
@@ -42,5 +45,4 @@
       in "${script}";
     };
   };
-
 }

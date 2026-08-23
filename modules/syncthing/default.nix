@@ -1,14 +1,24 @@
-{config, inputs, ...}:
-
-let
+{
+  config,
+  inputs,
+  ...
+}: let
   username = "abhay";
   host = config.networking.hostName;
   devices = import ./devices.nix;
-in
-{
-  sops.secrets."syncthing/gui/password" = { sopsFile = "${inputs.self}/secrets/service-secrets.yaml"; owner = username; };
-  sops.secrets."syncthing/${host}/key-pem" = {  sopsFile = "${inputs.self}/secrets/service-secrets.yaml"; owner = username; };
-  sops.secrets."syncthing/${host}/cert-pem" = {  sopsFile = "${inputs.self}/secrets/service-secrets.yaml"; owner = username; };
+in {
+  sops.secrets."syncthing/gui/password" = {
+    sopsFile = "${inputs.self}/secrets/service-secrets.yaml";
+    owner = username;
+  };
+  sops.secrets."syncthing/${host}/key-pem" = {
+    sopsFile = "${inputs.self}/secrets/service-secrets.yaml";
+    owner = username;
+  };
+  sops.secrets."syncthing/${host}/cert-pem" = {
+    sopsFile = "${inputs.self}/secrets/service-secrets.yaml";
+    owner = username;
+  };
 
   services.syncthing = {
     enable = true;
@@ -22,19 +32,19 @@ in
 
     settings = {
       devices = {
-        "devil" = { id = devices.devil; };
-        "daredevil" = { id = devices.daredevil; };
-        "old-devil" = { id = devices.oldDevil; };
-        "oneplus-13" = { id = devices.oneplus13; };
+        "devil" = {id = devices.devil;};
+        "daredevil" = {id = devices.daredevil;};
+        "old-devil" = {id = devices.oldDevil;};
+        "oneplus-13" = {id = devices.oneplus13;};
       };
       folders = {
         "Private" = {
           path = "/home/${username}/Sync/Private";
-          devices = [ "devil" "daredevil" "old-devil" "oneplus-13" ];
+          devices = ["devil" "daredevil" "old-devil" "oneplus-13"];
         };
         "Shared" = {
           path = "/home/${username}/Sync/Shared";
-          devices = [ "devil" "daredevil" "old-devil" "oneplus-13" ];
+          devices = ["devil" "daredevil" "old-devil" "oneplus-13"];
         };
       };
     };

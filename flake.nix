@@ -20,7 +20,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-
     nixvim = {
       url = "github:nix-community/nixvim";
     };
@@ -33,7 +32,6 @@
     nixvim-config = {
       url = "git+https://git.iamabhay.fyi/abhay/nixvim-config.git";
     };
-
   };
 
   outputs = {

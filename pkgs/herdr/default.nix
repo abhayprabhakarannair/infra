@@ -1,5 +1,8 @@
-{lib, stdenvNoCC, fetchurl}:
-
+{
+  lib,
+  stdenvNoCC,
+  fetchurl,
+}:
 stdenvNoCC.mkDerivation rec {
   pname = "herdr";
   version = "0.8.2";

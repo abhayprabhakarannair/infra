@@ -1,4 +1,8 @@
-{pkgs, inputs, ...}: {
+{
+  pkgs,
+  inputs,
+  ...
+}: {
   imports = [
     inputs.disko.nixosModules.disko
     inputs.home-manager.nixosModules.home-manager
@@ -32,20 +36,23 @@
   networking.useNetworkd = true;
   systemd.network.enable = true;
   networking.enableIPv6 = true;
-  networking.firewall.allowedTCPPorts = [ 
-    2442 80 443 2222
+  networking.firewall.allowedTCPPorts = [
+    2442
+    80
+    443
+    2222
   ];
 
   # --- WAN (Public Internet Interface) ---
   systemd.network.networks."10-wan" = {
     matchConfig.Name = "enp1s0";
-    
-    address = [ "2a01:4f8:c013:bfc8::1/64" ];
-    routes  = [ { Gateway = "fe80::1"; } ];
+
+    address = ["2a01:4f8:c013:bfc8::1/64"];
+    routes = [{Gateway = "fe80::1";}];
 
     networkConfig = {
       DHCP = "ipv4";
-      IPv6AcceptRA = false; 
+      IPv6AcceptRA = false;
       IPv4Forwarding = true;
       IPv6Forwarding = true;
       IPMasquerade = "both";
@@ -58,15 +65,15 @@
 
     networkConfig = {
       DHCP = "ipv4";
-      IPv6AcceptRA = false; 
+      IPv6AcceptRA = false;
     };
   };
 
   # -- Boot & Kernel configurations ---
   boot = {
-    kernelModules = [ "tcp_bbr" ];
+    kernelModules = ["tcp_bbr"];
     kernelPackages = pkgs.linuxPackages;
-    
+
     kernel.sysctl = {
       "net.core.default_qdisc" = "fq";
       "net.ipv4.tcp_congestion_control" = "bbr";

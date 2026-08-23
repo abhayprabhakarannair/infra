@@ -1,6 +1,8 @@
-{ config, pkgs, ... }:
-
 {
+  config,
+  pkgs,
+  ...
+}: {
   systemd.tmpfiles.rules = [
     "d /srv/technitium 0755 root root -"
   ];

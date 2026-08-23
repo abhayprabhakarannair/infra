@@ -1,6 +1,9 @@
-{ config, pkgs, inputs, ... }:
-
 {
+  config,
+  pkgs,
+  inputs,
+  ...
+}: {
   sops.secrets."known-hosts" = {
     sopsFile = "${inputs.self}/secrets/rclone/secrets.yaml";
     path = "/etc/rclone/known_hosts";

@@ -1,12 +1,14 @@
-{ config, pkgs, inputs, ... }:
+{
+  config,
+  pkgs,
+  inputs,
+  ...
+}: let
+  uploadLocation = "/mnt/homelab/immich/library";
 
-let
-  uploadLocation = "/mnt/homelab/immich/library"; 
-  
   dbDataLocation = "/srv/immich/postgres";
   modelCacheLocation = "/srv/immich/model-cache";
-in
-{
+in {
   sops.secrets."immich/db-password" = {
     sopsFile = "${inputs.self}/secrets/service-secrets.yaml";
   };
@@ -16,9 +18,9 @@ in
       DB_PASSWORD=${config.sops.placeholder."immich/db-password"}
       POSTGRES_PASSWORD=${config.sops.placeholder."immich/db-password"}
     '';
-    restartUnits = [ 
-      "podman-immich-database.service" 
-      "podman-immich-server.service" 
+    restartUnits = [
+      "podman-immich-database.service"
+      "podman-immich-server.service"
     ];
   };
 
@@ -28,10 +30,9 @@ in
   ];
 
   virtualisation.oci-containers.containers = {
-    
     immich-database = {
       image = "ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0@sha256:b1d33572a9a0634aa6d344077467ad32847812a37fa3859f702952cba22a2f55";
-      environmentFiles = [ config.sops.templates."immich.env".path ];
+      environmentFiles = [config.sops.templates."immich.env".path];
       autoRemoveOnStop = false;
       environment = {
         POSTGRES_USER = "postgres";
@@ -58,9 +59,9 @@ in
 
     immich-server = {
       image = "ghcr.io/immich-app/immich-server:v3@sha256:079cc990b26a88d71f96027341c67329cb11829d4c341ce33b3718fe0f84cbfa";
-      dependsOn = [ "immich-database" "immich-redis" ];
+      dependsOn = ["immich-database" "immich-redis"];
       autoRemoveOnStop = false;
-      environmentFiles = [ config.sops.templates."immich.env".path ];
+      environmentFiles = [config.sops.templates."immich.env".path];
       environment = {
         DB_HOSTNAME = "immich-database";
         DB_USERNAME = "postgres";
@@ -90,26 +91,26 @@ in
       extraOptions = [
         "--restart=always"
         "--shm-size=8gb"
-	"--security-opt=seccomp=unconfined"
-       ];
+        "--security-opt=seccomp=unconfined"
+      ];
     };
   };
 
   systemd.services.podman-immich-server = {
-    after = [ "rclone-homelab.service" ];
-    requires = [ "rclone-homelab.service" ];
-    bindsTo = [ "rclone-homelab.service" ];
+    after = ["rclone-homelab.service"];
+    requires = ["rclone-homelab.service"];
+    bindsTo = ["rclone-homelab.service"];
     unitConfig = {
       RequiresMountsFor = "/mnt/homelab/immich";
-    };  
+    };
   };
 
   systemd.services.podman-immich-machine-learning = {
-    after = [ "rclone-homelab.service" ];
-    requires = [ "rclone-homelab.service" ];
-    bindsTo = [ "rclone-homelab.service" ];
+    after = ["rclone-homelab.service"];
+    requires = ["rclone-homelab.service"];
+    bindsTo = ["rclone-homelab.service"];
     unitConfig = {
       RequiresMountsFor = "/mnt/homelab/immich";
-    };  
+    };
   };
 }

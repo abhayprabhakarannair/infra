@@ -1,11 +1,15 @@
-{inputs, config, ...}: {
- sops.secrets."ssh-secret-ips" = {
+{
+  inputs,
+  config,
+  ...
+}: {
+  sops.secrets."ssh-secret-ips" = {
     owner = config.users.users.abhay.name;
     group = config.users.users.abhay.group;
     mode = "0400";
- };
+  };
 
- sops.secrets."ssh-private-keys/github" = {
+  sops.secrets."ssh-private-keys/github" = {
     owner = config.users.users.abhay.name;
     group = config.users.users.abhay.group;
     mode = "0400";
@@ -31,5 +35,4 @@
     # Forgejo UI commits
     noreply@git.iamabhay.fyi ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMqx32jYbfgpOJY9k3LP2sCkFGiNm6IJ5uY6kDmRUGAG
   '';
-
 }

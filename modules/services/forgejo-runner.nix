@@ -1,6 +1,9 @@
-{ config, pkgs, inputs, ... }:
-
-let
+{
+  config,
+  pkgs,
+  inputs,
+  ...
+}: let
   runnerData = "/srv/forgejo-runner";
   hostname = config.networking.hostName;
 in {
@@ -15,34 +18,34 @@ in {
 
   systemd.services.forgejo-runner = {
     description = "Forgejo Actions Runner";
-    after = [ "network-online.target" ];
-    wants = [ "network-online.target" ];
-    wantedBy = [ "multi-user.target" ];
-    path = [ pkgs.git pkgs.nodejs_24 pkgs.bash pkgs.coreutils pkgs.nix pkgs.gnutar pkgs.gzip ];
+    after = ["network-online.target"];
+    wants = ["network-online.target"];
+    wantedBy = ["multi-user.target"];
+    path = [pkgs.git pkgs.nodejs_24 pkgs.bash pkgs.coreutils pkgs.nix pkgs.gnutar pkgs.gzip];
 
     preStart = ''
-      cat > ${runnerData}/config.yml << CONFIG_EOF
-log:
-  level: info
-  job_level: info
+            cat > ${runnerData}/config.yml << CONFIG_EOF
+      log:
+        level: info
+        job_level: info
 
-runner:
-  capacity: 1
-  timeout: 3h
-  fetch_timeout: 30s
-  fetch_interval: 2s
-  env:
-    PATH: /run/current-system/sw/bin:/etc/profiles/per-user/abhay/bin:/usr/bin:/bin
+      runner:
+        capacity: 1
+        timeout: 3h
+        fetch_timeout: 30s
+        fetch_interval: 2s
+        env:
+          PATH: /run/current-system/sw/bin:/etc/profiles/per-user/abhay/bin:/usr/bin:/bin
 
-server:
-  connections:
-    default:
-      url: https://git.iamabhay.fyi
-      uuid: "$(cat ${config.sops.secrets."forgejo/${hostname}-uuid".path})"
-      token: "$(cat ${config.sops.secrets."forgejo/${hostname}-token".path})"
-      labels:
-        - "ubuntu-latest:host"
-CONFIG_EOF
+      server:
+        connections:
+          default:
+            url: https://git.iamabhay.fyi
+            uuid: "$(cat ${config.sops.secrets."forgejo/${hostname}-uuid".path})"
+            token: "$(cat ${config.sops.secrets."forgejo/${hostname}-token".path})"
+            labels:
+              - "ubuntu-latest:host"
+      CONFIG_EOF
     '';
 
     serviceConfig = {

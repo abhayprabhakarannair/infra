@@ -53,10 +53,9 @@
     package = pkgs.unstable.brave;
     extensions = [
       # uBlock Origin
-      { id = "cjpalhdlnbpafiamejdnhcphjbkeiagm"; } 
+      {id = "cjpalhdlnbpafiamejdnhcphjbkeiagm";}
       # Private Internet Access (PIA) Extension
-      { id = "jplnlifepflhkbkgonidnobkakhmpnmh"; } 
+      {id = "jplnlifepflhkbkgonidnobkakhmpnmh";}
     ];
   };
-
 }

@@ -50,7 +50,7 @@
     evince
     gnome-text-editor
     gnome-calculator
-     
+
     # --- Extra Apps ---
     unstable.opencode
     unstable.obsidian
@@ -61,5 +61,4 @@
     gnome-console
     gnome-terminal
   ];
-
 }

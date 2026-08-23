@@ -54,15 +54,15 @@
   networking.networkmanager = {
     enable = true;
     settings = {
-    connection = {
-	"ethernet.wake-on-lan" = "magic";
+      connection = {
+        "ethernet.wake-on-lan" = "magic";
       };
     };
   };
 
   # -- Boot & Kernel configurations ---
   boot = {
-    kernelModules = [ "tcp_bbr" ];
+    kernelModules = ["tcp_bbr"];
     kernelParams = ["amd_pstate=active"];
     kernelPackages = pkgs.linuxPackages_zen;
 

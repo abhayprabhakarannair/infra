@@ -1,8 +1,11 @@
-{pkgs, config, inputs, ...}:
-
 {
+  pkgs,
+  config,
+  inputs,
+  ...
+}: {
   imports = [
-   "${inputs.self}/modules/storage/core.nix"
+    "${inputs.self}/modules/storage/core.nix"
   ];
 
   sops.secrets."rclone-backup-node.conf" = {

@@ -1,5 +1,8 @@
-{ lib, config, ... }: {
-
+{
+  lib,
+  config,
+  ...
+}: {
   options = {
     myStorage.swapSize = lib.mkOption {
       type = lib.types.str;
@@ -23,20 +26,41 @@
             size = "100%";
             content = {
               type = "btrfs";
-              extraArgs = [ "-f" "-L" "NixOS" ];
+              extraArgs = ["-f" "-L" "NixOS"];
               subvolumes = {
-                "@" = { mountpoint = "/"; mountOptions = [ "compress=zstd" "noatime" ]; };
-                "@home" = { mountpoint = "/home"; mountOptions = [ "compress=zstd" "noatime" ]; };
-                "@nix" = { mountpoint = "/nix"; mountOptions = [ "compress=zstd" "noatime" ]; };
+                "@" = {
+                  mountpoint = "/";
+                  mountOptions = ["compress=zstd" "noatime"];
+                };
+                "@home" = {
+                  mountpoint = "/home";
+                  mountOptions = ["compress=zstd" "noatime"];
+                };
+                "@nix" = {
+                  mountpoint = "/nix";
+                  mountOptions = ["compress=zstd" "noatime"];
+                };
                 "@swap" = {
                   mountpoint = "/swap";
-                  mountOptions = [ "noatime" ];
+                  mountOptions = ["noatime"];
                   swap.swapfile.size = config.myStorage.swapSize;
                 };
-                "@srv" = { mountpoint = "/srv"; mountOptions = [ "compress=zstd" "noatime" ]; };
-                "@var_lib_portables" = { mountpoint = "/var/lib/portables"; mountOptions = [ "compress=zstd" "noatime" ]; };
-                "@var_lib_machines" = { mountpoint = "/var/lib/machines"; mountOptions = [ "compress=zstd" "noatime" ]; };
-                "@var_tmp" = { mountpoint = "/var/tmp"; mountOptions = [ "compress=zstd" "noatime" ]; };
+                "@srv" = {
+                  mountpoint = "/srv";
+                  mountOptions = ["compress=zstd" "noatime"];
+                };
+                "@var_lib_portables" = {
+                  mountpoint = "/var/lib/portables";
+                  mountOptions = ["compress=zstd" "noatime"];
+                };
+                "@var_lib_machines" = {
+                  mountpoint = "/var/lib/machines";
+                  mountOptions = ["compress=zstd" "noatime"];
+                };
+                "@var_tmp" = {
+                  mountpoint = "/var/tmp";
+                  mountOptions = ["compress=zstd" "noatime"];
+                };
               };
             };
           };
