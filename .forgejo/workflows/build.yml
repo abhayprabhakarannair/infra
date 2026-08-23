@@ -4,6 +4,9 @@ on:
     branches:
       - main
 
+env:
+  PATH: /run/current-system/sw/bin:/etc/profiles/per-user/abhay/bin:/usr/bin:/bin
+
 jobs:
   build-hosts:
     runs-on: ubuntu-latest

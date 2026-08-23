@@ -5,6 +5,9 @@ on:
       - main
   pull_request:
 
+env:
+  PATH: /run/current-system/sw/bin:/etc/profiles/per-user/abhay/bin:/usr/bin:/bin
+
 jobs:
   check-eval:
     runs-on: ubuntu-latest
