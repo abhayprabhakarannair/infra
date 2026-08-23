@@ -3,7 +3,7 @@
   inputs,
   ...
 }: {
-  imports = ["${inputs.self}/modules/desktop/nixvim.nix" "${inputs.self}/modules/kitty"];
+  imports = ["${inputs.self}/modules/desktop/nixvim.nix"];
 
   # --- Global fonts ---
   fonts = {
@@ -13,8 +13,16 @@
       noto-fonts
       smc-manjari
       smc-chilanka
-      lohit-fonts.malayalam
     ];
+
+    fontconfig = {
+      enable = true;
+      defaultFonts = {
+        serif = ["Noto Serif Malayalam" "Noto Serif"];
+        sansSerif = ["Manjari" "Noto Sans Malayalam" "Noto Sans"];
+        monospace = ["JetBrainsMono Nerd Font" "Manjari" "Noto Sans Malayalam"];
+      };
+    };
   };
 
   # --- Essential System Packages ---

@@ -20,10 +20,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    wrappers = {
-      url = "github:BirdeeHub/nix-wrapper-modules";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
 
     nixvim = {
       url = "github:nix-community/nixvim";
@@ -46,7 +42,6 @@
     nixpkgs-unstable,
     home-manager,
     sops-nix,
-    wrappers,
     nixvim,
     deploy-rs,
     nixvim-config,

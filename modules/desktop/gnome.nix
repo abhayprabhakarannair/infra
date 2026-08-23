@@ -21,6 +21,7 @@
   services.gnome.games.enable = false;
 
   # --- Setup basic stuffs ---
+  programs.dconf.enable = true;
   programs.seahorse.enable = true;
   programs.gnome-disks.enable = true;
   services.gnome.sushi.enable = true;

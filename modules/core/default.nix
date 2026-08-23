@@ -20,7 +20,6 @@
     wget
     curl
     rclone
-    unstable.kitty.terminfo
     wakeonlan
     ethtool
   ];
