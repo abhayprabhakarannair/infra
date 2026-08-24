@@ -32,6 +32,11 @@
     nixvim-config = {
       url = "git+https://git.iamabhay.fyi/abhay/nixvim-config.git";
     };
+
+    antigravity-nix = {
+      url = "github:jacopone/antigravity-nix";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
   };
 
   outputs = {
@@ -43,6 +48,7 @@
     nixvim,
     deploy-rs,
     nixvim-config,
+    antigravity-nix,
     ...
   } @ inputs: let
     # --- Default username ---
@@ -61,6 +67,7 @@
       unstable = import nixpkgs-unstable {
         system = prev.stdenv.hostPlatform.system;
         config = sharedConfig;
+        overlays = [antigravity-nix.overlays.default];
       };
 
       install-infra = final.callPackage ./pkgs/install-infra {};

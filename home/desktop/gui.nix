@@ -17,6 +17,8 @@
     deploy-rs
     tea
     inter
+    google-antigravity-ide
+    google-antigravity-cli
   ];
 
   # --- Modern UI Fonts & Rendering ---
