@@ -17,7 +17,7 @@
     deploy-rs
     tea
     inter
-    google-antigravity-ide
+    google-antigravity-ide-no-fhs
     google-antigravity-cli
   ];
 
