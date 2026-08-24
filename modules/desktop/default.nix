@@ -44,7 +44,25 @@
     stylua
     zlib
     herdr
+
+    google-chrome
   ];
+
+  xdg.mime.defaultApplications = {
+    "text/html" = "google-chrome.desktop";
+    "x-scheme-handler/http" = "google-chrome.desktop";
+    "x-scheme-handler/https" = "google-chrome.desktop";
+  };
+
+  # Playwright channel:"chrome" looks for /opt/google/chrome/chrome
+  systemd.tmpfiles.rules = [
+    "L+ /opt/google/chrome/chrome - - - - ${pkgs.google-chrome}/bin/google-chrome-stable"
+  ];
+
+  environment.sessionVariables = {
+    CHROME_BIN = "${pkgs.google-chrome}/bin/google-chrome-stable";
+    PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD = "1";
+  };
 
   # --- FISH across all desktops ---
   programs.fish.enable = true;
