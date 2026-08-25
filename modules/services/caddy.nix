@@ -38,11 +38,19 @@ in {
 
     virtualHosts =
       builtins.mapAttrs (domain: backend: {
+        # Disable the module's default per-vhost log block; we define our own
+        # below (with rotation) inside extraConfig instead.
+        logFormat = null;
         extraConfig = ''
           reverse_proxy ${backend}
 
           log {
               format json
+              output file /var/log/caddy/access-${domain}.log {
+                  roll_size 10mb
+                  roll_keep 5
+                  roll_keep_for 168h
+              }
           }
         '';
       })

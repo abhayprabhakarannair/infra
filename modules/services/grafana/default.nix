@@ -43,6 +43,7 @@
       cmd = [
         "--config.file=/etc/prometheus/prometheus.yml"
         "--web.enable-remote-write-receiver"
+        "--storage.tsdb.retention.time=30d"
       ];
       extraOptions = ["--network=host"];
     };

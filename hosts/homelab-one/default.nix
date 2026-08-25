@@ -1,5 +1,6 @@
 {
   pkgs,
+  lib,
   inputs,
   ...
 }: {
@@ -84,6 +85,7 @@
 
       grub = {
         enable = true;
+        configurationLimit = 5;
       };
     };
   };
@@ -101,6 +103,9 @@
     extraSpecialArgs = {inherit inputs;};
     users.abhay = import "${inputs.self}/home/server.nix";
   };
+
+  # --- Tighter GC: small disk (39G), keep less history ---
+  nix.gc.options = lib.mkForce "--delete-older-than 7d";
 
   # --- Enable QEMU Guest Agent (Hetzner Controls) ---
   services.qemuGuest.enable = true;
