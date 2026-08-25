@@ -37,6 +37,11 @@
       url = "github:jacopone/antigravity-nix";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
+
+    hermes-agent = {
+      url = "github:nousresearch/hermes-agent";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = {
@@ -49,6 +54,7 @@
     deploy-rs,
     nixvim-config,
     antigravity-nix,
+    hermes-agent,
     ...
   } @ inputs: let
     # --- Default username ---
@@ -147,6 +153,16 @@
           ./hosts/homelab-one/default.nix
         ];
       };
+
+      # Lucifer (Rabisu VPS, isolated Hermes Agent host)
+      lucifer = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        specialArgs = {inherit inputs;};
+        modules = [
+          globalConfig
+          ./hosts/lucifer/default.nix
+        ];
+      };
     };
 
     # --- DEPLOYMENTS ---
@@ -184,6 +200,15 @@
         profiles.system = {
           sshUser = "root";
           path = deploy-rs.lib.x86_64-linux.activate.nixos self.nixosConfigurations.homelab-one;
+        };
+      };
+
+      lucifer = {
+        hostname = "lucifer";
+        sshUser = "root";
+        profiles.system = {
+          sshUser = "root";
+          path = deploy-rs.lib.x86_64-linux.activate.nixos self.nixosConfigurations.lucifer;
         };
       };
     };

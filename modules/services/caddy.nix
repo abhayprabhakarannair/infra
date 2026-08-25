@@ -20,6 +20,7 @@
     "photos.iamabhay.fyi" = "devil:2283";
 
     "vault.iamabhay.fyi" = "127.0.0.1:8222";
+    "lucifer.iamabhay.fyi" = "lucifer:9000";
     "git.iamabhay.fyi" = "127.0.0.1:3333";
     "grafana.iamabhay.fyi" = "127.0.0.1:3000";
     "loki.iamabhay.fyi" = "127.0.0.1:3100";

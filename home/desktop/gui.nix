@@ -8,6 +8,7 @@
   # --- Essential apps ---
   home.packages = with pkgs.unstable; [
     vlc
+    discord
     fastfetch
     wl-clipboard
     tela-icon-theme
