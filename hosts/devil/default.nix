@@ -27,6 +27,7 @@
     "${inputs.self}/modules/services/navidrome.nix"
     "${inputs.self}/modules/services/stash.nix"
     "${inputs.self}/modules/services/arr-stack.nix"
+    "${inputs.self}/modules/services/media-warm.nix"
     "${inputs.self}/modules/services/immich.nix"
     "${inputs.self}/modules/services/grafana/alloy-node.nix"
     "${inputs.self}/modules/services/ollama.nix"

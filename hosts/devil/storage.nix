@@ -31,8 +31,8 @@
                ${pkgs.rclone}/bin/rclone mount homelab-storage-one-combined:/ /mnt/homelab \
                  --config=${config.sops.secrets."rclone-main.conf".path} \
                  --vfs-cache-mode=full \
-                 --vfs-cache-max-size=100G \
-          --vfs-cache-max-age=72h \
+                 --vfs-cache-max-size=250G \
+          --vfs-cache-max-age=168h \
                  --vfs-write-back=5s \
                  --vfs-read-chunk-size=64M \
                  --vfs-read-chunk-size-limit=2G \
