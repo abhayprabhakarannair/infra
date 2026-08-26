@@ -110,6 +110,8 @@
         docker_volumes = [
           "/run/secrets/ssh-private-keys/hermes:/root/.ssh/id_ed25519:ro"
           "/srv/hermes/.ssh/config:/root/.ssh/config:ro"
+          # Live Syncthing vault: read/write access to SOUL.md, AGENTS.md, user_feeds.json, cron_jobs.json
+          "/srv/hermes/Sync/Lucifer:/root/.hermes/vault"
         ];
       };
       web = {
