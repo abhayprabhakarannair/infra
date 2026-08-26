@@ -31,13 +31,28 @@
   sops.secrets."hermes/dashboard-secret" = {
     sopsFile = "${inputs.self}/secrets/service-secrets.yaml";
   };
+  sops.secrets."ssh-private-keys/homelab" = {
+    sopsFile = "${inputs.self}/secrets/system-secrets.yaml";
+    owner = "root";
+    group = "hermes";
+    mode = "0440";
+  };
+
+  sops.secrets."ssh-private-keys/hermes" = {
+    sopsFile = "${inputs.self}/secrets/system-secrets.yaml";
+    path = "/srv/hermes/.ssh/id_ed25519";
+    owner = "hermes";
+    group = "hermes";
+    mode = "0400";
+  };
 
   # Declarative symlinks and directory structure for Docker socket & Syncthing live vault
   systemd.tmpfiles.rules = [
-    "d /srv/hermes 0700 hermes hermes -"
+    "d /srv/hermes 0755 hermes hermes -"
     "d /srv/hermes/.hermes 0700 hermes hermes -"
     "d /srv/hermes/.hermes/cron 0700 hermes hermes -"
     "d /srv/hermes/Sync/Lucifer 0755 hermes hermes -"
+    "d /srv/hermes/.ssh 0700 hermes hermes -"
     "L+ /run/docker.sock - - - - /run/podman/podman.sock"
     "L+ /srv/hermes/.hermes/SOUL.md - hermes hermes - /srv/hermes/Sync/Lucifer/SOUL.md"
     "L+ /srv/hermes/SOUL.md - hermes hermes - /srv/hermes/Sync/Lucifer/SOUL.md"
@@ -52,8 +67,8 @@
       GEMINI_API_KEY=${config.sops.placeholder."hermes/gemini-api-key"}
       DISCORD_BOT_TOKEN=${config.sops.placeholder."hermes/discord-bot-token"}
       DISCORD_ALLOWED_USERS=${config.sops.placeholder."hermes/discord-allowed-users"}
-      DISCORD_HOME_CHANNEL=1541818201627820176
-      DISCORD_HOME_CHANNEL_NAME="#general"
+      DISCORD_HOME_CHANNEL=1542031236082565140
+      DISCORD_HOME_CHANNEL_NAME="#home"
       DISCORD_REQUIRE_MENTION=false
       DISCORD_THREAD_REQUIRE_MENTION=false
       DISCORD_AUTO_THREAD=false
@@ -80,14 +95,18 @@
 
     settings = {
       model = {
-        provider = "gemini";
-        default = "gemini-3.6-flash";
+        provider = "nous";
+        default = "deepseek/deepseek-v4-flash";
       };
       approvals = {
         mode = "manual";
       };
       terminal = {
         backend = "docker";
+        docker_volumes = [
+          "/run/secrets/ssh-private-keys/hermes:/root/.ssh/id_ed25519:ro"
+          "/srv/hermes/.ssh/config:/root/.ssh/config:ro"
+        ];
       };
       web = {
         backend = "tavily";
@@ -143,6 +162,9 @@
 
     # Remove static document definition - rely on symlink for live-editable content
   };
+
+  # Add abhay to hermes group so he can read the homelab SSH key
+  users.users.abhay.extraGroups = ["hermes"];
 
   # Ensure hermes system user is in podman/docker groups with subuid/subgid ranges
   users.users.hermes = {

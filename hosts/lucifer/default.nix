@@ -92,6 +92,7 @@ in {
     useUserPackages = true;
     extraSpecialArgs = {inherit inputs;};
     users.abhay = import "${inputs.self}/home/server.nix";
+    users.hermes = import "${inputs.self}/home/hermes.nix";
   };
 
   # --- Tighter GC: small disk (40G), keep less history (matches homelab-one) ---
