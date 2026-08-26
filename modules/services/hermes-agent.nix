@@ -16,6 +16,9 @@
   sops.secrets."hermes/discord-bot-token" = {
     sopsFile = "${inputs.self}/secrets/service-secrets.yaml";
   };
+  sops.secrets."hermes/discord-mcp-token" = {
+    sopsFile = "${inputs.self}/secrets/service-secrets.yaml";
+  };
   sops.secrets."hermes/discord-allowed-users" = {
     sopsFile = "${inputs.self}/secrets/service-secrets.yaml";
   };
@@ -67,6 +70,7 @@
       GEMINI_API_KEY=${config.sops.placeholder."hermes/gemini-api-key"}
       DISCORD_BOT_TOKEN=${config.sops.placeholder."hermes/discord-bot-token"}
       DISCORD_ALLOWED_USERS=${config.sops.placeholder."hermes/discord-allowed-users"}
+      DISCORD_MCP_TOKEN=${config.sops.placeholder."hermes/discord-mcp-token"}
       DISCORD_HOME_CHANNEL=1542031236082565140
       DISCORD_HOME_CHANNEL_NAME="#home"
       DISCORD_REQUIRE_MENTION=false
@@ -160,6 +164,17 @@
       config.sops.templates."hermes.env".path
     ];
 
+    # Mazikeen — Discord housekeeper via MCP (HTTP transport, localhost)
+    mcpServers = {
+      mazikeen = {
+        url = "http://127.0.0.1:8000/mcp";
+        headers = {
+          Authorization = "Bot \${DISCORD_MCP_TOKEN}";
+        };
+        timeout = 60;
+      };
+    };
+
     # Remove static document definition - rely on symlink for live-editable content
   };
 
@@ -215,6 +230,24 @@
     after = ["podman.socket" "syncthing.service"];
     environment = {
       DOCKER_HOST = "unix:///run/podman/podman.sock";
+    };
+  };
+
+  # Mazikeen — Discord housekeeper MCP server (HTTP, localhost only)
+  systemd.services.discord-mcp = {
+    wantedBy = ["multi-user.target"];
+    wants = ["network-online.target"];
+    after = ["network-online.target"];
+    environment = {
+      MCP_HOST = "127.0.0.1";
+      MCP_PORT = "8000";
+    };
+    serviceConfig = {
+      ExecStart = "${pkgs.discord-mcp}/bin/discord-mcp";
+      User = "hermes";
+      Group = "hermes";
+      Restart = "always";
+      RestartSec = 5;
     };
   };
 }

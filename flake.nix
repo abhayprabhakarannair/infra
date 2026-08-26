@@ -78,6 +78,7 @@
 
       install-infra = final.callPackage ./pkgs/install-infra {};
       herdr = final.callPackage ./pkgs/herdr {};
+      discord-mcp = final.callPackage ./pkgs/discord-mcp {};
     };
     globalConfig = {
       nixpkgs.overlays = [systemOverlay];
