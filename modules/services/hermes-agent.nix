@@ -59,11 +59,13 @@
     "L+ /run/docker.sock - - - - /run/podman/podman.sock"
     "L+ /srv/hermes/.hermes/SOUL.md - hermes hermes - /srv/hermes/Sync/Lucifer/SOUL.md"
     "L+ /srv/hermes/SOUL.md - hermes hermes - /srv/hermes/Sync/Lucifer/SOUL.md"
-    "L+ /srv/hermes/.hermes/user_feeds.json - hermes hermes - /srv/hermes/Sync/Lucifer/user_feeds.json"
-    "L+ /srv/hermes/.hermes/cron/jobs.json - hermes hermes - /srv/hermes/Sync/Lucifer/cron_jobs.json"
+    "L+ /srv/hermes/.hermes/user_feeds.json - hermes hermes - /srv/hermes/Sync/Lucifer/config/user_feeds.json"
+    "L+ /srv/hermes/.hermes/cron/jobs.json - hermes hermes - /srv/hermes/Sync/Lucifer/config/cron_jobs.json"
     "L+ /srv/hermes/.hermes/AGENTS.md - hermes hermes - /srv/hermes/Sync/Lucifer/AGENTS.md"
     "d /srv/hermes/mem0_qdrant 0755 root root - -"
     "d /srv/hermes/Sync/Lucifer/memory 0755 hermes hermes - -"
+    "d /srv/hermes/Sync/Lucifer/config 0755 hermes hermes - -"
+    "d /srv/hermes/Sync/Lucifer/misc 0755 hermes hermes - -"
   ];
 
   # Construct the runtime environment file from sops placeholders
