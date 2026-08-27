@@ -325,6 +325,10 @@
     after = ["podman.socket" "syncthing.service"];
     environment = {
       DOCKER_HOST = "unix:///run/podman/podman.sock";
+      # discord.py loads libopus via ctypes.util.find_library(), which searches
+      # LD_LIBRARY_PATH — without this it can't discover the codec and Discord
+      # voice playback is disabled ("Opus codec not found").
+      LD_LIBRARY_PATH = "${pkgs.libopus}/lib:${pkgs.opusfile}/lib";
     };
     path = [
       pkgs.docker-client
