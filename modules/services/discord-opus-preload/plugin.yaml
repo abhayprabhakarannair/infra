@@ -1,0 +1,4 @@
+name: discord-opus-preload
+version: 1.0.0
+description: "Preload libopus for Discord voice at gateway startup (bypasses ctypes find_library, which fails on NixOS)."
+author: "Lucifer"

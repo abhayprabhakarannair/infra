@@ -120,6 +120,19 @@
     extraDependencyGroups = ["messaging" "mem0" "voice"]; # voice = faster-whisper local STT + sounddevice
     stateDir = "/srv/hermes";
     workingDirectory = "/srv/hermes/workspace";
+    # Discord voice: discord.py loads libopus via ctypes.util.find_library('opus'),
+    # whose gcc -l probe ignores LD_LIBRARY_PATH on NixOS (returns None -> voice
+    # disabled: "Opus codec not found"). This plugin preloads the codec explicitly
+    # at gateway startup via discord.opus.load_opus(). Verified on lucifer's live
+    # env: load_opus(store path) -> is_loaded() True.
+    extraPlugins = [
+      (pkgs.runCommand "discord-opus-preload" {} ''
+        mkdir -p $out
+        substitute ${./discord-opus-preload/__init__.py} $out/__init__.py \
+          --replace '@LIBOPUS@' '${pkgs.libopus}/lib/libopus.so.0'
+        cp ${./discord-opus-preload/plugin.yaml} $out/plugin.yaml
+      '')
+    ];
 
     backend = {
       mode = "dashboard";
