@@ -41,6 +41,11 @@
   sops.secrets."hermes/telegram-bot-token" = {
     sopsFile = "${inputs.self}/secrets/service-secrets.yaml";
   };
+  # Voice: API server bearer key — HA Assist routes conversation to Lucifer via the
+  # OpenAI-compatible endpoint (same key configured in HA's OpenAI conversation agent).
+  sops.secrets."hermes/api-server-key" = {
+    sopsFile = "${inputs.self}/secrets/service-secrets.yaml";
+  };
   sops.secrets."ssh-private-keys/homelab" = {
     sopsFile = "${inputs.self}/secrets/system-secrets.yaml";
     owner = "root";
@@ -94,6 +99,13 @@
       HASS_TOKEN=${config.sops.placeholder."hermes/hass-token"}
       HASS_URL=https://home.iamabhay.fyi
       TELEGRAM_BOT_TOKEN=${config.sops.placeholder."hermes/telegram-bot-token"}
+      # API server: OpenAI-compatible endpoint so HA Assist on the phone routes to
+      # Lucifer (the agent), not HA's stock conversation agent. Binds 0.0.0.0 — the
+      # public NIC stays firewalled (8642 not in allowedTCPPorts), tailnet is a trusted
+      # interface, so only old-devil/HA can reach it via http://lucifer:8642/v1.
+      API_SERVER_ENABLED=true
+      API_SERVER_KEY=${config.sops.placeholder."hermes/api-server-key"}
+      API_SERVER_HOST=0.0.0.0
       DOCKER_HOST=unix:///run/podman/podman.sock
       TAVILY_API_KEY=${config.sops.placeholder."hermes/tavily-api-key"}
       HERMES_DASHBOARD_BASIC_AUTH_USERNAME=${config.sops.placeholder."hermes/dashboard-username"}
@@ -210,6 +222,13 @@
                 "light"
               ];
               cooldown_seconds = 30;
+            };
+          };
+          api_server = {
+            extra = {
+              # Honor the "hermes-agent" model name HA sends (bare model, no provider
+              # field) instead of silently falling back to the gateway default model.
+              direct_model_requests = true;
             };
           };
         };
