@@ -34,6 +34,13 @@
   sops.secrets."hermes/dashboard-secret" = {
     sopsFile = "${inputs.self}/secrets/service-secrets.yaml";
   };
+  # Voice: HA token (device control + HA Assist path) & Telegram bot token (resilient voice channel)
+  sops.secrets."hermes/hass-token" = {
+    sopsFile = "${inputs.self}/secrets/service-secrets.yaml";
+  };
+  sops.secrets."hermes/telegram-bot-token" = {
+    sopsFile = "${inputs.self}/secrets/service-secrets.yaml";
+  };
   sops.secrets."ssh-private-keys/homelab" = {
     sopsFile = "${inputs.self}/secrets/system-secrets.yaml";
     owner = "root";
@@ -83,6 +90,10 @@
       DISCORD_REQUIRE_MENTION=false
       DISCORD_THREAD_REQUIRE_MENTION=false
       DISCORD_AUTO_THREAD=false
+      # Voice: Home Assistant (device control + HA Assist) & Telegram (resilient voice DM)
+      HASS_TOKEN=${config.sops.placeholder."hermes/hass-token"}
+      HASS_URL=https://home.iamabhay.fyi
+      TELEGRAM_BOT_TOKEN=${config.sops.placeholder."hermes/telegram-bot-token"}
       DOCKER_HOST=unix:///run/podman/podman.sock
       TAVILY_API_KEY=${config.sops.placeholder."hermes/tavily-api-key"}
       HERMES_DASHBOARD_BASIC_AUTH_USERNAME=${config.sops.placeholder."hermes/dashboard-username"}
@@ -94,7 +105,7 @@
 
   services.hermes-agent = {
     enable = true;
-    extraDependencyGroups = ["messaging" "mem0"];
+    extraDependencyGroups = ["messaging" "mem0" "voice"]; # voice = faster-whisper local STT + sounddevice
     stateDir = "/srv/hermes";
     workingDirectory = "/srv/hermes/workspace";
 
@@ -127,6 +138,15 @@
       };
       web = {
         backend = "tavily";
+      };
+      # Voice: local STT (faster-whisper) + TTS via Nous Portal (OpenAI TTS through Tool Gateway)
+      stt = {
+        enabled = true;
+        provider = "local";
+        local.model = "base";
+      };
+      tts = {
+        provider = "openai"; # Nous Portal Tool Gateway routes OpenAI TTS; no separate key needed
       };
       cron = {
         enabled = true;
@@ -167,6 +187,29 @@
               allow_admin_from = [
                 "1378246341569806377"
               ];
+            };
+          };
+          telegram = {
+            extra = {
+              allow_from = [
+                "1378246341569806377"
+              ];
+              allow_admin_from = [
+                "1378246341569806377"
+              ];
+            };
+          };
+          homeassistant = {
+            enabled = true;
+            extra = {
+              # React to meaningful home state changes; device control tools activate via HASS_TOKEN
+              watch_domains = [
+                "climate"
+                "binary_sensor"
+                "alarm_control_panel"
+                "light"
+              ];
+              cooldown_seconds = 30;
             };
           };
         };
