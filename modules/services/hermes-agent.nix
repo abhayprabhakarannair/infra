@@ -107,6 +107,10 @@
         provider = "nous";
         default = "deepseek/deepseek-v4-flash";
       };
+      # Mem0 external memory provider (OSS, Gemini via OPENAI_API_KEY, local qdrant)
+      memory = {
+        provider = "mem0";
+      };
       approvals = {
         mode = "manual";
       };
