@@ -141,6 +141,14 @@
     };
 
     settings = {
+      # discord-opus-preload is a standalone (user) plugin, which Hermes treats
+      # as opt-in: it is discovered but NOT loaded unless listed here. Bundled
+      # platform/backend plugins auto-load; standalone/user plugins do not.
+      # Without this, discord.py never preloads libopus and Discord voice stays
+      # disabled ("Opus codec not found").
+      plugins = {
+        enabled = ["discord-opus-preload"];
+      };
       model = {
         provider = "nous";
         default = "deepseek/deepseek-v4-flash";
