@@ -315,6 +315,9 @@
       pkgs.git
       pkgs.alejandra
       pkgs.nix
+      pkgs.ffmpeg
+      pkgs.libopus
+      pkgs.portaudio
       "/run/current-system/sw"
     ];
     serviceConfig = {
