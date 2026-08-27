@@ -179,7 +179,13 @@
         local.model = "base";
       };
       tts = {
-        provider = "openai"; # Nous Portal Tool Gateway routes OpenAI TTS; no separate key needed
+        # "nous" = Nous managed audio gateway (openai-audio-gateway.nousresearch.com).
+        # provider "openai" would use direct credentials only: tts.openai.api_key or
+        # VOICE_TOOLS_OPENAI_KEY/OPENAI_API_KEY — and OPENAI_API_KEY here is the
+        # Gemini key (mem0), so every voice reply 401'd at api.openai.com.
+        # "nous" resolves the managed gateway (user token + origin) automatically,
+        # model defaults to gpt-4o-mini-tts (the only supported model).
+        provider = "nous";
       };
       cron = {
         enabled = true;
