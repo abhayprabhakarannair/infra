@@ -62,12 +62,17 @@
     "L+ /srv/hermes/.hermes/user_feeds.json - hermes hermes - /srv/hermes/Sync/Lucifer/user_feeds.json"
     "L+ /srv/hermes/.hermes/cron/jobs.json - hermes hermes - /srv/hermes/Sync/Lucifer/cron_jobs.json"
     "L+ /srv/hermes/.hermes/AGENTS.md - hermes hermes - /srv/hermes/Sync/Lucifer/AGENTS.md"
+    "d /srv/hermes/mem0_qdrant 0755 root root - -"
+    "d /srv/hermes/Sync/Lucifer/memory 0755 hermes hermes - -"
   ];
 
   # Construct the runtime environment file from sops placeholders
   sops.templates."hermes.env" = {
     content = ''
       GEMINI_API_KEY=${config.sops.placeholder."hermes/gemini-api-key"}
+      # mem0 OSS points its openai provider at Gemini's OpenAI-compatible endpoint;
+      # it reads the key from OPENAI_API_KEY. Reuses the existing Gemini secret.
+      OPENAI_API_KEY=${config.sops.placeholder."hermes/gemini-api-key"}
       DISCORD_BOT_TOKEN=${config.sops.placeholder."hermes/discord-bot-token"}
       DISCORD_ALLOWED_USERS=${config.sops.placeholder."hermes/discord-allowed-users"}
       DISCORD_MCP_TOKEN=${config.sops.placeholder."hermes/discord-mcp-token"}
@@ -87,7 +92,7 @@
 
   services.hermes-agent = {
     enable = true;
-    extraDependencyGroups = ["messaging"];
+    extraDependencyGroups = ["messaging" "mem0"];
     stateDir = "/srv/hermes";
     workingDirectory = "/srv/hermes/workspace";
 
@@ -166,6 +171,43 @@
       config.sops.templates."hermes.env".path
     ];
 
+    # Mem0 OSS memory provider config (non-secret). Key comes from OPENAI_API_KEY env.
+    # LLM/embedder ride Gemini's OpenAI-compatible endpoint; vectors go to local qdrant.
+    # Not enabled yet: set settings.memory.provider="mem0" at activation (credit gate).
+    hermesHomeFiles."mem0.json" = ''
+      {
+        "mode": "oss",
+        "user_id": "abhay",
+        "agent_id": "hermes",
+        "oss": {
+          "llm": {
+            "provider": "openai",
+            "config": {
+              "model": "gemini-3.6-flash",
+              "openai_base_url": "https://generativelanguage.googleapis.com/v1beta/openai/"
+            }
+          },
+          "embedder": {
+            "provider": "openai",
+            "config": {
+              "model": "gemini-embedding-001",
+              "openai_base_url": "https://generativelanguage.googleapis.com/v1beta/openai/",
+              "embedding_dims": 3072
+            }
+          },
+          "vector_store": {
+            "provider": "qdrant",
+            "config": {
+              "host": "localhost",
+              "port": 6333,
+              "collection_name": "mem0",
+              "embedding_model_dims": 3072
+            }
+          }
+        }
+      }
+    '';
+
     # Mazikeen — Discord housekeeper via MCP (HTTP transport, localhost)
     mcpServers = {
       mazikeen = {
@@ -178,6 +220,15 @@
     };
 
     # Remove static document definition - rely on symlink for live-editable content
+  };
+
+  # Qdrant vector DB — mem0's vector store (server mode; localhost only, data on /srv).
+  virtualisation.oci-containers.containers.qdrant = {
+    image = "qdrant/qdrant:latest@sha256:6c0652f8d6925b22f2f6f0e0a5365a6c9dbc8768bd6e70ccc1cdc14847e452a0";
+    autoRemoveOnStop = false;
+    ports = ["127.0.0.1:6333:6333"];
+    volumes = ["/srv/hermes/mem0_qdrant:/qdrant/storage"];
+    extraOptions = ["--restart=always"];
   };
 
   # Add abhay to hermes group so he can read the homelab SSH key
@@ -232,6 +283,55 @@
     after = ["podman.socket" "syncthing.service"];
     environment = {
       DOCKER_HOST = "unix:///run/podman/podman.sock";
+    };
+  };
+
+  # Export mem0 memories to plain-text JSONL in the Syncthing vault (Design A).
+  # Zero LLM tokens: reads qdrant directly, atomic full overwrite (regenerated each run).
+  systemd.services.mem0-export = {
+    serviceConfig = {
+      Type = "oneshot";
+      User = "hermes";
+      Group = "hermes";
+    };
+    path = [pkgs.coreutils];
+    script = ''
+      ${pkgs.python312.withPackages (ps: [ps.qdrant-client])}/bin/python3 - <<'PY'
+      import json, pathlib
+      from qdrant_client import QdrantClient
+      out = pathlib.Path("/srv/hermes/Sync/Lucifer/memory/mem0.jsonl")
+      try:
+          client = QdrantClient(url="http://localhost:6333")
+      except Exception:
+          raise SystemExit(0)  # qdrant down: keep last good snapshot
+      if not client.collection_exists("mem0"):
+          out.write_text("")
+          raise SystemExit(0)
+      rows, offset = [], None
+      while True:
+          pts, nxt = client.scroll(collection_name="mem0", limit=100,
+                                   with_payload=True, with_vectors=False, offset=offset)
+          for pt in pts:
+              p = pt.payload or {}
+              rows.append({"id": str(pt.id), "memory": p.get("data", ""),
+                           "metadata": {k: v for k, v in p.items()
+                                        if k not in ("data", "text_lemmatized")}})
+          if nxt is None:
+              break
+          offset = nxt
+      tmp = out.with_suffix(".jsonl.tmp")
+      tmp.write_text("\n".join(json.dumps(r, ensure_ascii=False) for r in rows) + ("\n" if rows else ""))
+      tmp.rename(out)
+      PY
+    '';
+  };
+
+  systemd.timers.mem0-export = {
+    wantedBy = ["timers.target"];
+    timerConfig = {
+      OnCalendar = "*:0/5";
+      Persistent = true;
+      AccuracySec = "1min";
     };
   };
 
