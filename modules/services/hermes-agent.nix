@@ -117,7 +117,7 @@
 
   services.hermes-agent = {
     enable = true;
-    extraDependencyGroups = ["messaging" "mem0" "voice" "edge"]; # voice = faster-whisper local STT; edge = edge-tts (Azure neural voices)
+    extraDependencyGroups = ["messaging" "mem0" "voice" "edge-tts"]; # voice = faster-whisper local STT; edge-tts = Azure neural voices
     stateDir = "/srv/hermes";
     workingDirectory = "/srv/hermes/workspace";
     # Discord voice: discord.py loads libopus via ctypes.util.find_library('opus'),
@@ -185,7 +185,7 @@
         # so voice replies start near-instantly (was ~2-4s via the Nous gateway).
         provider = "edge";
         edge = {
-          voice = "en-IN-PrabhatNeural"; # male Indian-English neural voice
+          voice = "en-US-ChristopherNeural"; # deep, natural US male voice
         };
       };
       cron = {
