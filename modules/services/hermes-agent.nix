@@ -152,8 +152,8 @@
       model = {
         # Nous credits low (2026-08-27); switch to Gemini 3.7 Flash until nous recovers.
         # Revert via: provider = "nous"; default = "deepseek/deepseek-v4-flash";
-        provider = "gemini";
-        default = "gemini-3-flash-preview";
+        provider = "nous";
+        default = "deepseek/deepseek-v4-flash";
       };
       # Mem0 external memory provider (OSS, Gemini via OPENAI_API_KEY, local qdrant)
       memory = {
@@ -276,19 +276,19 @@
         "user_id": "abhay",
         "agent_id": "hermes",
         "oss": {
-          "llm": {
+           "llm": {
             "provider": "openai",
             "config": {
-              "model": "gemini-3.6-flash",
-              "openai_base_url": "https://generativelanguage.googleapis.com/v1beta/openai/"
+              "model": "deepseek/deepseek-v4-flash",
+              "openai_base_url": "https://inference.nousresearch.com/v1"
             }
           },
-          "embedder": {
+         "embedder": {
             "provider": "openai",
             "config": {
-              "model": "gemini-embedding-001",
-              "openai_base_url": "https://generativelanguage.googleapis.com/v1beta/openai/",
-              "embedding_dims": 3072
+              "model": "BAAI/bge-large-en-v1.5",
+              "openai_base_url": "https://inference.nousresearch.com/v1",
+              "embedding_dims": 1024
             }
           },
           "vector_store": {
