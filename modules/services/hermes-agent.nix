@@ -150,8 +150,10 @@
         enabled = ["discord-opus-preload"];
       };
       model = {
-        provider = "nous";
-        default = "deepseek/deepseek-v4-flash";
+        # Nous credits low (2026-08-27); switch to Gemini 3.7 Flash until nous recovers.
+        # Revert via: provider = "nous"; default = "deepseek/deepseek-v4-flash";
+        provider = "gemini";
+        default = "gemini-3.7-flash";
       };
       # Mem0 external memory provider (OSS, Gemini via OPENAI_API_KEY, local qdrant)
       memory = {
