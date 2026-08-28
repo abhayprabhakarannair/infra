@@ -117,7 +117,7 @@
 
   services.hermes-agent = {
     enable = true;
-    extraDependencyGroups = ["messaging" "mem0" "voice"]; # voice = faster-whisper local STT + sounddevice
+    extraDependencyGroups = ["messaging" "mem0" "voice" "edge"]; # voice = faster-whisper local STT; edge = edge-tts (Azure neural voices)
     stateDir = "/srv/hermes";
     workingDirectory = "/srv/hermes/workspace";
     # Discord voice: discord.py loads libopus via ctypes.util.find_library('opus'),
@@ -181,13 +181,12 @@
         local.model = "base";
       };
       tts = {
-        # "nous" = Nous managed audio gateway (openai-audio-gateway.nousresearch.com).
-        # provider "openai" would use direct credentials only: tts.openai.api_key or
-        # VOICE_TOOLS_OPENAI_KEY/OPENAI_API_KEY — and OPENAI_API_KEY here is the
-        # Gemini key (mem0), so every voice reply 401'd at api.openai.com.
-        # "nous" resolves the managed gateway (user token + origin) automatically,
-        # model defaults to gpt-4o-mini-tts (the only supported model).
-        provider = "nous";
+        # Edge TTS (Azure neural voices) — local synthesis, no cloud round-trip,
+        # so voice replies start near-instantly (was ~2-4s via the Nous gateway).
+        provider = "edge";
+        edge = {
+          voice = "en-IN-PrabhatNeural"; # male Indian-English neural voice
+        };
       };
       cron = {
         enabled = true;
