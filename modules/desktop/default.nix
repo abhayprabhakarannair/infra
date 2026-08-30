@@ -96,4 +96,16 @@
     alsa.support32Bit = true;
     pulse.enable = true;
   };
+
+  programs.nix-ld = {
+    enable = true;
+    libraries = with pkgs; [
+      stdenv.cc.cc
+      zlib
+      openssl
+      curl
+      glibc
+      libffi
+    ];
+  };
 }

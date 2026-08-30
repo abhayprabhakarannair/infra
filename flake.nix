@@ -52,8 +52,6 @@
     ...
   } @ inputs: let
     # --- Default username ---
-    username = "abhay";
-
     supportedSystems = ["x86_64-linux"];
     forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
 
