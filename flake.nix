@@ -33,11 +33,6 @@
       url = "git+https://git.iamabhay.fyi/abhay/nixvim-config.git";
     };
 
-    antigravity-nix = {
-      url = "github:jacopone/antigravity-nix";
-      inputs.nixpkgs.follows = "nixpkgs-unstable";
-    };
-
     hermes-agent = {
       url = "github:nousresearch/hermes-agent";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -53,7 +48,6 @@
     nixvim,
     deploy-rs,
     nixvim-config,
-    antigravity-nix,
     hermes-agent,
     ...
   } @ inputs: let
@@ -73,7 +67,7 @@
       unstable = import nixpkgs-unstable {
         system = prev.stdenv.hostPlatform.system;
         config = sharedConfig;
-        overlays = [antigravity-nix.overlays.default];
+        overlays = [];
       };
 
       install-infra = final.callPackage ./pkgs/install-infra {};

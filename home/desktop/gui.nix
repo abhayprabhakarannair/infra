@@ -18,8 +18,10 @@
     deploy-rs
     tea
     inter
-    google-antigravity-ide-no-fhs
-    google-antigravity-cli
+    zed-editor
+    nil
+    nixd
+    nixpkgs-fmt
   ];
 
   # --- Modern UI Fonts & Rendering ---
