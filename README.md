@@ -49,7 +49,6 @@ deploy .#                # all hosts
 - **Forgejo** (git) — homelab-one
 - **Immich** (photos) — devil
 - **Jellyfin** (media) — devil
-- **Grafana + Loki + Prometheus** (observability) — homelab-one
 - **Home Assistant** — old-devil
 - **Arr-stack** (sonarr, radarr, prowlarr, sabnzbd, qbittorrent) — devil
 
