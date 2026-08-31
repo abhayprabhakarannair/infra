@@ -49,7 +49,6 @@
         IdentitiesOnly = "yes";
       };
 
-
       "daredevil" = {
         User = "abhay";
         Port = 2442;

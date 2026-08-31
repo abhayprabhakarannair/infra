@@ -32,7 +32,6 @@
     nixvim-config = {
       url = "git+https://git.iamabhay.fyi/abhay/nixvim-config.git";
     };
-
   };
 
   outputs = {
@@ -141,7 +140,6 @@
           ./hosts/homelab-one/default.nix
         ];
       };
-
     };
 
     # --- DEPLOYMENTS ---
@@ -181,7 +179,6 @@
           path = deploy-rs.lib.x86_64-linux.activate.nixos self.nixosConfigurations.homelab-one;
         };
       };
-
     };
 
     checks = builtins.mapAttrs (system: deployLib: deployLib.deployChecks self.deploy) deploy-rs.lib;
