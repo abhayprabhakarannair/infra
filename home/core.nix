@@ -49,12 +49,6 @@
         IdentitiesOnly = "yes";
       };
 
-      "lucifer" = {
-        User = "abhay";
-        Port = 2442;
-        IdentityFile = "/run/secrets/ssh-private-keys/homelab";
-        IdentitiesOnly = "yes";
-      };
 
       "daredevil" = {
         User = "abhay";

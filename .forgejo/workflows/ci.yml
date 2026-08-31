@@ -14,7 +14,7 @@ jobs:
 
       - name: Eval all hosts
         run: |
-          for host in daredevil devil old-devil homelab-one lucifer; do
+          for host in daredevil devil old-devil homelab-one; do
             echo "=== Eval $host ==="
             nix eval .#nixosConfigurations.$host.config.system.build.toplevel.name \
               --option accept-flake-config true

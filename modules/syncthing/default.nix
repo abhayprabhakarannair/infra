@@ -35,7 +35,6 @@ in {
         "daredevil" = {id = devices.daredevil;};
         "old-devil" = {id = devices.oldDevil;};
         "oneplus-13" = {id = devices.oneplus13;};
-        "lucifer" = {id = devices.lucifer;};
       };
       folders = {
         "Private" = {
@@ -46,17 +45,13 @@ in {
           path = "/home/${username}/Sync/Shared";
           devices = ["devil" "daredevil" "old-devil" "oneplus-13"];
         };
-        "Lucifer" = {
-          path = "/home/${username}/Sync/Lucifer";
-          devices = ["devil" "daredevil" "old-devil" "oneplus-13" "lucifer"];
-        };
       };
     };
   };
 
   system.activationScripts.syncthing-dirs = {
     text = ''
-      mkdir -p /home/${username}/Sync/Private /home/${username}/Sync/Shared /home/${username}/Sync/Lucifer
+      mkdir -p /home/${username}/Sync/Private /home/${username}/Sync/Shared
       mkdir -p /home/${username}/.config/syncthing
       chown -R ${username}:users /home/${username}/Sync /home/${username}/.config/syncthing
     '';

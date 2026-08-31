@@ -8,7 +8,6 @@ keys:
   - &daredevil age1t363efchn7yahsnwg65vnkculygqzk9vacl55eyd3e47a0mw29dqw3mquh
   - &homelab_one age1lkeyp8n597el6jeeyremqaayrlr5j8zqln92ddr0zxs2h9khuqdq0wmgwe
   - &old_devil age1y8ruw5f80t4ga4uuqsqmx85uacf0yn37ly5hdmxe0z9q083udpmsw5hpfx
-  - &lucifer age1rpyc4y7pensd2nkauf46sm6gpamrngp4vtymeu83tlmkhkj96qxqhgxmav
 creation_rules:
   - path_regex: secrets/.*\.yaml$
     key_groups:
@@ -19,7 +18,6 @@ creation_rules:
       - *daredevil
       - *homelab_one
       - *old_devil
-      - *lucifer
 
   - path_regex: secrets/.*\.conf$
     key_groups:
@@ -30,4 +28,3 @@ creation_rules:
       - *daredevil
       - *homelab_one
       - *old_devil
-      - *lucifer

@@ -33,10 +33,6 @@
       url = "git+https://git.iamabhay.fyi/abhay/nixvim-config.git";
     };
 
-    hermes-agent = {
-      url = "github:nousresearch/hermes-agent";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
   };
 
   outputs = {
@@ -48,7 +44,6 @@
     nixvim,
     deploy-rs,
     nixvim-config,
-    hermes-agent,
     ...
   } @ inputs: let
     # --- Default username ---
@@ -147,15 +142,6 @@
         ];
       };
 
-      # Lucifer (Rabisu VPS, isolated Hermes Agent host)
-      lucifer = nixpkgs.lib.nixosSystem {
-        system = "x86_64-linux";
-        specialArgs = {inherit inputs;};
-        modules = [
-          globalConfig
-          ./hosts/lucifer/default.nix
-        ];
-      };
     };
 
     # --- DEPLOYMENTS ---
@@ -196,14 +182,6 @@
         };
       };
 
-      lucifer = {
-        hostname = "lucifer";
-        sshUser = "root";
-        profiles.system = {
-          sshUser = "root";
-          path = deploy-rs.lib.x86_64-linux.activate.nixos self.nixosConfigurations.lucifer;
-        };
-      };
     };
 
     checks = builtins.mapAttrs (system: deployLib: deployLib.deployChecks self.deploy) deploy-rs.lib;

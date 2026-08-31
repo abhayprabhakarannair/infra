@@ -61,7 +61,6 @@
     "flake-parts": {
       "inputs": {
         "nixpkgs-lib": [
-          "hermes-agent",
           "nixpkgs"
         ]
       },
@@ -122,36 +121,9 @@
         "type": "github"
       }
     },
-    "hermes-agent": {
-      "inputs": {
-        "flake-parts": "flake-parts",
-        "home-manager": "home-manager",
-        "nixpkgs": [
-          "nixpkgs"
-        ],
-        "npm-lockfile-fix": "npm-lockfile-fix",
-        "pyproject-build-systems": "pyproject-build-systems",
-        "pyproject-nix": "pyproject-nix",
-        "uv2nix": "uv2nix"
-      },
-      "locked": {
-        "lastModified": 1787701981,
-        "narHash": "sha256-MWJClyfM3Ipg9r+9H1uJuhSIrTcbZXOSvAMahEuN4Y4=",
-        "owner": "nousresearch",
-        "repo": "hermes-agent",
-        "rev": "f751a8c5467c41500e505d90cb0eb8b70929080f",
-        "type": "github"
-      },
-      "original": {
-        "owner": "nousresearch",
-        "repo": "hermes-agent",
-        "type": "github"
-      }
-    },
     "home-manager": {
       "inputs": {
         "nixpkgs": [
-          "hermes-agent",
           "nixpkgs"
         ]
       },
@@ -332,7 +304,6 @@
     "npm-lockfile-fix": {
       "inputs": {
         "nixpkgs": [
-          "hermes-agent",
           "nixpkgs"
         ]
       },
@@ -353,15 +324,12 @@
     "pyproject-build-systems": {
       "inputs": {
         "nixpkgs": [
-          "hermes-agent",
           "nixpkgs"
         ],
         "pyproject-nix": [
-          "hermes-agent",
           "pyproject-nix"
         ],
         "uv2nix": [
-          "hermes-agent",
           "uv2nix"
         ]
       },
@@ -382,7 +350,6 @@
     "pyproject-nix": {
       "inputs": {
         "nixpkgs": [
-          "hermes-agent",
           "nixpkgs"
         ]
       },
@@ -404,7 +371,6 @@
       "inputs": {
         "deploy-rs": "deploy-rs",
         "disko": "disko",
-        "hermes-agent": "hermes-agent",
         "home-manager": "home-manager_2",
         "nixpkgs": "nixpkgs",
         "nixpkgs-unstable": "nixpkgs-unstable",
@@ -502,11 +468,9 @@
     "uv2nix": {
       "inputs": {
         "nixpkgs": [
-          "hermes-agent",
           "nixpkgs"
         ],
         "pyproject-nix": [
-          "hermes-agent",
           "pyproject-nix"
         ]
       },
