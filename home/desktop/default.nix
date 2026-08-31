@@ -10,25 +10,39 @@
     enable = true;
 
     functions = {
-     fish_prompt = ''
-      set_color cyan
-      echo -n (prompt_pwd)
-      set_color normal
-      echo -n " => "
-     '';
+      fish_prompt = ''
+        set_color cyan
+        echo -n (prompt_pwd)
+        set_color normal
+        echo -n " => "
+      '';
     };
 
     shellAliases = {
       ll = "ls -larth";
-      nrs = "sudo nixos-rebuild switch --flake ~/Projects/infra#\$(cat /etc/hostname)";
-      nrb = "sudo nixos-rebuild boot --flake ~/Projects/infra#\$(cat /etc/hostname)";
+      nrs = "sudo nixos-rebuild switch --flake ~/Projects/infra#$(cat /etc/hostname)";
+      nrb = "sudo nixos-rebuild boot --flake ~/Projects/infra#$(cat /etc/hostname)";
       ve = "nvim .";
     };
 
     interactiveShellInit = ''
-     set -g fish_greeting
+      set -g fish_greeting
     '';
   };
 
+  # --- DIR Env ---
+  programs.direnv = {
+    enable = true;
+    nix-direnv.enable = true;
 
+    config = {
+      global = {
+        hide_env_diff = true;
+      };
+    };
+  };
+
+  home.sessionPath = [
+    "$HOME/.cargo/bin"
+  ];
 }

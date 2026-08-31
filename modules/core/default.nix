@@ -1,4 +1,9 @@
-{pkgs, inputs, config, ...}: {
+{
+  pkgs,
+  inputs,
+  config,
+  ...
+}: {
   # --- Timezone and Locale ---
   time.timeZone = "Asia/Kolkata";
   i18n.defaultLocale = "en_US.UTF-8";
@@ -20,7 +25,6 @@
     wget
     curl
     rclone
-    unstable.kitty.terminfo
     wakeonlan
     ethtool
   ];
@@ -28,7 +32,7 @@
   # --- Secrets ---
   sops.defaultSopsFile = "${inputs.self}/secrets/system-secrets.yaml";
   sops.defaultSopsFormat = "yaml";
-  sops.age.sshKeyPaths = [ "/etc/ssh/ssh_host_ed25519_key" ];
+  sops.age.sshKeyPaths = ["/etc/ssh/ssh_host_ed25519_key"];
 
   # --- Passwords ---
   sops.secrets."abhay-password" = {
@@ -51,28 +55,28 @@
 
   # --- Sudo config (Run commands without root) ---
   security.sudo.extraRules = [
-  {
-    users = [ "abhay" ];
-    commands = [
-      {
-        command = "/run/current-system/sw/bin/wakeonlan";
-        options = [ "NOPASSWD" ];
-      }
-      {
-        # Using the absolute path is required for NixOS sudo rules
-        command = "/run/current-system/sw/bin/systemctl poweroff";
-        options = [ "NOPASSWD" ];
-      }
-    ];
-  }
- ];
+    {
+      users = ["abhay"];
+      commands = [
+        {
+          command = "/run/current-system/sw/bin/wakeonlan";
+          options = ["NOPASSWD"];
+        }
+        {
+          # Using the absolute path is required for NixOS sudo rules
+          command = "/run/current-system/sw/bin/systemctl poweroff";
+          options = ["NOPASSWD"];
+        }
+      ];
+    }
+  ];
 
   # --- Firewall ---
   networking.firewall = {
     enable = true;
     allowedTCPPorts = [2442 80 443];
-    allowedUDPPorts = [ config.services.tailscale.port ];
-    trustedInterfaces = [ config.services.tailscale.interfaceName ];
+    allowedUDPPorts = [config.services.tailscale.port];
+    trustedInterfaces = [config.services.tailscale.interfaceName];
   };
 
   # --- TailScale ---

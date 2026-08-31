@@ -1,14 +1,28 @@
-{pkgs, inputs, ...}: {
-
- imports =  [ "${inputs.self}/modules/neovim" "${inputs.self}/modules/kitty" ];
-
+{
+  pkgs,
+  inputs,
+  ...
+}: {
+  imports = ["${inputs.self}/modules/desktop/nixvim.nix"];
 
   # --- Global fonts ---
   fonts = {
     packages = with pkgs; [
       nerd-fonts.jetbrains-mono
       noto-fonts-color-emoji
+      noto-fonts
+      smc-manjari
+      smc-chilanka
     ];
+
+    fontconfig = {
+      enable = true;
+      defaultFonts = {
+        serif = ["Noto Serif Malayalam" "Noto Serif"];
+        sansSerif = ["Manjari" "Noto Sans Malayalam" "Noto Sans"];
+        monospace = ["JetBrainsMono Nerd Font" "Manjari" "Noto Sans Malayalam"];
+      };
+    };
   };
 
   # --- Essential System Packages ---
@@ -21,8 +35,34 @@
     mkpasswd
     ripgrep
     git
+    gcc
+    gnumake
+    rustup
+    unzip
+    curl
+    alejandra
+    stylua
+    zlib
+    herdr
+
+    google-chrome
   ];
 
+  xdg.mime.defaultApplications = {
+    "text/html" = "google-chrome.desktop";
+    "x-scheme-handler/http" = "google-chrome.desktop";
+    "x-scheme-handler/https" = "google-chrome.desktop";
+  };
+
+  # Playwright channel:"chrome" looks for /opt/google/chrome/chrome
+  systemd.tmpfiles.rules = [
+    "L+ /opt/google/chrome/chrome - - - - ${pkgs.google-chrome}/bin/google-chrome-stable"
+  ];
+
+  environment.sessionVariables = {
+    CHROME_BIN = "${pkgs.google-chrome}/bin/google-chrome-stable";
+    PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD = "1";
+  };
 
   # --- FISH across all desktops ---
   programs.fish.enable = true;
@@ -55,5 +95,17 @@
     alsa.enable = true;
     alsa.support32Bit = true;
     pulse.enable = true;
+  };
+
+  programs.nix-ld = {
+    enable = true;
+    libraries = with pkgs; [
+      stdenv.cc.cc
+      zlib
+      openssl
+      curl
+      glibc
+      libffi
+    ];
   };
 }

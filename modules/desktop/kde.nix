@@ -6,15 +6,15 @@
 
   # --- System packages ---
   environment.systemPackages = with pkgs; [
-   vivaldi
-   kdePackages.bluedevil
-   kdePackages.plasma-browser-integration
+    vivaldi
+    kdePackages.bluedevil
+    kdePackages.plasma-browser-integration
   ];
 
   environment.plasma6.excludePackages = with pkgs.kdePackages; [
     konsole
   ];
-  
+
   # --- KDE connection ---
   programs.chromium = {
     enable = true;

@@ -18,3 +18,13 @@ creation_rules:
       - *daredevil
       - *homelab_one
       - *old_devil
+
+  - path_regex: secrets/.*\.conf$
+    key_groups:
+    - age:
+      - *github_key
+      - *homelab_key
+      - *devil
+      - *daredevil
+      - *homelab_one
+      - *old_devil

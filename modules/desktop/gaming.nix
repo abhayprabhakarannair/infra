@@ -11,7 +11,7 @@
     dedicatedServer.openFirewall = true;
 
     extraCompatPackages = with pkgs.unstable; [
-       proton-ge-bin
+      proton-ge-bin
     ];
   };
 

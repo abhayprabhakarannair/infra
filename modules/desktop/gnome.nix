@@ -21,6 +21,7 @@
   services.gnome.games.enable = false;
 
   # --- Setup basic stuffs ---
+  programs.dconf.enable = true;
   programs.seahorse.enable = true;
   programs.gnome-disks.enable = true;
   services.gnome.sushi.enable = true;
@@ -49,8 +50,10 @@
     evince
     gnome-text-editor
     gnome-calculator
-     
+
     # --- Extra Apps ---
+    unstable.opencode
+    unstable.obsidian
   ];
 
   # --- Exclude GNOME defaults ---
@@ -58,5 +61,4 @@
     gnome-console
     gnome-terminal
   ];
-
 }

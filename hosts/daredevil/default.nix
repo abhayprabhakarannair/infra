@@ -7,9 +7,11 @@
     inputs.disko.nixosModules.disko
     inputs.home-manager.nixosModules.home-manager
     inputs.sops-nix.nixosModules.sops
+    inputs.nixvim.nixosModules.nixvim
 
     ./hardware.nix
     "${inputs.self}/hosts/shared/disko_os_encrypted.nix"
+    ./storage.nix
 
     "${inputs.self}/modules/core"
     "${inputs.self}/modules/desktop"
@@ -19,11 +21,7 @@
     "${inputs.self}/modules/desktop/virtualmachine.nix"
     "${inputs.self}/modules/desktop/controlroom.nix"
 
-    "${inputs.self}/modules/storage"
-    "${inputs.self}/modules/storage/private.nix"
-    "${inputs.self}/modules/storage/shared.nix"
-
-    "${inputs.self}/scripts/storage-sync"
+    "${inputs.self}/modules/services/forgejo-runner.nix"
 
     "${inputs.self}/users/abhay"
   ];

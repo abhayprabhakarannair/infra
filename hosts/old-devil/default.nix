@@ -1,4 +1,9 @@
-{pkgs, inputs, config, ...}: {
+{
+  pkgs,
+  inputs,
+  config,
+  ...
+}: {
   imports = [
     inputs.disko.nixosModules.disko
     inputs.home-manager.nixosModules.home-manager
@@ -6,6 +11,7 @@
 
     ./hardware.nix
     "${inputs.self}/hosts/shared/disko_os_server.nix"
+    ./storage.nix
 
     "${inputs.self}/modules/core"
     "${inputs.self}/modules/webhook"
@@ -13,7 +19,9 @@
     "${inputs.self}/modules/desktop/controlroom.nix"
     "${inputs.self}/modules/services/omada-controller.nix"
     "${inputs.self}/modules/services/technitium.nix"
-
+    "${inputs.self}/modules/services/grafana/alloy-node.nix"
+    "${inputs.self}/modules/services/net-ups-client.nix"
+    "${inputs.self}/modules/services/home-assistant.nix"
 
     "${inputs.self}/users/abhay"
   ];
@@ -55,13 +63,12 @@
     };
   };
 
-
   # --- Power Management (Prevent Sleep & Ignore Lid) ---
   services.logind.settings = {
     Login = {
-	HandleLidSwitchDocked = "ignore";
-	HandleLidSwitchExternalPower = "ignore";
-	HandleLidSwitch = "ignore";
+      HandleLidSwitchDocked = "ignore";
+      HandleLidSwitchExternalPower = "ignore";
+      HandleLidSwitch = "ignore";
     };
   };
 
@@ -70,22 +77,54 @@
   systemd.targets.suspend.enable = false;
   systemd.targets.hibernate.enable = false;
   systemd.targets.hybrid-sleep.enable = false;
-  
+
   # --- This is the Networking hub device ---
-  networking.firewall.allowedUDPPorts = [ 
-    config.services.tailscale.port 19810 27001 29810 53 
+  networking.firewall.allowedUDPPorts = [
+    config.services.tailscale.port
+    19810
+    27001
+    29810
+    53
+    9
   ];
-  networking.firewall.allowedTCPPorts = [ 
-    2442 80 443 8043 8088 8843 29811 29812 29813 29814 29815 29816 29817 8085 53 9000
+  networking.firewall.allowedTCPPorts = [
+    2442
+    80
+    443
+    8043
+    8088
+    8843
+    29811
+    29812
+    29813
+    29814
+    29815
+    29816
+    29817
+    8085
+    53
+    9000
   ];
 
+  # Temp
+  systemd.services.wol-relay = {
+    description = "Wake-on-LAN UDP Relay (Tailscale to Physical LAN)";
+    after = ["network-online.target" "tailscaled.service"];
+    wants = ["network-online.target"];
+    wantedBy = ["multi-user.target"];
+    serviceConfig = {
+      Type = "simple";
+      ExecStart = "${pkgs.socat}/bin/socat UDP4-LISTEN:9,fork UDP4-DATAGRAM:192.168.0.255:9,broadcast";
+      Restart = "always";
+      RestartSec = "10s";
+    };
+  };
 
   # --- File system & cleanups ---
   services.btrfs.autoScrub = {
     enable = true;
     interval = "weekly";
   };
-
 
   # --- Enable Home Manager ---
   home-manager = {

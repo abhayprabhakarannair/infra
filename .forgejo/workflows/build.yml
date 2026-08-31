@@ -1,0 +1,21 @@
+name: Build
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-all:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build all hosts
+        run: |
+          for host in daredevil devil old-devil homelab-one; do
+            echo "=== Building $host ==="
+            nix build .#nixosConfigurations.$host.config.system.build.toplevel \
+              --print-build-logs \
+              --option accept-flake-config true
+          done

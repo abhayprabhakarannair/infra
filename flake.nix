@@ -4,6 +4,7 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-26.05";
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
+    llm-agents.url = "github:numtide/llm-agents.nix";
 
     home-manager = {
       url = "github:nix-community/home-manager/release-26.05";
@@ -20,9 +21,17 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    wrappers = {
-      url = "github:BirdeeHub/nix-wrapper-modules";
+    nixvim = {
+      url = "github:nix-community/nixvim";
+    };
+
+    deploy-rs = {
+      url = "github:serokell/deploy-rs";
       inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    nixvim-config = {
+      url = "git+https://git.iamabhay.fyi/abhay/nixvim-config.git";
     };
   };
 
@@ -32,13 +41,12 @@
     nixpkgs-unstable,
     home-manager,
     sops-nix,
-    wrappers,
+    nixvim,
+    deploy-rs,
+    nixvim-config,
     ...
   } @ inputs: let
-    # --- Default username & WSL host ---
-    username = "abhay";
-    wslHostname = "ANair-1082";
-
+    # --- Default username ---
     supportedSystems = ["x86_64-linux"];
     forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
 
@@ -52,9 +60,14 @@
       unstable = import nixpkgs-unstable {
         system = prev.stdenv.hostPlatform.system;
         config = sharedConfig;
+        overlays = [];
       };
 
+      llm-agents = (inputs.llm-agents.overlays.shared-nixpkgs final prev).llm-agents;
+
       install-infra = final.callPackage ./pkgs/install-infra {};
+      herdr = final.callPackage ./pkgs/herdr {};
+      discord-mcp = final.callPackage ./pkgs/discord-mcp {};
     };
     globalConfig = {
       nixpkgs.overlays = [systemOverlay];
@@ -76,8 +89,18 @@
         };
       in {
         inherit (pkgs) install-infra;
+        deploy-rs = pkgs.deploy-rs;
       }
     );
+
+    # --- APPS ---
+    apps = forAllSystems (system: {
+      deploy = {
+        type = "app";
+        program = "${self.packages.${system}.deploy-rs}/bin/deploy";
+        meta.description = "Deploy NixOS configurations with auto-rollback";
+      };
+    });
 
     # --- NIXOS CONFIGURATIONS ---
     nixosConfigurations = {
@@ -101,7 +124,6 @@
         ];
       };
 
-
       # Old Laptop
       old-devil = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
@@ -111,7 +133,6 @@
           ./hosts/old-devil/default.nix
         ];
       };
-
 
       # Homelab One (Hetzner alpha node)
       homelab-one = nixpkgs.lib.nixosSystem {
@@ -124,17 +145,45 @@
       };
     };
 
-    # --- WSL STANDALONE CONFIG ---
-    homeConfigurations = {
-      "${username}@${wslHostname}" = home-manager.lib.homeManagerConfiguration {
-        pkgs = import nixpkgs {
-          system = "x86_64-linux";
-          config = sharedConfig;
-          overlays = [systemOverlay];
+    # --- DEPLOYMENTS ---
+    deploy.nodes = {
+      daredevil = {
+        hostname = "daredevil";
+        sshUser = "root";
+        profiles.system = {
+          sshUser = "root";
+          path = deploy-rs.lib.x86_64-linux.activate.nixos self.nixosConfigurations.daredevil;
         };
-        extraSpecialArgs = {inherit inputs;};
-        modules = [./home/desktop/wsl.nix];
+      };
+
+      devil = {
+        hostname = "devil";
+        sshUser = "root";
+        profiles.system = {
+          sshUser = "root";
+          path = deploy-rs.lib.x86_64-linux.activate.nixos self.nixosConfigurations.devil;
+        };
+      };
+
+      old-devil = {
+        hostname = "old-devil";
+        sshUser = "root";
+        profiles.system = {
+          sshUser = "root";
+          path = deploy-rs.lib.x86_64-linux.activate.nixos self.nixosConfigurations.old-devil;
+        };
+      };
+
+      homelab-one = {
+        hostname = "homelab-one";
+        sshUser = "root";
+        profiles.system = {
+          sshUser = "root";
+          path = deploy-rs.lib.x86_64-linux.activate.nixos self.nixosConfigurations.homelab-one;
+        };
       };
     };
+
+    checks = builtins.mapAttrs (system: deployLib: deployLib.deployChecks self.deploy) deploy-rs.lib;
   };
 }
