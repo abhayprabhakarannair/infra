@@ -14,7 +14,6 @@
     ./storage.nix
 
     "${inputs.self}/modules/core"
-    "${inputs.self}/modules/webhook"
     "${inputs.self}/modules/server/podman.nix"
     "${inputs.self}/modules/desktop/controlroom.nix"
     "${inputs.self}/modules/services/omada-controller.nix"
@@ -103,7 +102,6 @@
     29817
     8085
     53
-    9000
   ];
 
   # Temp
