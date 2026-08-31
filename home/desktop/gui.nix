@@ -15,6 +15,7 @@
     nodejs_24
     python314
     pi-coding-agent
+    pkgs.llm-agents.chatgpt
     deploy-rs
     tea
     inter

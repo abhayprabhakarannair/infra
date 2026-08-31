@@ -4,6 +4,7 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-26.05";
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
+    llm-agents.url = "github:numtide/llm-agents.nix";
 
     home-manager = {
       url = "github:nix-community/home-manager/release-26.05";
@@ -61,6 +62,8 @@
         config = sharedConfig;
         overlays = [];
       };
+
+      llm-agents = (inputs.llm-agents.overlays.shared-nixpkgs final prev).llm-agents;
 
       install-infra = final.callPackage ./pkgs/install-infra {};
       herdr = final.callPackage ./pkgs/herdr {};
