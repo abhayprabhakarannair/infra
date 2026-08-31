@@ -24,7 +24,6 @@
     "${inputs.self}/modules/desktop/controlroom.nix"
 
     "${inputs.self}/modules/services/jellyfin.nix"
-    "${inputs.self}/modules/services/navidrome.nix"
     "${inputs.self}/modules/services/stash.nix"
     "${inputs.self}/modules/services/arr-stack.nix"
     "${inputs.self}/modules/services/media-warm.nix"

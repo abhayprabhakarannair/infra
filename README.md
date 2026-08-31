@@ -48,7 +48,7 @@ deploy .#                # all hosts
 - **Vaultwarden** (password manager) — homelab-one
 - **Forgejo** (git) — homelab-one
 - **Immich** (photos) — devil
-- **Jellyfin** (media) — devil
+- **Jellyfin** (media and FLAC music for Symfonium) — devil
 - **Home Assistant** — old-devil
 - **Arr-stack** (sonarr, radarr, prowlarr, sabnzbd, qbittorrent) — devil
 
