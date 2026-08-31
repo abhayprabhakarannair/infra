@@ -34,10 +34,6 @@
             --config=${config.sops.secrets."rclone-backup-node.conf".path} \
             --fast-list --transfers 4 --checkers 8 --contimeout 1m
 
-          ${pkgs.rclone}/bin/rclone sync /srv/grafana backups:/srv/grafana/ \
-            --config=${config.sops.secrets."rclone-backup-node.conf".path} \
-            --fast-list --transfers 4 --checkers 8 --contimeout 1m
-
           ${pkgs.rclone}/bin/rclone sync homelab-storage-one:/ b2-storage:homelab-storage-one-replica/ \
             --config=${config.sops.secrets."rclone-backup-node.conf".path} \
             --fast-list --transfers 4 --checkers 8 --contimeout 1m --low-level-retries 10

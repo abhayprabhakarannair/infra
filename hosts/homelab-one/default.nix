@@ -20,8 +20,6 @@
     "${inputs.self}/modules/services/vaultwarden.nix"
     "${inputs.self}/modules/services/forgejo.nix"
     "${inputs.self}/modules/services/forgejo-runner.nix"
-    "${inputs.self}/modules/services/grafana"
-    "${inputs.self}/modules/services/grafana/alloy-hub.nix"
 
     "${inputs.self}/users/abhay"
   ];
