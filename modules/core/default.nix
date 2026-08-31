@@ -99,6 +99,14 @@
     settings = {
       auto-optimise-store = true;
       experimental-features = ["nix-command" "flakes"];
+      substituters = [
+        "https://cache.nixos.org/"
+        "https://abhay-infra.cachix.org"
+      ];
+      trusted-public-keys = [
+        "cache.nixos.org-1:6NCHdD59dX431o0gWypbMrAURkbJ16ZPMQFGpcDShjY="
+        "abhay-infra.cachix.org-1:tZoiFgPW9hg6axTG6+oh2pfhic1I09sq7FszGrFc7JY="
+      ];
     };
     gc = {
       automatic = true;
