@@ -17,7 +17,7 @@
     pi-coding-agent
     pkgs.llm-agents.chatgpt
     deploy-rs
-    pkgs.gh
+    gh
     inter
     zed-editor
     nil
