@@ -322,15 +322,15 @@
       "locked": {
         "lastModified": 1787025942,
         "narHash": "sha256-4GQraDVQ4JcExo5E1wzlqntGdnWLPVPBZj4PQzrwbG0=",
-        "ref": "refs/heads/main",
+        "owner": "abhayprabhakarannair",
+        "repo": "nixvim-config",
         "rev": "19a3ed3555f3354242204d294a8d8db9b94f096a",
-        "revCount": 10,
-        "type": "git",
-        "url": "https://git.iamabhay.fyi/abhay/nixvim-config.git"
+        "type": "github"
       },
       "original": {
-        "type": "git",
-        "url": "https://git.iamabhay.fyi/abhay/nixvim-config.git"
+        "owner": "abhayprabhakarannair",
+        "repo": "nixvim-config",
+        "type": "github"
       }
     },
     "nixvim_2": {

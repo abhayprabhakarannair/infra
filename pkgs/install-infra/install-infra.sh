@@ -5,7 +5,7 @@ set -e
 if [ -z "$1" ] || [ -z "$2" ]; then
     echo "Usage: install-infra <host-target> <ip-address> [ssh-port]"
     echo "Example: install-infra homelab-one 192.168.1.50"
-    echo "Example (custom port): install-infra homelab-one 192.168.1.50 2222"
+    echo "Example (custom port): install-infra homelab-one 192.168.1.50 2442"
     exit 1
 fi
 

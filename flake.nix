@@ -31,7 +31,7 @@
     };
 
     nixvim-config = {
-      url = "git+https://git.iamabhay.fyi/abhay/nixvim-config.git";
+      url = "github:abhayprabhakarannair/nixvim-config";
     };
   };
 
