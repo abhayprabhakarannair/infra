@@ -17,6 +17,7 @@
 
     volumes = [
       "/srv/jellyfin:/config"
+      # The shared media mount includes the FLAC music library used by Symfonium.
       "/mnt/homelab/media:/media"
     ];
 

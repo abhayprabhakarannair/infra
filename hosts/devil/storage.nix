@@ -60,7 +60,7 @@
   };
 
   systemd.services.backup-devil-srv = {
-    description = "Backup Immich DB, Jellyfin, Navidrome to StorageBox";
+    description = "Backup Immich DB and Jellyfin to StorageBox";
     wants = ["network-online.target"];
     after = ["network-online.target" "podman-immich-database.service"];
     requires = ["podman-immich-database.service"];
@@ -81,10 +81,6 @@
             --config=${config.sops.secrets."rclone-main.conf".path}
 
           ${pkgs.rclone}/bin/rclone sync /srv/jellyfin backups:/srv/jellyfin/ \
-            --config=${config.sops.secrets."rclone-main.conf".path} \
-            --fast-list --transfers 4 --checkers 8
-
-          ${pkgs.rclone}/bin/rclone sync /srv/navidrome backups:/srv/navidrome/ \
             --config=${config.sops.secrets."rclone-main.conf".path} \
             --fast-list --transfers 4 --checkers 8
 
