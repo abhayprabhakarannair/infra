@@ -17,7 +17,7 @@ Personal NixOS infrastructure.
 flake.nix          # Inputs, outputs, deploy-rs config
 hosts/             # Per-host NixOS configs
 modules/           # Shared NixOS modules
-  services/        # Container services (vaultwarden, forgejo, immich, etc.)
+  services/        # Container services (vaultwarden, immich, etc.)
   desktop/         # Desktop-specific (nixvim, etc.)
   storage/         # Rclone mounts, backups
 home/              # Home-manager configs (shared + per-host)
@@ -46,7 +46,6 @@ deploy .#                # all hosts
 ## Key Services
 
 - **Vaultwarden** (password manager) — homelab-one
-- **Forgejo** (git) — homelab-one
 - **Immich** (photos) — devil
 - **Jellyfin** (media and FLAC music for Symfonium) — devil
 - **Home Assistant** — old-devil
@@ -55,6 +54,11 @@ deploy .#                # all hosts
 ## Neovim
 
 The nixvim configuration lives in its own repo:
-https://git.iamabhay.fyi/abhay/nixvim-config
+https://github.com/abhayprabhakarannair/nixvim-config
 
 Infra imports it as a flake input — edit there, both infra and WSL pick up changes.
+
+## GitHub workflows
+
+- Desktop profiles include the GitHub CLI (`gh`). Run `gh auth login` once per machine and select SSH for Git operations.
+- Git commits use SSH signing and Git verifies signatures against the configured allowed signers file.

@@ -31,8 +31,6 @@
     "${inputs.self}/modules/services/ollama.nix"
     "${inputs.self}/modules/services/net-ups-server.nix"
 
-    "${inputs.self}/modules/services/forgejo-runner.nix"
-
     "${inputs.self}/users/abhay"
   ];
 

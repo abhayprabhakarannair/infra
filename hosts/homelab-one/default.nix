@@ -18,8 +18,6 @@
 
     "${inputs.self}/modules/services/caddy.nix"
     "${inputs.self}/modules/services/vaultwarden.nix"
-    "${inputs.self}/modules/services/forgejo.nix"
-    "${inputs.self}/modules/services/forgejo-runner.nix"
 
     "${inputs.self}/users/abhay"
   ];
@@ -39,7 +37,6 @@
     2442
     80
     443
-    2222
   ];
 
   # --- WAN (Public Internet Interface) ---

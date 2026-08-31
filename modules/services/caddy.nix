@@ -19,7 +19,6 @@
     "photos.iamabhay.fyi" = "devil:2283";
 
     "vault.iamabhay.fyi" = "127.0.0.1:8222";
-    "git.iamabhay.fyi" = "127.0.0.1:3333";
   };
 in {
   sops.secrets."caddy/basic-auth-password" = {

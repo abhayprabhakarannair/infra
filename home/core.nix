@@ -5,7 +5,7 @@
       user = {
         name = "abhayprabhakarannair";
         email = "abhayprabhakarannair@gmail.com";
-        signingkey = "/run/secrets/ssh-private-keys/forge";
+        signingkey = "/run/secrets/ssh-private-keys/github";
       };
       init = {
         defaultBranch = "main";
@@ -71,13 +71,6 @@
       "github.com" = {
         User = "abhay";
         IdentityFile = "/run/secrets/ssh-private-keys/github";
-        IdentitiesOnly = "yes";
-      };
-
-      "git.iamabhay.fyi" = {
-        User = "abhay";
-        Port = 2222;
-        IdentityFile = "/run/secrets/ssh-private-keys/forge";
         IdentitiesOnly = "yes";
       };
     };
