@@ -110,8 +110,8 @@
     # Trigger emergency GC during builds before the filesystem becomes full.
     # Keep a 12G reserve so deployments have room for temporary closures.
     settings = {
-      "min-free" = "8G";
-      "max-free" = "12G";
+      "min-free" = 8 * 1024 * 1024 * 1024;
+      "max-free" = 12 * 1024 * 1024 * 1024;
     };
   };
 
