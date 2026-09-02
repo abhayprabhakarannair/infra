@@ -44,12 +44,9 @@
                  --contimeout=60s \
                  --transfers=4 \
           --sftp-chunk-size=255k \
-                 --sftp-idle-timeout=5m \
-                 --dir-cache-time=1000h \
-          --checkers=4 \
-          --rc \
-                 --rc-addr=0.0.0.0:5572 \
-                 --rc-no-auth
+          --sftp-idle-timeout=5m \
+          --dir-cache-time=1000h \
+          --checkers=4
         '';
         ExecStop = "${pkgs.fuse}/bin/fusermount -u /mnt/homelab";
         ExecStopPost = "-${pkgs.util-linux}/bin/umount -l /mnt/homelab";
