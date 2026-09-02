@@ -100,7 +100,20 @@
   };
 
   # --- Tighter GC: small disk (39G), keep less history ---
-  nix.gc.options = lib.mkForce "--delete-older-than 7d";
+  nix = {
+    gc = {
+      # Weekly GC leaves too little headroom on this host between runs.
+      dates = lib.mkForce "daily";
+      options = lib.mkForce "--delete-older-than 7d";
+    };
+
+    # Trigger emergency GC during builds before the filesystem becomes full.
+    # Keep a 12G reserve so deployments have room for temporary closures.
+    settings = {
+      "min-free" = "8G";
+      "max-free" = "12G";
+    };
+  };
 
   # --- Enable QEMU Guest Agent (Hetzner Controls) ---
   services.qemuGuest.enable = true;
