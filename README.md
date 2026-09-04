@@ -35,6 +35,16 @@ deploy .#<hostname>
 deploy .#                # all hosts
 ```
 
+### First-boot SOPS setup
+
+After the first reboot, derive the SOPS age identity from the host SSH key:
+
+```bash
+./scripts/after_install.sh <hostname> <luks-partition>
+```
+
+The script stores it at `~/.config/sops/age/keys.txt` with mode `0600`, validates and reuses an existing identity on reruns, and removes failed-run temporary files. Use `--replace-sops-key` only after rotating or re-encrypting the affected SOPS recipients and confirming the old identity is no longer required. TPM2 enrollment runs only after SOPS setup completes, so a failed TPM enrollment can be retried safely. If the identity is lost, restore it from the protected bootstrap backup or rotate the host's SOPS recipient before attempting decryption.
+
 ## Storage
 
 - **Hetzner StorageBox** (1TB): primary backing store via rclone crypt

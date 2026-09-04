@@ -54,14 +54,18 @@
     '';
   };
 
-  programs.chromium = {
+  programs.vivaldi = {
     enable = true;
-    package = pkgs.unstable.brave;
+    # Vivaldi is installed by the desktop NixOS module; Home Manager manages
+    # its profile and extensions here.
+    package = null;
     extensions = [
       # uBlock Origin
       {id = "cjpalhdlnbpafiamejdnhcphjbkeiagm";}
       # Private Internet Access (PIA) Extension
       {id = "jplnlifepflhkbkgonidnobkakhmpnmh";}
+      # Official ChatGPT browser integration for Codex
+      {id = "hehggadaopoacecdllhhajmbjkdcmajg";}
     ];
   };
 }
