@@ -95,8 +95,8 @@
             fi
             # cap total bytes per run
             if [ "$((bytes + size))" -gt "$MAX_BYTES_PER_RUN" ]; then
-              echo "run cap reached at $p" >&2
-              break
+              echo "skipping $p ($size bytes exceeds remaining run budget)" >&2
+              continue
             fi
             echo "warming: $p ($size bytes)"
             # force a full read through the VFS mount -> populates rclone cache
