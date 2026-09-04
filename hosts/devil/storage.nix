@@ -26,13 +26,20 @@
       serviceConfig = {
         Type = "notify";
         TimeoutStartSec = "600";
+        # Keep the reconstructible VFS cache out of /tmp and let systemd
+        # create it with a known owner/mode. The cache is still on the root
+        # filesystem, so the rclone limits below remain important.
+        CacheDirectory = "rclone-homelab";
+        CacheDirectoryMode = "0700";
         ExecStartPost = "${pkgs.bash}/bin/bash -c 'while ! ${pkgs.util-linux}/bin/mountpoint -q /mnt/homelab; do sleep 1; done'";
         ExecStart = ''
                ${pkgs.rclone}/bin/rclone mount homelab-storage-one-combined:/ /mnt/homelab \
                  --config=${config.sops.secrets."rclone-main.conf".path} \
+                 --cache-dir=/var/cache/rclone-homelab \
                  --vfs-cache-mode=full \
-                 --vfs-cache-max-size=250G \
-          --vfs-cache-max-age=168h \
+                 --vfs-cache-max-size=32G \
+                 --vfs-cache-min-free-space=20G \
+                 --vfs-cache-max-age=72h \
                  --vfs-write-back=5s \
                  --vfs-read-chunk-size=64M \
                  --vfs-read-chunk-size-limit=2G \
