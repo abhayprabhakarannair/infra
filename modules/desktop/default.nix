@@ -27,6 +27,7 @@
 
   # --- Essential System Packages ---
   environment.systemPackages = with pkgs; [
+    bubblewrap
     jq
     tree
     sops

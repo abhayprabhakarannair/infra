@@ -10,6 +10,17 @@ umask 077
 SOPS_AGE_DIR="${HOME}/.config/sops/age"
 SOPS_AGE_KEY_FILE="${SOPS_AGE_DIR}/keys.txt"
 TEMP_SOPS_AGE_KEY=""
+SOPS_KEY_READY=false
+
+validate_age_identity() {
+    local key_file="$1"
+
+    if command -v age-keygen >/dev/null 2>&1; then
+        age-keygen -y "${key_file}" >/dev/null 2>&1
+    else
+        grep --quiet --extended-regexp -- '^AGE-SECRET-KEY-[A-Z0-9]+$' "${key_file}"
+    fi
+}
 
 cleanup() {
     if [ -n "${TEMP_SOPS_AGE_KEY}" ] && [ -e "${TEMP_SOPS_AGE_KEY}" ]; then
@@ -39,56 +50,67 @@ if [ "$#" -eq 3 ]; then
     REPLACE_SOPS_KEY=true
 fi
 
-# Safety check: Verify the block device actually exists
+# Safety check: Verify the block device actually exists before changing anything.
 if [ ! -b "$LUKS_PARTITION" ]; then
     echo "Error: Partition '$LUKS_PARTITION' does not exist on this system."
     exit 1
 fi
-
-echo "Enrolling TPM2 for $HOSTNAME on partition $LUKS_PARTITION..."
-sudo systemd-cryptenroll --tpm2-device=auto --tpm2-pcrs=0+7 "$LUKS_PARTITION"
-echo "TPM2 enrollment complete."
 
 echo "Adding SOPS Decryption Setup..."
 mkdir -p -- "${SOPS_AGE_DIR}"
 chmod 700 -- "${SOPS_AGE_DIR}"
 
 if [ -e "${SOPS_AGE_KEY_FILE}" ] || [ -L "${SOPS_AGE_KEY_FILE}" ]; then
-    if [ "${REPLACE_SOPS_KEY}" != true ]; then
-        echo "Error: '${SOPS_AGE_KEY_FILE}' already exists; refusing to overwrite it."
-        echo "Use --replace-sops-key only after confirming the old identity is no longer needed."
-        exit 1
-    fi
-    if [ -d "${SOPS_AGE_KEY_FILE}" ]; then
+    if [ -L "${SOPS_AGE_KEY_FILE}" ]; then
+        if [ "${REPLACE_SOPS_KEY}" != true ]; then
+            echo "Error: '${SOPS_AGE_KEY_FILE}' is a symlink; refusing to use or overwrite it."
+            echo "Use --replace-sops-key only after confirming the old identity is no longer needed."
+            exit 1
+        fi
+    elif [ -d "${SOPS_AGE_KEY_FILE}" ]; then
         echo "Error: '${SOPS_AGE_KEY_FILE}' is a directory."
         exit 1
     fi
+
+    if [ "${REPLACE_SOPS_KEY}" != true ]; then
+        if ! validate_age_identity "${SOPS_AGE_KEY_FILE}"; then
+            echo "Error: '${SOPS_AGE_KEY_FILE}' is not a valid age identity."
+            echo "Use --replace-sops-key only after confirming the old identity is no longer needed."
+            exit 1
+        fi
+        chmod 600 -- "${SOPS_AGE_KEY_FILE}"
+        echo "Existing SOPS age identity is valid; reusing it."
+        SOPS_KEY_READY=true
+    fi
 fi
 
-# Keep the temporary identity in the private destination directory. mktemp
-# creates it before ssh-to-age writes, avoiding predictable paths and races.
-TEMP_SOPS_AGE_KEY=$(mktemp "${SOPS_AGE_DIR}/.keys.txt.XXXXXX")
-chmod 600 -- "${TEMP_SOPS_AGE_KEY}"
-sudo ssh-to-age -private-key -i /etc/ssh/ssh_host_ed25519_key > "${TEMP_SOPS_AGE_KEY}"
+if [ "${SOPS_KEY_READY}" != true ]; then
+    # Keep the temporary identity in the private destination directory. mktemp
+    # creates it before ssh-to-age writes, avoiding predictable paths and races.
+    TEMP_SOPS_AGE_KEY=$(mktemp "${SOPS_AGE_DIR}/.keys.txt.XXXXXX")
+    chmod 600 -- "${TEMP_SOPS_AGE_KEY}"
+    sudo ssh-to-age -private-key -i /etc/ssh/ssh_host_ed25519_key > "${TEMP_SOPS_AGE_KEY}"
 
-if command -v age-keygen >/dev/null 2>&1; then
-    if ! age-keygen -y "${TEMP_SOPS_AGE_KEY}" >/dev/null; then
+    if ! validate_age_identity "${TEMP_SOPS_AGE_KEY}"; then
         echo "Error: ssh-to-age did not produce a valid age identity."
         exit 1
     fi
-elif ! grep --quiet -- '^AGE-SECRET-KEY-' "${TEMP_SOPS_AGE_KEY}"; then
-    echo "Error: ssh-to-age did not produce an age identity."
-    exit 1
-fi
 
-if [ "${REPLACE_SOPS_KEY}" = true ]; then
-    mv -f -- "${TEMP_SOPS_AGE_KEY}" "${SOPS_AGE_KEY_FILE}"
-else
-    # A hard link gives a no-overwrite install: if the destination appeared
-    # after the check above, the operation fails instead of replacing it.
-    ln -- "${TEMP_SOPS_AGE_KEY}" "${SOPS_AGE_KEY_FILE}"
-    rm -f -- "${TEMP_SOPS_AGE_KEY}"
+    if [ "${REPLACE_SOPS_KEY}" = true ]; then
+        mv -fT -- "${TEMP_SOPS_AGE_KEY}" "${SOPS_AGE_KEY_FILE}"
+    else
+        # A hard link gives a no-overwrite install: if the destination appeared
+        # after the check above, the operation fails instead of replacing it.
+        ln -- "${TEMP_SOPS_AGE_KEY}" "${SOPS_AGE_KEY_FILE}"
+        rm -f -- "${TEMP_SOPS_AGE_KEY}"
+    fi
+    chmod 600 -- "${SOPS_AGE_KEY_FILE}"
+    TEMP_SOPS_AGE_KEY=""
 fi
-chmod 600 -- "${SOPS_AGE_KEY_FILE}"
-TEMP_SOPS_AGE_KEY=""
 echo "SOPS Setup completed."
+
+echo "Enrolling TPM2 for $HOSTNAME on partition $LUKS_PARTITION..."
+sudo systemd-cryptenroll --tpm2-device=auto --tpm2-pcrs=0+7 "$LUKS_PARTITION"
+echo "TPM2 enrollment complete."
+
+echo "Setup completed."
