@@ -40,9 +40,9 @@
       RuntimeDirectoryMode = "0700";
       Environment = [
         "JF_BASE=http://localhost:8096"
-        # Keep pre-warming useful without allowing one run to consume a
-        # material fraction of the bounded rclone cache.
-        "MAX_BYTES_PER_RUN=5000000000"
+        # Bandwidth is not the constraint here; let one run warm a cache-sized
+        # batch while rclone's max-size and min-free-space remain the bounds.
+        "MAX_BYTES_PER_RUN=32000000000"
       ];
       ExecStart = let
         script = pkgs.writeShellScript "media-warm" ''
