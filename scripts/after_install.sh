@@ -57,6 +57,10 @@ if [ ! -b "$LUKS_PARTITION" ]; then
 fi
 
 echo "Adding SOPS Decryption Setup..."
+if [ -L "${SOPS_AGE_DIR}" ]; then
+    echo "Error: '${SOPS_AGE_DIR}' is a symlink; refusing to write secrets through it."
+    exit 1
+fi
 mkdir -p -- "${SOPS_AGE_DIR}"
 chmod 700 -- "${SOPS_AGE_DIR}"
 
