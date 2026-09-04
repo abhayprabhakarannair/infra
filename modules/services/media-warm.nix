@@ -35,9 +35,14 @@
       Type = "oneshot";
       User = "root";
       StateDirectory = "media-warm";
+      StateDirectoryMode = "0700";
+      RuntimeDirectory = "media-warm";
+      RuntimeDirectoryMode = "0700";
       Environment = [
         "JF_BASE=http://localhost:8096"
-        "MAX_BYTES_PER_RUN=25000000000"
+        # Keep pre-warming useful without allowing one run to consume a
+        # material fraction of the bounded rclone cache.
+        "MAX_BYTES_PER_RUN=5000000000"
       ];
       ExecStart = let
         script = pkgs.writeShellScript "media-warm" ''
@@ -45,32 +50,31 @@
 
           KEY=$(cat ${config.sops.secrets."jellyfin/api-key".path})
           ST=/var/lib/media-warm/state.json
-          : > /tmp/media-warm-candidates.txt
-          : > /tmp/media-warm-done.txt
+          CANDIDATES=/run/media-warm/candidates.txt
+          trap 'rm -f "$CANDIDATES"' EXIT
+          : > "$CANDIDATES"
 
           # Resolve first user id
           UID_=$(curl -sf -H "X-Emby-Token: $KEY" \
             "$JF_BASE/Users" | jq -r '.[0].Id // empty' || true)
           [ -n "$UID_" ] || { echo "no jellyfin user"; exit 0; }
 
-          # Gather candidate paths (Resume + NextUp + RecentlyAdded)
+          # Gather only likely-to-be-watched, unplayed candidate paths:
+          # partially watched/resumable items and the user's Next Up queue.
           curl -sf -H "X-Emby-Token: $KEY" \
-            "$JF_BASE/Users/$UID_/Items/Resume?Fields=Path&Limit=8" \
-            | jq -r '.Items[]?.Path // empty' >> /tmp/media-warm-candidates.txt 2>/dev/null || true
+            "$JF_BASE/Users/$UID_/Items/Resume?Fields=Path&Limit=4&EnableUserData=true" \
+            | jq -r '.Items[]? | select(.UserData.Played != true) | .Path // empty' >> "$CANDIDATES" 2>/dev/null || true
           curl -sf -H "X-Emby-Token: $KEY" \
-            "$JF_BASE/Shows/NextUp?UserId=$UID_&Fields=Path&Limit=6" \
-            | jq -r '.Items[]?.Path // empty' >> /tmp/media-warm-candidates.txt 2>/dev/null || true
-          curl -sf -H "X-Emby-Token: $KEY" \
-            "$JF_BASE/Users/$UID_/Items/Latest?Fields=Path&Limit=5" \
-            | jq -r '.[].Path // empty' >> /tmp/media-warm-candidates.txt 2>/dev/null || true
+            "$JF_BASE/Shows/NextUp?UserId=$UID_&Fields=Path&Limit=4&EnableUserData=true&EnableRewatching=false&EnableResumable=true" \
+            | jq -r '.Items[]? | select(.UserData.Played != true) | .Path // empty' >> "$CANDIDATES" 2>/dev/null || true
 
           # Normalise container paths back to host paths
           sed -i \
             -e 's#^/media/#/mnt/homelab/media/#' \
             -e 's#^/music/#/mnt/homelab/media/music/#' \
-            /tmp/media-warm-candidates.txt
+            "$CANDIDATES"
 
-          sort -u /tmp/media-warm-candidates.txt -o /tmp/media-warm-candidates.txt
+          sort -u "$CANDIDATES" -o "$CANDIDATES"
 
           # Reject anything already warmed recently (state = size:mtime)
           [ -f "$ST" ] || echo '{}' > "$ST"
@@ -102,7 +106,7 @@
             jq --arg p "$p" --argjson s "$size" --argjson m "$mtime" --argjson t "$now" \
               '.[$p] = {size: $s, mtime: $m, warmedAt: $t}' "$ST" > "$ST.tmp"
             mv "$ST.tmp" "$ST"
-          done < /tmp/media-warm-candidates.txt
+          done < "$CANDIDATES"
 
           echo "media-warm done: $warmed files warmed ($bytes bytes)"
         '';
@@ -114,8 +118,10 @@
     description = "Every 2h media cache pre-warm";
     wantedBy = ["timers.target"];
     timerConfig = {
-      OnCalendar = "*-*-* *:0/2";
-      Persistent = true;
+      # Use a monotonic interval; OnCalendar="*:0/2" means every two
+      # minutes, not every two hours.
+      OnBootSec = "15min";
+      OnUnitActiveSec = "2h";
       RandomizedDelaySec = "10min";
     };
   };
