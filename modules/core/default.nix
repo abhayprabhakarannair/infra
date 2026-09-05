@@ -1,4 +1,5 @@
 {
+  lib,
   pkgs,
   inputs,
   config,
@@ -49,7 +50,11 @@
   # --- Secrets ---
   sops.defaultSopsFile = "${inputs.self}/secrets/system-secrets.yaml";
   sops.defaultSopsFormat = "yaml";
-  sops.age.sshKeyPaths = ["/etc/ssh/ssh_host_ed25519_key"];
+  # On the resettable host, the encrypted secret must be unlocked from the
+  # persisted host key before the ephemeral root is recreated in initrd.
+  sops.age.sshKeyPaths = lib.mkIf config.myImpermanence.reset.enable [
+    "/persist/etc/ssh/ssh_host_ed25519_key"
+  ];
 
   # --- Passwords ---
   sops.secrets."abhay-password" = {
