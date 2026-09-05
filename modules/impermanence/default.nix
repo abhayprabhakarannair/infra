@@ -227,13 +227,13 @@ in {
         impermanence_btrfs_device=${lib.escapeShellArg cfg.reset.device}
         impermanence_btrfs_root=/run/impermanence-btrfs-root
         mkdir -p "$impermanence_btrfs_root"
-        ${pkgs.util-linux}/bin/mount -t btrfs -o subvolid=5 "$impermanence_btrfs_device" "$impermanence_btrfs_root"
+        ${pkgs.util-linuxMinimal}/bin/mount -t btrfs -o subvolid=5 "$impermanence_btrfs_device" "$impermanence_btrfs_root"
 
         # The marker is created only after the live migration has copied the
         # allowlisted state into @persist and the rollback snapshot exists.
         if [ ! -e "$impermanence_btrfs_root/@persist/.impermanence-ready" ]; then
           echo "impermanence: migration marker absent; keeping existing subvolumes"
-          ${pkgs.util-linux}/bin/umount "$impermanence_btrfs_root"
+          ${pkgs.util-linuxMinimal}/bin/umount "$impermanence_btrfs_root"
           exit 0
         fi
 
@@ -245,7 +245,7 @@ in {
         done
 
         sync
-        ${pkgs.util-linux}/bin/umount "$impermanence_btrfs_root"
+        ${pkgs.util-linuxMinimal}/bin/umount "$impermanence_btrfs_root"
       '';
     };
   };
