@@ -156,13 +156,48 @@ in {
       };
     };
 
+    systemd.services.abhay-home-permissions = {
+      description = "Prepare abhay's home directory for Home Manager";
+      wantedBy = ["home-manager-abhay.service"];
+      before = ["home-manager-abhay.service"];
+      after = ["local-fs.target"];
+      serviceConfig = {
+        Type = "oneshot";
+        ExecStart = pkgs.writeShellScript "abhay-home-permissions" ''
+          install -d -o abhay -g users -m 0755 \
+            /home/abhay/.config \
+            /home/abhay/.local \
+            /home/abhay/.local/share \
+            /home/abhay/.local/state
+          chown abhay:users \
+            /home/abhay \
+            /home/abhay/.config \
+            /home/abhay/.local \
+            /home/abhay/.local/share \
+            /home/abhay/.local/state
+          chmod 0755 \
+            /home/abhay \
+            /home/abhay/.config \
+            /home/abhay/.local \
+            /home/abhay/.local/share \
+            /home/abhay/.local/state
+        '';
+      };
+    };
+
     # The reset service runs before the normal system closure is available.
     # Include the tools it invokes in the initrd explicitly.
     boot.initrd.systemd.storePaths = [pkgs.util-linux pkgs.btrfs-progs];
 
     # A freshly reset @home is created by root. Home Manager activates as the
     # user and therefore needs its home directory owned by abhay first.
-    systemd.tmpfiles.rules = ["z /home/abhay 0755 abhay users -"];
+    systemd.tmpfiles.rules = [
+      "z /home/abhay 0755 abhay users -"
+      "z /home/abhay/.config 0755 abhay users -"
+      "z /home/abhay/.local 0755 abhay users -"
+      "z /home/abhay/.local/share 0755 abhay users -"
+      "z /home/abhay/.local/state 0755 abhay users -"
+    ];
 
     environment.persistence."/persist" = {
       hideMounts = true;

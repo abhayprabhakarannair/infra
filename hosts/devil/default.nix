@@ -65,7 +65,10 @@
       ".config/obsidian"
       ".config/Codex"
       ".config/opencode"
+      ".config/dconf"
       ".local/share/keyrings"
+      ".local/share/backgrounds"
+      ".local/share/icons"
       ".local/share/Steam/userdata"
       ".codex"
     ];
