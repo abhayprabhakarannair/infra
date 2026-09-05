@@ -11,6 +11,7 @@
     "/var/lib/tailscale"
     "/etc/NetworkManager/system-connections"
     "/var/lib/bluetooth"
+    "/var/log/journal"
   ];
 
   commonSystemFiles = [
@@ -60,8 +61,10 @@
       /etc/ssh/ssh_host_rsa_key \
       /etc/ssh/ssh_host_rsa_key.pub \
       /var/lib/systemd/random-seed; do
-      if ! ${pkgs.util-linux}/bin/findmnt --mountpoint "$path" >/dev/null 2>&1; then
-        rm -f "$path"
+      if [ -e "$path" ] && ! ${pkgs.util-linux}/bin/findmnt --mountpoint "$path" >/dev/null 2>&1; then
+        # A concurrently-started persistence mount can make the file busy
+        # after the check. That is harmless: the bind mount already owns it.
+        rm -f -- "$path" 2>/dev/null || true
       fi
     done
   '';
@@ -81,6 +84,7 @@ in {
         "Sync"
         ".config/syncthing"
         ".local/share/keyrings"
+        ".local/state/nix"
         ".ssh"
       ];
       description = "User directories retained by Home Manager impermanence.";
@@ -168,13 +172,17 @@ in {
             /home/abhay/.config \
             /home/abhay/.local \
             /home/abhay/.local/share \
-            /home/abhay/.local/state
+            /home/abhay/.local/state \
+            /home/abhay/.local/state/nix \
+            /home/abhay/.local/state/nix/profiles
           chown abhay:users \
             /home/abhay \
             /home/abhay/.config \
             /home/abhay/.local \
             /home/abhay/.local/share \
-            /home/abhay/.local/state
+            /home/abhay/.local/state \
+            /home/abhay/.local/state/nix \
+            /home/abhay/.local/state/nix/profiles
           chmod 0755 \
             /home/abhay \
             /home/abhay/.config \
@@ -197,6 +205,8 @@ in {
       "z /home/abhay/.local 0755 abhay users -"
       "z /home/abhay/.local/share 0755 abhay users -"
       "z /home/abhay/.local/state 0755 abhay users -"
+      "z /home/abhay/.local/state/nix 0755 abhay users -"
+      "z /home/abhay/.local/state/nix/profiles 0755 abhay users -"
     ];
 
     environment.persistence."/persist" = {
