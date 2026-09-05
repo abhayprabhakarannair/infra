@@ -58,6 +58,41 @@
 
     marker=/persist/.impermanence-ready
     rollback=/persist/rollback
+    migration_marker=/persist/.impermanence-state-seeded-v1
+
+    seed_file() {
+      source="$1"
+      target="$2"
+      if [ -e "$source" ] && [ ! -e "$target" ] && [ ! -L "$target" ]; then
+        ${pkgs.coreutils}/bin/mkdir -p "$(${pkgs.coreutils}/bin/dirname "$target")"
+        ${pkgs.coreutils}/bin/cp -a -- "$source" "$target"
+      fi
+    }
+
+    seed_directory() {
+      source="$1"
+      target="$2"
+      [ -d "$source" ] || return 0
+      ${pkgs.coreutils}/bin/mkdir -p "$target"
+
+      # Copy only entries missing from persistence. This makes the migration
+      # additive and never overwrites state already established there.
+      for entry in "$source"/* "$source"/.[!.]* "$source"/..?*; do
+        [ -e "$entry" ] || [ -L "$entry" ] || continue
+        name="''${entry##*/}"
+        if [ ! -e "$target/$name" ] && [ ! -L "$target/$name" ]; then
+          ${pkgs.coreutils}/bin/cp -a -- "$entry" "$target/$name"
+        fi
+      done
+    }
+
+    seed_declared_state() {
+      ${seedSystemDirectories}
+      ${seedServiceDirectories}
+      ${seedHomeDirectories}
+      ${seedSystemFiles}
+      ${seedHomeFiles}
+    }
 
     if ! ${pkgs.util-linux}/bin/mountpoint --quiet /persist; then
       echo "impermanence-prepare-reset: /persist is not mounted" >&2
@@ -65,10 +100,11 @@
     fi
 
     has_snapshot=no
+    latest_snapshot=
     for candidate in "$rollback"/*; do
       if [ -d "$candidate" ]; then
         has_snapshot=yes
-        break
+        latest_snapshot="$candidate"
       fi
     done
 
@@ -76,6 +112,11 @@
     # the marker behind without a rollback snapshot, create the missing point
     # before allowing the next reset.
     if [ -e "$marker" ] && [ "$has_snapshot" = yes ]; then
+      if [ ! -e "$migration_marker" ]; then
+        destination="$latest_snapshot"
+        seed_declared_state
+        ${pkgs.coreutils}/bin/touch "$migration_marker"
+      fi
       exit 0
     fi
 
@@ -90,6 +131,8 @@
       ${pkgs.btrfs-progs}/bin/btrfs subvolume snapshot -r /srv "$destination/srv"
     fi
 
+    seed_declared_state
+    ${pkgs.coreutils}/bin/touch "$migration_marker"
     ${pkgs.coreutils}/bin/touch "$marker"
     echo "Created read-only rollback snapshots under $destination"
   '';
@@ -109,6 +152,33 @@
       fi
     done
   '';
+
+  persistentSystemDirectories =
+    commonSystemDirectories
+    ++ cfg.extraSystemDirectories;
+
+  seedSystemDirectories = lib.concatMapStringsSep "\n" (path: ''
+    seed_directory "$destination/root${path}" "/persist${path}"
+  '') persistentSystemDirectories;
+
+  seedServiceDirectories = lib.concatMapStringsSep "\n" (path:
+    if lib.hasPrefix "/srv/" path then ''
+      seed_directory "$destination/srv/${lib.removePrefix "/srv/" path}" "/persist${path}"
+    '' else ''
+      seed_directory "$destination/root${path}" "/persist${path}"
+    '') cfg.serviceDirectories;
+
+  seedHomeDirectories = lib.concatMapStringsSep "\n" (path: ''
+    seed_directory "$destination/home/abhay/${path}" "/persist/home/abhay/${path}"
+  '') cfg.homeDirectories;
+
+  seedSystemFiles = lib.concatMapStringsSep "\n" (path: ''
+    seed_file "$destination/root${path}" "/persist${path}"
+  '') (commonSystemFiles ++ cfg.extraSystemFiles);
+
+  seedHomeFiles = lib.concatMapStringsSep "\n" (path: ''
+    seed_file "$destination/home/abhay/${path}" "/persist/home/abhay/${path}"
+  '') cfg.homeFiles;
 in {
   options.myImpermanence = {
     enable = lib.mkEnableOption "explicit persistent state boundaries";
