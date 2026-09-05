@@ -73,6 +73,8 @@
       ".local/share/icons"
       ".local/share/Steam/userdata"
       ".local/state/nix"
+      # Mutable SSH state, including known_hosts, must survive resets without
+      # being owned by Home Manager.
       ".ssh"
       ".codex"
     ];
@@ -142,6 +144,9 @@
   home-manager = {
     useGlobalPkgs = true;
     useUserPackages = true;
+    # Preserve pre-existing files while Home Manager takes ownership during
+    # the impermanence cutover.
+    backupFileExtension = "hm-backup";
     extraSpecialArgs = {inherit inputs;};
     users.abhay = import "${inputs.self}/home/desktop/gui.nix";
   };
