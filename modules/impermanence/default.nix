@@ -53,6 +53,47 @@
     '';
   };
 
+  prepareReset = pkgs.writeShellScript "impermanence-prepare-reset" ''
+    set -eu
+
+    marker=/persist/.impermanence-ready
+    rollback=/persist/rollback
+
+    if ! ${pkgs.util-linux}/bin/mountpoint --quiet /persist; then
+      echo "impermanence-prepare-reset: /persist is not mounted" >&2
+      exit 1
+    fi
+
+    has_snapshot=no
+    for candidate in "$rollback"/*; do
+      if [ -d "$candidate" ]; then
+        has_snapshot=yes
+        break
+      fi
+    done
+
+    # The marker gates destructive resets. If an older recovery attempt left
+    # the marker behind without a rollback snapshot, create the missing point
+    # before allowing the next reset.
+    if [ -e "$marker" ] && [ "$has_snapshot" = yes ]; then
+      exit 0
+    fi
+
+    stamp=$(${pkgs.coreutils}/bin/date -u +%Y%m%d-%H%M%S)
+    destination="$rollback/$stamp"
+    ${pkgs.coreutils}/bin/mkdir -p "$destination"
+
+    ${pkgs.btrfs-progs}/bin/btrfs subvolume snapshot -r / "$destination/root"
+    ${pkgs.btrfs-progs}/bin/btrfs subvolume snapshot -r /home "$destination/home"
+
+    if ${pkgs.btrfs-progs}/bin/btrfs subvolume show /srv >/dev/null 2>&1; then
+      ${pkgs.btrfs-progs}/bin/btrfs subvolume snapshot -r /srv "$destination/srv"
+    fi
+
+    ${pkgs.coreutils}/bin/touch "$marker"
+    echo "Created read-only rollback snapshots under $destination"
+  '';
+
   cleanupSystemFiles = pkgs.writeShellScript "impermanence-clean-system-files" ''
     for path in \
       /etc/machine-id \
@@ -137,6 +178,13 @@ in {
     system.activationScripts.persist-files.deps = lib.mkAfter [
       "impermanence-clean-system-files"
     ];
+
+    # Prepare the rollback point during the activation that enables reset.
+    # The following reboot is then the first destructive reset.
+    system.activationScripts.impermanence-prepare-reset = lib.mkIf cfg.reset.enable {
+      deps = ["createPersistentStorageDirs"];
+      text = "${prepareReset}";
+    };
 
     # NixOS and sshd-keygen may create these files before impermanence's
     # mount units run. Remove the ephemeral copies first so the persisted
@@ -228,7 +276,14 @@ in {
     boot.initrd.systemd.services.impermanence-reset = lib.mkIf cfg.reset.enable {
       description = "Reset undeclared impermanent root and home state";
       wantedBy = ["initrd-root-fs.target"];
-      before = ["initrd-root-fs.target"];
+      before = [
+        "initrd-fs.target"
+        "initrd-root-fs.target"
+        "sysroot.mount"
+        "sysroot-home.mount"
+        "sysroot-nix.mount"
+        "sysroot-persist.mount"
+      ];
       after = ["initrd-root-device.target"];
       serviceConfig.Type = "oneshot";
       script = ''

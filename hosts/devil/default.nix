@@ -37,9 +37,7 @@
   myImpermanence = {
     enable = true;
     reset = {
-      # Recovery boot: @ and @home were already recreated by the failed
-      # cutover. Leave them untouched while validating stage 2.
-      enable = false;
+      enable = true;
       device = "/dev/mapper/enc";
     };
     serviceDirectories = [
@@ -144,9 +142,6 @@
   home-manager = {
     useGlobalPkgs = true;
     useUserPackages = true;
-    # Preserve pre-existing files while Home Manager takes ownership during
-    # the impermanence cutover.
-    backupFileExtension = "hm-backup";
     extraSpecialArgs = {inherit inputs;};
     users.abhay = import "${inputs.self}/home/desktop/gui.nix";
   };
