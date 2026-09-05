@@ -65,10 +65,13 @@
       ".config/obsidian"
       ".config/Codex"
       ".config/opencode"
+      # Zed settings and user-managed project/editor state.
+      ".config/zed"
       ".config/dconf"
       ".local/share/keyrings"
       ".local/share/backgrounds"
       ".local/share/icons"
+      ".local/share/zed"
       ".local/share/Steam/userdata"
       ".local/state/nix"
       # Mutable SSH state, including known_hosts, must survive resets without
