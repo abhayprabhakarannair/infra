@@ -5,6 +5,32 @@
 }: {
   imports = ["${inputs.self}/modules/desktop/nixvim.nix"];
 
+  # Desktop persistence follows the XDG boundary instead of enumerating every
+  # application. Configuration and user data survive resets; ~/.cache and
+  # other transient top-level state remain ephemeral. The few non-XDG user
+  # directories below are standard credentials/data locations, not app lists.
+  myImpermanence.homeDirectories = [
+    "Desktop"
+    "Documents"
+    "Downloads"
+    "Music"
+    "Pictures"
+    "Projects"
+    "Public"
+    "Sync"
+    "Templates"
+    "Videos"
+    ".config"
+    ".local/share"
+    ".local/state"
+    ".ssh"
+    ".gnupg"
+    ".pki"
+    ".var/app"
+    ".codex"
+  ];
+  myImpermanence.homeFiles = [".bash_history"];
+
   # --- Global fonts ---
   fonts = {
     packages = with pkgs; [
@@ -58,15 +84,14 @@
   # Playwright channel:"chrome" looks for /opt/google/chrome/chrome
   systemd.tmpfiles.rules = [
     "L+ /opt/google/chrome/chrome - - - - ${pkgs.google-chrome}/bin/google-chrome-stable"
-    # Steam's client bootstrap writes into this directory. Keep the existing
-    # impermanence migration from leaving it root/nobody-owned after reset.
-    "z /home/abhay/.local/share/Steam 0755 abhay users -"
-    "z /home/abhay/.local/share/Steam/config 0755 abhay users -"
-    "z /home/abhay/.local/share/Steam/userdata 0755 abhay users -"
-    "z /persist/home/abhay/.local/share/Steam 0755 abhay users -"
-    "z /persist/home/abhay/.local/share/Steam/config 0755 abhay users -"
-    "z /persist/home/abhay/.local/share/Steam/userdata 0755 abhay users -"
-    "z /persist/home/abhay/.local/share/Steam/steamapps 0755 abhay users -"
+    # Repair the top-level user state roots left by older generations. The
+    # one-time migration also normalizes their declared contents recursively.
+    "z /home/abhay/.config 0755 abhay users -"
+    "z /home/abhay/.local/share 0755 abhay users -"
+    "z /home/abhay/.local/state 0755 abhay users -"
+    "z /persist/home/abhay/.config 0755 abhay users -"
+    "z /persist/home/abhay/.local/share 0755 abhay users -"
+    "z /persist/home/abhay/.local/state 0755 abhay users -"
   ];
 
   environment.sessionVariables = {

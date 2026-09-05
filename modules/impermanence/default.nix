@@ -58,7 +58,7 @@
 
     marker=/persist/.impermanence-ready
     rollback=/persist/rollback
-    migration_marker=/persist/.impermanence-state-seeded-v1
+    migration_marker=/persist/.impermanence-state-seeded-v2
 
     seed_file() {
       source="$1"
@@ -92,6 +92,11 @@
       ${seedHomeDirectories}
       ${seedSystemFiles}
       ${seedHomeFiles}
+
+      # Existing persistence directories may have been created by an older
+      # cutover with the wrong owner. Normalize only the declared user state,
+      # once, so applications can write normally without app-specific fixes.
+      ${seedHomeOwnership}
     }
 
     if ! ${pkgs.util-linux}/bin/mountpoint --quiet /persist; then
@@ -179,6 +184,12 @@
   seedHomeFiles = lib.concatMapStringsSep "\n" (path: ''
     seed_file "$destination/home/abhay/${path}" "/persist/home/abhay/${path}"
   '') cfg.homeFiles;
+
+  seedHomeOwnership = lib.concatMapStringsSep "\n" (path: ''
+    if [ -e "/persist/home/abhay/${path}" ]; then
+      ${pkgs.coreutils}/bin/chown -R abhay:users -- "/persist/home/abhay/${path}"
+    fi
+  '') cfg.homeDirectories;
 in {
   options.myImpermanence = {
     enable = lib.mkEnableOption "explicit persistent state boundaries";

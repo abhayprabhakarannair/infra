@@ -54,41 +54,6 @@
       "/srv/seerr"
       "/srv/stash"
     ];
-    homeDirectories = [
-      "Sync"
-      "Projects"
-      "Pictures"
-      "Documents"
-      "Downloads"
-      ".config/syncthing"
-      ".config/vivaldi"
-      ".config/obsidian"
-      ".config/Codex"
-      # Zed settings and user-managed project/editor state.
-      ".config/zed"
-      ".config/dconf"
-      ".config/sops/age"
-      ".local/share/keyrings"
-      ".local/share/zed"
-      # Keep Steam's small mutable client state, but leave caches and local
-      # runtime data ephemeral. The game payload and app manifests live on
-      # the separate /mnt/games/SteamLibrary Btrfs filesystem.
-      ".local/share/Steam/config"
-      ".local/share/Steam/userdata"
-      ".local/state/nix"
-      # Mutable SSH state, including known_hosts, must survive resets without
-      # being owned by Home Manager.
-      ".ssh"
-      ".codex"
-    ];
-    homeFiles = [
-      # Steam stores the external-library registration in this file. Without
-      # it, a reset makes Steam forget the games that are still on /mnt/games.
-      ".local/share/Steam/steamapps/libraryfolders.vdf"
-      # Preserve user-selected XDG application associations across resets.
-      ".config/mimeapps.list"
-      ".local/share/applications/mimeapps.list"
-    ];
   };
 
   # --- Default Drive ---

@@ -30,31 +30,6 @@
       enable = true;
       device = "/dev/mapper/enc";
     };
-    homeDirectories = [
-      "Sync"
-      "Projects"
-      "Pictures"
-      "Documents"
-      "Downloads"
-      ".config/syncthing"
-      ".config/vivaldi"
-      ".config/obsidian"
-      ".config/Codex"
-      ".config/zed"
-      ".config/dconf"
-      ".config/sops/age"
-      ".local/share/keyrings"
-      ".local/share/zed"
-      ".local/share/Steam/userdata"
-      ".local/state/nix"
-      ".codex"
-      ".ssh"
-    ];
-    homeFiles = [
-      # Preserve user-selected XDG application associations across resets.
-      ".config/mimeapps.list"
-      ".local/share/applications/mimeapps.list"
-    ];
   };
 
   # --- Default Drive ---
