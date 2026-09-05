@@ -10,6 +10,16 @@
 
   # Tailscale and the Gluetun VPN container both require the kernel TUN device.
   boot.kernelModules = ["tun"];
+  systemd.services.load-tun-module = {
+    description = "Load the kernel TUN module";
+    wantedBy = ["sysinit.target"];
+    before = ["tailscaled.service" "podman-gluetun.service"];
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = "${pkgs.kmod}/bin/modprobe tun";
+      RemainAfterExit = true;
+    };
+  };
 
   # --- Timezone and Locale ---
   time.timeZone = "Asia/Kolkata";
