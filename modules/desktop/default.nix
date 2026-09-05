@@ -50,9 +50,9 @@
   ];
 
   xdg.mime.defaultApplications = {
-    "text/html" = "google-chrome.desktop";
-    "x-scheme-handler/http" = "google-chrome.desktop";
-    "x-scheme-handler/https" = "google-chrome.desktop";
+    "text/html" = "vivaldi-stable.desktop";
+    "x-scheme-handler/http" = "vivaldi-stable.desktop";
+    "x-scheme-handler/https" = "vivaldi-stable.desktop";
   };
 
   # Playwright channel:"chrome" looks for /opt/google/chrome/chrome

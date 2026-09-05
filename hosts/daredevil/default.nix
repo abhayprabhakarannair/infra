@@ -50,6 +50,11 @@
       ".codex"
       ".ssh"
     ];
+    homeFiles = [
+      # Preserve user-selected XDG application associations across resets.
+      ".config/mimeapps.list"
+      ".local/share/applications/mimeapps.list"
+    ];
   };
 
   # --- Default Drive ---

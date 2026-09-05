@@ -85,6 +85,9 @@
       # Steam stores the external-library registration in this file. Without
       # it, a reset makes Steam forget the games that are still on /mnt/games.
       ".local/share/Steam/steamapps/libraryfolders.vdf"
+      # Preserve user-selected XDG application associations across resets.
+      ".config/mimeapps.list"
+      ".local/share/applications/mimeapps.list"
     ];
   };
 
