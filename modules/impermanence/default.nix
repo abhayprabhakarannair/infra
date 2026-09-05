@@ -349,6 +349,7 @@ in {
     };
 
     home-manager.users.abhay.home.persistence."/persist" = {
+      hideMounts = true;
       directories = cfg.homeDirectories;
       files = cfg.homeFiles;
     };
