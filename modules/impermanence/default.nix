@@ -51,6 +51,20 @@
       echo "Created read-only rollback snapshots under $destination"
     '';
   };
+
+  cleanupSystemFiles = pkgs.writeShellScript "impermanence-clean-system-files" ''
+    for path in \
+      /etc/machine-id \
+      /etc/ssh/ssh_host_ed25519_key \
+      /etc/ssh/ssh_host_ed25519_key.pub \
+      /etc/ssh/ssh_host_rsa_key \
+      /etc/ssh/ssh_host_rsa_key.pub \
+      /var/lib/systemd/random-seed; do
+      if ! ${pkgs.util-linux}/bin/findmnt --mountpoint "$path" >/dev/null 2>&1; then
+        rm -f "$path"
+      fi
+    done
+  '';
 in {
   options.myImpermanence = {
     enable = lib.mkEnableOption "explicit persistent state boundaries";
@@ -111,6 +125,40 @@ in {
 
     fileSystems."/persist".neededForBoot = true;
     fileSystems."/home".neededForBoot = true;
+
+    system.activationScripts.impermanence-clean-system-files = {
+      deps = ["createPersistentStorageDirs"];
+      text = "${cleanupSystemFiles}";
+    };
+    system.activationScripts.persist-files.deps = lib.mkAfter [
+      "impermanence-clean-system-files"
+    ];
+
+    # NixOS and sshd-keygen may create these files before impermanence's
+    # mount units run. Remove the ephemeral copies first so the persisted
+    # files can be bind-mounted in their place.
+    systemd.services.impermanence-clean-system-files = {
+      description = "Remove ephemeral copies of persisted system files";
+      wantedBy = ["local-fs.target"];
+      before = [
+        "local-fs.target"
+        "persist-persist-etc-machine\\x2did.service"
+        "persist-persist-etc-ssh-ssh_host_ed25519_key.service"
+        "persist-persist-etc-ssh-ssh_host_ed25519_key.pub.service"
+        "persist-persist-etc-ssh-ssh_host_rsa_key.service"
+        "persist-persist-etc-ssh-ssh_host_rsa_key.pub.service"
+        "persist-persist-var-lib-systemd-random\\x2dseed.service"
+      ];
+      unitConfig.DefaultDependencies = false;
+      serviceConfig = {
+        Type = "oneshot";
+        ExecStart = cleanupSystemFiles;
+      };
+    };
+
+    # A freshly reset @home is created by root. Home Manager activates as the
+    # user and therefore needs its home directory owned by abhay first.
+    systemd.tmpfiles.rules = ["z /home/abhay 0755 abhay users -"];
 
     environment.persistence."/persist" = {
       hideMounts = true;

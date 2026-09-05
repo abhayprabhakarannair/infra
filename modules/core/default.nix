@@ -8,6 +8,9 @@
     ../impermanence
   ];
 
+  # Tailscale and the Gluetun VPN container both require the kernel TUN device.
+  boot.kernelModules = ["tun"];
+
   # --- Timezone and Locale ---
   time.timeZone = "Asia/Kolkata";
   i18n.defaultLocale = "en_US.UTF-8";
