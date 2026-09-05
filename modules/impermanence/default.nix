@@ -2,6 +2,7 @@
   config,
   lib,
   pkgs,
+  utils,
   ...
 }: let
   cfg = config.myImpermanence;
@@ -58,7 +59,7 @@
 
     marker=/persist/.impermanence-ready
     rollback=/persist/rollback
-    migration_marker=/persist/.impermanence-state-seeded-v2
+    migration_marker=/persist/.impermanence-state-seeded-v3
 
     seed_file() {
       source="$1"
@@ -87,6 +88,13 @@
     }
 
     seed_declared_state() {
+      service_snapshot_root="$destination/root"
+      if ${pkgs.btrfs-progs}/bin/btrfs subvolume show "$destination/srv" >/dev/null 2>&1; then
+        # Newer layouts may have a dedicated @srv snapshot. Prefer it when
+        # present; otherwise /srv lives below the root snapshot.
+        service_snapshot_root="$destination/srv"
+      fi
+
       ${seedSystemDirectories}
       ${seedServiceDirectories}
       ${seedHomeDirectories}
@@ -107,7 +115,8 @@
     has_snapshot=no
     latest_snapshot=
     for candidate in "$rollback"/*; do
-      if [ -d "$candidate" ]; then
+      if ${pkgs.btrfs-progs}/bin/btrfs subvolume show "$candidate/root" >/dev/null 2>&1 && \
+        ${pkgs.btrfs-progs}/bin/btrfs subvolume show "$candidate/home" >/dev/null 2>&1; then
         has_snapshot=yes
         latest_snapshot="$candidate"
       fi
@@ -132,7 +141,7 @@
     ${pkgs.btrfs-progs}/bin/btrfs subvolume snapshot -r / "$destination/root"
     ${pkgs.btrfs-progs}/bin/btrfs subvolume snapshot -r /home "$destination/home"
 
-    if ${pkgs.btrfs-progs}/bin/btrfs subvolume show /srv >/dev/null 2>&1; then
+    if [ -d /srv ] && ${pkgs.btrfs-progs}/bin/btrfs subvolume show /srv >/dev/null 2>&1; then
       ${pkgs.btrfs-progs}/bin/btrfs subvolume snapshot -r /srv "$destination/srv"
     fi
 
@@ -162,34 +171,87 @@
     commonSystemDirectories
     ++ cfg.extraSystemDirectories;
 
-  seedSystemDirectories = lib.concatMapStringsSep "\n" (path: ''
-    seed_directory "$destination/root${path}" "/persist${path}"
-  '') persistentSystemDirectories;
+  seedSystemDirectories =
+    lib.concatMapStringsSep "\n" (path: ''
+      seed_directory "$destination/root${path}" "/persist${path}"
+    '')
+    persistentSystemDirectories;
 
   seedServiceDirectories = lib.concatMapStringsSep "\n" (path:
-    if lib.hasPrefix "/srv/" path then ''
-      seed_directory "$destination/srv/${lib.removePrefix "/srv/" path}" "/persist${path}"
-    '' else ''
+    if lib.hasPrefix "/srv/" path
+    then ''
+      seed_directory "$service_snapshot_root/srv/${lib.removePrefix "/srv/" path}" "/persist${path}"
+    ''
+    else ''
       seed_directory "$destination/root${path}" "/persist${path}"
-    '') cfg.serviceDirectories;
+    '')
+  cfg.serviceDirectories;
 
-  seedHomeDirectories = lib.concatMapStringsSep "\n" (path: ''
-    seed_directory "$destination/home/abhay/${path}" "/persist/home/abhay/${path}"
-  '') cfg.homeDirectories;
+  seedHomeDirectories =
+    lib.concatMapStringsSep "\n" (path: ''
+      seed_directory "$destination/home/abhay/${path}" "/persist/home/abhay/${path}"
+    '')
+    cfg.homeDirectories;
 
   seedSystemFiles = lib.concatMapStringsSep "\n" (path: ''
     seed_file "$destination/root${path}" "/persist${path}"
   '') (commonSystemFiles ++ cfg.extraSystemFiles);
 
-  seedHomeFiles = lib.concatMapStringsSep "\n" (path: ''
-    seed_file "$destination/home/abhay/${path}" "/persist/home/abhay/${path}"
-  '') cfg.homeFiles;
+  seedHomeFiles =
+    lib.concatMapStringsSep "\n" (path: ''
+      seed_file "$destination/home/abhay/${path}" "/persist/home/abhay/${path}"
+    '')
+    cfg.homeFiles;
 
-  seedHomeOwnership = lib.concatMapStringsSep "\n" (path: ''
-    if [ -e "/persist/home/abhay/${path}" ]; then
-      ${pkgs.coreutils}/bin/chown -R abhay:users -- "/persist/home/abhay/${path}"
-    fi
-  '') cfg.homeDirectories;
+  seedHomeOwnership =
+    lib.concatMapStringsSep "\n" (path: ''
+      if [ -e "/persist/home/abhay/${path}" ]; then
+        ${pkgs.coreutils}/bin/chown -R abhay:users -- "/persist/home/abhay/${path}"
+      fi
+    '')
+    cfg.homeDirectories;
+
+  persistentDirectoryPaths =
+    (commonSystemDirectories
+      ++ cfg.extraSystemDirectories
+      ++ cfg.serviceDirectories)
+    ++ map (path: "/home/abhay/${path}") cfg.homeDirectories;
+
+  persistentFilePaths =
+    (commonSystemFiles ++ cfg.extraSystemFiles)
+    ++ map (path: "/home/abhay/${path}") cfg.homeFiles;
+
+  persistenceDirectoryMounts =
+    map (path: {
+      before = ["local-fs.target"];
+      where = path;
+      wantedBy = ["local-fs.target"];
+      what = "/persist${path}";
+      type = "none";
+      options = "bind,x-gvfs-hide";
+      unitConfig = {
+        After = ["persist.mount"];
+        DefaultDependencies = false;
+        Requires = ["persist.mount"];
+      };
+    })
+    persistentDirectoryPaths;
+
+  persistenceFileServices = lib.genAttrs (map (path: "persist-${utils.escapeSystemdPath "/persist${path}"}") persistentFilePaths) (_: {
+    unitConfig = {
+      After = ["persist.mount"];
+      Requires = ["persist.mount"];
+    };
+  });
+
+  preflightPersistentDirectories =
+    lib.concatMapStringsSep "\n" (path: ''
+      if [ ! -d "$impermanence_btrfs_root/@persist${path}" ]; then
+        log "required persistent directory is missing: /persist${path}"
+        exit 1
+      fi
+    '')
+    persistentDirectoryPaths;
 in {
   options.myImpermanence = {
     enable = lib.mkEnableOption "explicit persistent state boundaries";
@@ -271,57 +333,62 @@ in {
     # NixOS and sshd-keygen may create these files before impermanence's
     # mount units run. Remove the ephemeral copies first so the persisted
     # files can be bind-mounted in their place.
-    systemd.services.impermanence-clean-system-files = {
-      description = "Remove ephemeral copies of persisted system files";
-      wantedBy = ["local-fs.target"];
-      before = [
-        "local-fs.target"
-        "persist-persist-etc-machine\\x2did.service"
-        "persist-persist-etc-ssh-ssh_host_ed25519_key.service"
-        "persist-persist-etc-ssh-ssh_host_ed25519_key.pub.service"
-        "persist-persist-etc-ssh-ssh_host_rsa_key.service"
-        "persist-persist-etc-ssh-ssh_host_rsa_key.pub.service"
-        "persist-persist-var-lib-systemd-random\\x2dseed.service"
-      ];
-      unitConfig.DefaultDependencies = false;
-      serviceConfig = {
-        Type = "oneshot";
-        ExecStart = cleanupSystemFiles;
-      };
-    };
+    systemd.services = lib.mkMerge [
+      {
+        "impermanence-clean-system-files" = {
+          description = "Remove ephemeral copies of persisted system files";
+          wantedBy = ["local-fs.target"];
+          before = [
+            "local-fs.target"
+            "persist-persist-etc-machine\\x2did.service"
+            "persist-persist-etc-ssh-ssh_host_ed25519_key.service"
+            "persist-persist-etc-ssh-ssh_host_ed25519_key.pub.service"
+            "persist-persist-etc-ssh-ssh_host_rsa_key.service"
+            "persist-persist-etc-ssh-ssh_host_rsa_key.pub.service"
+            "persist-persist-var-lib-systemd-random\\x2dseed.service"
+          ];
+          unitConfig.DefaultDependencies = false;
+          serviceConfig = {
+            Type = "oneshot";
+            ExecStart = cleanupSystemFiles;
+          };
+        };
 
-    systemd.services.abhay-home-permissions = {
-      description = "Prepare abhay's home directory for Home Manager";
-      wantedBy = ["home-manager-abhay.service"];
-      before = ["home-manager-abhay.service"];
-      after = ["local-fs.target"];
-      serviceConfig = {
-        Type = "oneshot";
-        ExecStart = pkgs.writeShellScript "abhay-home-permissions" ''
-          install -d -o abhay -g users -m 0755 \
-            /home/abhay/.config \
-            /home/abhay/.local \
-            /home/abhay/.local/share \
-            /home/abhay/.local/state \
-            /home/abhay/.local/state/nix \
-            /home/abhay/.local/state/nix/profiles
-          chown abhay:users \
-            /home/abhay \
-            /home/abhay/.config \
-            /home/abhay/.local \
-            /home/abhay/.local/share \
-            /home/abhay/.local/state \
-            /home/abhay/.local/state/nix \
-            /home/abhay/.local/state/nix/profiles
-          chmod 0755 \
-            /home/abhay \
-            /home/abhay/.config \
-            /home/abhay/.local \
-            /home/abhay/.local/share \
-            /home/abhay/.local/state
-        '';
-      };
-    };
+        "abhay-home-permissions" = {
+          description = "Prepare abhay's home directory for Home Manager";
+          wantedBy = ["home-manager-abhay.service"];
+          before = ["home-manager-abhay.service"];
+          after = ["local-fs.target"];
+          serviceConfig = {
+            Type = "oneshot";
+            ExecStart = pkgs.writeShellScript "abhay-home-permissions" ''
+              install -d -o abhay -g users -m 0755 \
+                /home/abhay/.config \
+                /home/abhay/.local \
+                /home/abhay/.local/share \
+                /home/abhay/.local/state \
+                /home/abhay/.local/state/nix \
+                /home/abhay/.local/state/nix/profiles
+              chown abhay:users \
+                /home/abhay \
+                /home/abhay/.config \
+                /home/abhay/.local \
+                /home/abhay/.local/share \
+                /home/abhay/.local/state \
+                /home/abhay/.local/state/nix \
+                /home/abhay/.local/state/nix/profiles
+              chmod 0755 \
+                /home/abhay \
+                /home/abhay/.config \
+                /home/abhay/.local \
+                /home/abhay/.local/share \
+                /home/abhay/.local/state
+            '';
+          };
+        };
+      }
+      persistenceFileServices
+    ];
 
     # The reset service runs before the normal system closure is available.
     # Include the tools it invokes in the initrd explicitly.
@@ -347,6 +414,12 @@ in {
         ++ cfg.serviceDirectories;
       files = commonSystemFiles ++ cfg.extraSystemFiles;
     };
+
+    # impermanence generates these units with DefaultDependencies=false and
+    # Before=local-fs.target. Make the dependency on the filesystem that
+    # backs /persist explicit, otherwise a bind mount can attach to the
+    # ephemeral mountpoint before persist.mount has completed.
+    systemd.mounts = lib.mkBefore persistenceDirectoryMounts;
 
     home-manager.users.abhay.home.persistence."/persist" = {
       hideMounts = true;
@@ -377,38 +450,140 @@ in {
 
         impermanence_btrfs_device=${lib.escapeShellArg cfg.reset.device}
         impermanence_btrfs_root=/run/impermanence-btrfs-root
+        impermanence_subvolumes="@ @home"
+        impermanence_reset_complete=no
+        impermanence_mounted=no
         mkdir -p "$impermanence_btrfs_root"
+
+        cleanup() {
+          impermanence_status=$?
+
+          if [ "$impermanence_reset_complete" != yes ]; then
+            # If a transactional rename was interrupted, discard only the
+            # newly-created empty subvolumes and restore the old names.
+            for impermanence_subvolume in $impermanence_subvolumes; do
+              if ${pkgs.btrfs-progs}/bin/btrfs subvolume show "$impermanence_btrfs_root/$impermanence_subvolume.impermanence-old" >/dev/null 2>&1; then
+                if ${pkgs.btrfs-progs}/bin/btrfs subvolume show "$impermanence_btrfs_root/$impermanence_subvolume" >/dev/null 2>&1; then
+                  ${pkgs.btrfs-progs}/bin/btrfs subvolume delete "$impermanence_btrfs_root/$impermanence_subvolume" >/dev/null 2>&1 || true
+                fi
+                ${pkgs.btrfs-progs}/bin/btrfs subvolume rename \
+                  "$impermanence_btrfs_root/$impermanence_subvolume.impermanence-old" \
+                  "$impermanence_btrfs_root/$impermanence_subvolume" >/dev/null 2>&1 || true
+              elif ${pkgs.btrfs-progs}/bin/btrfs subvolume show "$impermanence_btrfs_root/$impermanence_subvolume.impermanence-new" >/dev/null 2>&1; then
+                ${pkgs.btrfs-progs}/bin/btrfs subvolume delete \
+                  "$impermanence_btrfs_root/$impermanence_subvolume.impermanence-new" >/dev/null 2>&1 || true
+              fi
+            done
+          fi
+
+          if ${pkgs.util-linuxMinimal}/bin/mountpoint --quiet "$impermanence_btrfs_root"; then
+            ${pkgs.util-linuxMinimal}/bin/umount "$impermanence_btrfs_root" \
+              || ${pkgs.util-linuxMinimal}/bin/umount --lazy "$impermanence_btrfs_root" \
+              || true
+          fi
+
+          trap - EXIT
+          exit "$impermanence_status"
+        }
+        trap cleanup EXIT
+
         ${pkgs.util-linuxMinimal}/bin/mount -t btrfs -o subvolid=5 "$impermanence_btrfs_device" "$impermanence_btrfs_root"
+        impermanence_mounted=yes
+
+        if ! ${pkgs.btrfs-progs}/bin/btrfs subvolume show "$impermanence_btrfs_root/@persist" >/dev/null 2>&1; then
+          echo "impermanence-reset: @persist is not a Btrfs subvolume" >&2
+          exit 1
+        fi
+
         impermanence_log="$impermanence_btrfs_root/@persist/.impermanence-reset.log"
-        exec 9>"$impermanence_log"
+        exec 9>>"$impermanence_log"
         log() { echo "impermanence-reset: $*" >&9; }
         log "mounted top-level Btrfs"
+
+        # Recover names left by an interrupted transactional switch before
+        # evaluating the marker. The old subvolume is always preferred.
+        for impermanence_subvolume in @ @home @srv; do
+          if ${pkgs.btrfs-progs}/bin/btrfs subvolume show "$impermanence_btrfs_root/$impermanence_subvolume.impermanence-old" >/dev/null 2>&1; then
+            if ${pkgs.btrfs-progs}/bin/btrfs subvolume show "$impermanence_btrfs_root/$impermanence_subvolume" >/dev/null 2>&1; then
+              ${pkgs.btrfs-progs}/bin/btrfs subvolume delete "$impermanence_btrfs_root/$impermanence_subvolume" >/dev/null 2>&1 || true
+            fi
+            ${pkgs.btrfs-progs}/bin/btrfs subvolume rename \
+              "$impermanence_btrfs_root/$impermanence_subvolume.impermanence-old" \
+              "$impermanence_btrfs_root/$impermanence_subvolume" >/dev/null 2>&1 || true
+            log "recovered interrupted reset for $impermanence_subvolume"
+          fi
+        done
+
+        if ${pkgs.btrfs-progs}/bin/btrfs subvolume show "$impermanence_btrfs_root/@srv" >/dev/null 2>&1; then
+          impermanence_subvolumes="$impermanence_subvolumes @srv"
+        fi
 
         # The marker is created only after the live migration has copied the
         # allowlisted state into @persist and the rollback snapshot exists.
         if [ ! -e "$impermanence_btrfs_root/@persist/.impermanence-ready" ]; then
           log "migration marker absent; keeping existing subvolumes"
-          ${pkgs.util-linuxMinimal}/bin/umount "$impermanence_btrfs_root"
           exit 0
         fi
 
-        for impermanence_subvolume in @ @home; do
-          log "deleting $impermanence_subvolume"
-          if ${pkgs.btrfs-progs}/bin/btrfs subvolume show "$impermanence_btrfs_root/$impermanence_subvolume" >/dev/null 2>&1; then
-            ${pkgs.btrfs-progs}/bin/btrfs subvolume delete "$impermanence_btrfs_root/$impermanence_subvolume"
+        if [ ! -e "$impermanence_btrfs_root/@persist/.impermanence-state-seeded-v3" ]; then
+          log "state migration marker v3 absent; refusing destructive reset"
+          exit 1
+        fi
+
+        impermanence_latest_snapshot=
+        for impermanence_candidate in "$impermanence_btrfs_root/@persist/rollback"/*; do
+          if ${pkgs.btrfs-progs}/bin/btrfs subvolume show "$impermanence_candidate/root" >/dev/null 2>&1 && \
+            ${pkgs.btrfs-progs}/bin/btrfs subvolume show "$impermanence_candidate/home" >/dev/null 2>&1; then
+            impermanence_latest_snapshot="$impermanence_candidate"
           fi
-          ${pkgs.btrfs-progs}/bin/btrfs subvolume create "$impermanence_btrfs_root/$impermanence_subvolume"
-          log "created $impermanence_subvolume"
+        done
+        if [ -z "$impermanence_latest_snapshot" ]; then
+          log "no complete rollback snapshot found; refusing destructive reset"
+          exit 1
+        fi
+
+        ${preflightPersistentDirectories}
+
+        for impermanence_subvolume in $impermanence_subvolumes; do
+          if ! ${pkgs.btrfs-progs}/bin/btrfs subvolume show "$impermanence_btrfs_root/$impermanence_subvolume" >/dev/null 2>&1; then
+            log "required subvolume is missing: $impermanence_subvolume"
+            exit 1
+          fi
+          if ${pkgs.btrfs-progs}/bin/btrfs subvolume show "$impermanence_btrfs_root/$impermanence_subvolume.impermanence-new" >/dev/null 2>&1 || \
+            ${pkgs.btrfs-progs}/bin/btrfs subvolume show "$impermanence_btrfs_root/$impermanence_subvolume.impermanence-old" >/dev/null 2>&1; then
+            log "transactional reset names already exist for $impermanence_subvolume"
+            exit 1
+          fi
+        done
+
+        # Prepare every replacement before renaming any live subvolume. The
+        # old subvolumes remain recoverable until both root and home switch.
+        for impermanence_subvolume in $impermanence_subvolumes; do
+          ${pkgs.btrfs-progs}/bin/btrfs subvolume create \
+            "$impermanence_btrfs_root/$impermanence_subvolume.impermanence-new"
+          log "prepared $impermanence_subvolume"
+        done
+
+        for impermanence_subvolume in $impermanence_subvolumes; do
+          ${pkgs.btrfs-progs}/bin/btrfs subvolume rename \
+            "$impermanence_btrfs_root/$impermanence_subvolume" \
+            "$impermanence_btrfs_root/$impermanence_subvolume.impermanence-old"
+          ${pkgs.btrfs-progs}/bin/btrfs subvolume rename \
+            "$impermanence_btrfs_root/$impermanence_subvolume.impermanence-new" \
+            "$impermanence_btrfs_root/$impermanence_subvolume"
+          log "switched $impermanence_subvolume"
+        done
+
+        # Only remove the old state after every replacement has its final
+        # name. If deletion fails, the EXIT trap restores the old names.
+        for impermanence_subvolume in $impermanence_subvolumes; do
+          ${pkgs.btrfs-progs}/bin/btrfs subvolume delete \
+            "$impermanence_btrfs_root/$impermanence_subvolume.impermanence-old"
         done
 
         sync
+        impermanence_reset_complete=yes
         log "subvolume reset complete"
-        # The initrd-to-host mount namespace handoff can briefly retain a
-        # reference to this private mount. Detach lazily if a regular unmount
-        # reports EBUSY; the subvolume reset is already complete at this point.
-        ${pkgs.util-linuxMinimal}/bin/umount "$impermanence_btrfs_root" \
-          || ${pkgs.util-linuxMinimal}/bin/umount --lazy "$impermanence_btrfs_root"
-        log "unmounted top-level Btrfs"
       '';
     };
   };

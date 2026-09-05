@@ -38,7 +38,7 @@
     enable = true;
     reset = {
       enable = true;
-      device = "/dev/mapper/enc";
+      device = "/dev/disk/by-label/NixOS";
     };
     serviceDirectories = [
       "/srv/jellyfin"
@@ -53,6 +53,10 @@
       "/srv/qbittorrent"
       "/srv/seerr"
       "/srv/stash"
+    ];
+    extraSystemDirectories = [
+      "/var/lib/libvirt"
+      "/var/lib/ollama"
     ];
   };
 

@@ -16,9 +16,9 @@
     mode = "netclient"; # MUST be netclient
     upsmon.monitor = {
       myups = {
-        user = "monitorUser";
-        passwordFile = "/run/secrets/ups-password"; # Must match the user created on the server
-        system = "myups@devil"; # Point to the Server's IP
+        user = "admin";
+        passwordFile = "/run/secrets/ups-password";
+        system = "myups@devil";
       };
     };
   };

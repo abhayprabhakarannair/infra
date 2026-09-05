@@ -3,7 +3,10 @@
   config,
   ...
 }: {
-  imports = ["${inputs.self}/home/core.nix"];
+  imports = [
+    "${inputs.self}/home/core.nix"
+    "${inputs.self}/home/desktop/operator.nix"
+  ];
 
   # --- BASH Configuration ---
   programs.bash = {

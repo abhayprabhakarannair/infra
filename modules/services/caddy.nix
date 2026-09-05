@@ -1,9 +1,4 @@
-{
-  config,
-  pkgs,
-  inputs,
-  ...
-}: let
+{...}: let
   proxyServices = {
     "home.iamabhay.fyi" = "old-devil:8123";
 
@@ -21,13 +16,9 @@
     "vault.iamabhay.fyi" = "127.0.0.1:8222";
   };
 in {
-  sops.secrets."caddy/basic-auth-password" = {
-    sopsFile = "${inputs.self}/secrets/service-secrets.yaml";
-    owner = config.services.caddy.user;
-    group = config.services.caddy.group;
-    restartUnits = ["caddy.service"];
-  };
-
+  # The proxied applications own authentication (Jellyfin, the Arr stack,
+  # Immich, Vaultwarden, and Home Assistant). Do not declare an unused Caddy
+  # password secret that suggests the proxy itself is protecting these hosts.
   services.caddy = {
     enable = true;
 

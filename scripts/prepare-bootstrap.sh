@@ -1,35 +1,69 @@
 #!/usr/bin/env bash
-set -e
+set -euo pipefail
 
-if [ -z "$1" ]; then
+umask 077
+
+usage() {
     echo "Usage: ./prepare-bootstrap.sh <host-target>"
     echo "Example: ./prepare-bootstrap.sh daredevil"
+}
+
+if [ "$#" -ne 1 ]; then
+    usage
     exit 1
 fi
 
 TARGET=$1
-KEY_DIR="$HOME/.server-bootstrap/$TARGET/etc/ssh"
+case "$TARGET" in
+    daredevil|devil|old-devil|homelab-one) ;;
+    *)
+        echo "Error: unsupported host '$TARGET'."
+        echo "Expected one of: daredevil, devil, old-devil, homelab-one."
+        exit 1
+        ;;
+esac
+
+BOOTSTRAP_ROOT="${HOME:?}/.server-bootstrap"
+TARGET_ROOT="$BOOTSTRAP_ROOT/$TARGET"
+KEY_DIR="$TARGET_ROOT/etc/ssh"
 PRIVATE_KEY="$KEY_DIR/ssh_host_ed25519_key"
 PUBLIC_KEY="${PRIVATE_KEY}.pub"
 
-# Check if we already scaffolded this host
-if [ -f "$PRIVATE_KEY" ]; then
-    echo "⚠️  Bootstrap files already exist for $TARGET at $KEY_DIR!"
+for path in "$BOOTSTRAP_ROOT" "$TARGET_ROOT" "$KEY_DIR" "$PRIVATE_KEY" "$PUBLIC_KEY"; do
+    if [ -L "$path" ]; then
+        echo "Error: refusing to follow symlink '$path'."
+        exit 1
+    fi
+done
+
+mkdir -p "$KEY_DIR"
+chmod 700 "$BOOTSTRAP_ROOT" "$TARGET_ROOT" "$KEY_DIR"
+
+# Never overwrite key material. Require a complete, correctly protected
+# scaffold before allowing an existing target to be used.
+if [ -e "$PRIVATE_KEY" ] || [ -e "$PUBLIC_KEY" ]; then
+    if [ ! -f "$PRIVATE_KEY" ] || [ ! -f "$PUBLIC_KEY" ]; then
+        echo "Error: incomplete bootstrap key pair in '$KEY_DIR'."
+        exit 1
+    fi
+    if [ "$(stat -c '%a' "$PRIVATE_KEY")" != "600" ]; then
+        echo "Error: private key '$PRIVATE_KEY' must have mode 600."
+        exit 1
+    fi
+    if [ "$(stat -c '%a' "$PUBLIC_KEY")" != "644" ]; then
+        echo "Error: public key '$PUBLIC_KEY' must have mode 644."
+        exit 1
+    fi
+    echo "Bootstrap files already exist for $TARGET at $KEY_DIR."
     exit 0
 fi
 
 echo "Creating bootstrap directory structure for $TARGET..."
 
-# 1. Create the exact folder structure
-mkdir -p "$KEY_DIR"
-
-# 2. Create the empty files
-touch "$PRIVATE_KEY"
-touch "$PUBLIC_KEY"
-
-# 3. Lock down the permissions immediately (SSH strictly requires 600 for private keys)
-chmod 600 "$PRIVATE_KEY"
-chmod 644 "$PUBLIC_KEY"
+# Create placeholders with their final permissions. The private key is never
+# created with a caller-controlled mode.
+install -m 600 /dev/null "$PRIVATE_KEY"
+install -m 644 /dev/null "$PUBLIC_KEY"
 
 echo "✅ Folder structure created successfully."
 echo ""

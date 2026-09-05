@@ -11,6 +11,9 @@
     nut
   ];
 
+  # old-devil monitors this UPS over Tailscale. Keep NUT's port off the WAN
+  # and other interfaces; the common firewall already trusts tailscale0.
+
   power.ups = {
     enable = true;
     mode = "netserver";
@@ -30,15 +33,13 @@
       ];
     };
 
-    # 1. NEW: Define the user on the server (upsd) side
     users = {
       admin = {
         passwordFile = "/run/secrets/ups-password";
-        upsmon = "primary"; # Grants this user permission to act as the primary monitor
+        upsmon = "primary";
       };
     };
 
-    # 2. upsmon (the client) logs in using those credentials
     upsmon = {
       enable = true;
       monitor = {

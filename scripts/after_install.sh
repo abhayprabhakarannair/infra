@@ -42,6 +42,16 @@ fi
 
 HOSTNAME="$1"
 shift
+
+case "$HOSTNAME" in
+    daredevil|devil|old-devil|homelab-one) ;;
+    *)
+        echo "Error: unsupported host '$HOSTNAME'."
+        echo "Expected one of: daredevil, devil, old-devil, homelab-one."
+        exit 1
+        ;;
+esac
+
 LUKS_PARTITION=""
 REPLACE_SOPS_KEY=false
 
@@ -78,6 +88,19 @@ fi
 if [ -z "$LUKS_PARTITION" ] && [ -e /dev/mapper/enc ]; then
     echo "Error: An active LUKS mapping exists at /dev/mapper/enc."
     echo "Pass the underlying LUKS partition explicitly for TPM2 enrollment."
+    exit 1
+fi
+
+SSH_HOST_KEY=/etc/ssh/ssh_host_ed25519_key
+if ! sudo test -f "$SSH_HOST_KEY" || ! sudo test -r "$SSH_HOST_KEY"; then
+    echo "Error: required SSH host key '$SSH_HOST_KEY' is missing or unreadable."
+    exit 1
+fi
+
+SSH_TO_AGE=$(command -v ssh-to-age || true)
+if [ -z "$SSH_TO_AGE" ]; then
+    echo "Error: ssh-to-age is not installed or not available in PATH."
+    echo "Rebuild the host configuration with the server Home Manager role first."
     exit 1
 fi
 
@@ -118,7 +141,7 @@ if [ "${SOPS_KEY_READY}" != true ]; then
     # creates it before ssh-to-age writes, avoiding predictable paths and races.
     TEMP_SOPS_AGE_KEY=$(mktemp "${SOPS_AGE_DIR}/.keys.txt.XXXXXX")
     chmod 600 -- "${TEMP_SOPS_AGE_KEY}"
-    sudo ssh-to-age -private-key -i /etc/ssh/ssh_host_ed25519_key > "${TEMP_SOPS_AGE_KEY}"
+    sudo "$SSH_TO_AGE" -private-key -i "$SSH_HOST_KEY" > "${TEMP_SOPS_AGE_KEY}"
 
     if ! validate_age_identity "${TEMP_SOPS_AGE_KEY}"; then
         echo "Error: ssh-to-age did not produce a valid age identity."

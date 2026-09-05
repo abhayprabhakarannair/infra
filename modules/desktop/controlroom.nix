@@ -1,8 +1,10 @@
 {
+  lib,
   inputs,
   config,
   ...
-}: {
+}:
+lib.mkIf config.services.desktopManager.gnome.enable {
   sops.secrets."ssh-secret-ips" = {
     owner = config.users.users.abhay.name;
     group = config.users.users.abhay.group;

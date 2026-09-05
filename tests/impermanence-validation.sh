@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+cache_root="${XDG_CACHE_HOME:-/tmp}/infra-nix-cache"
+mkdir -p "$cache_root"
+
+for host in daredevil devil old-devil homelab-one; do
+  echo "validating $host"
+  system=$(XDG_CACHE_HOME="$cache_root" nix build \
+    --no-link \
+    --no-update-lock-file \
+    --print-out-paths \
+    "path:$repo_root#nixosConfigurations.$host.config.system.build.toplevel")
+
+  mount_count=0
+  while IFS= read -r unit_link; do
+    unit=$(readlink -f "$unit_link")
+    if ! grep -q '^What=/persist/' "$unit"; then
+      continue
+    fi
+    mount_count=$((mount_count + 1))
+    grep -qx 'After=persist.mount' "$unit"
+    grep -qx 'Requires=persist.mount' "$unit"
+  done < <(find -L "$system/etc/systemd/system" -maxdepth 1 -type f -name '*.mount' -print)
+
+  test "$mount_count" -gt 0
+
+  service_count=0
+  while IFS= read -r unit_link; do
+    unit=$(readlink -f "$unit_link")
+    if ! grep -q '^Description=.* /persist/' "$unit"; then
+      continue
+    fi
+    service_count=$((service_count + 1))
+    grep -qx 'After=persist.mount' "$unit"
+    grep -qx 'Requires=persist.mount' "$unit"
+  done < <(find -L "$system/etc/systemd/system" -maxdepth 1 -type f -name 'persist-*.service' -print)
+
+  test "$service_count" -gt 0
+done
+
+grep -q 'migration_marker=/persist/.impermanence-state-seeded-v3' \
+  "$repo_root/modules/impermanence/default.nix"
+grep -q 'service_snapshot_root="$destination/root"' \
+  "$repo_root/modules/impermanence/default.nix"
+grep -q 'impermanence-state-seeded-v3' \
+  "$repo_root/modules/impermanence/default.nix"
+grep -q '/dev/disk/by-label/NixOS' "$repo_root/hosts"/*/default.nix
+
+echo "impermanence validation passed"

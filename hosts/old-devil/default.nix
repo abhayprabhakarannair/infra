@@ -28,7 +28,7 @@
     enable = true;
     reset = {
       enable = true;
-      device = "/dev/sda2";
+      device = "/dev/disk/by-label/NixOS";
     };
     serviceDirectories = [
       "/srv/home-assistant"

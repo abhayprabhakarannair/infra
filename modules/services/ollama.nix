@@ -6,11 +6,10 @@
   services.ollama = {
     enable = true;
     package = pkgs.ollama-rocm;
-    host = "0.0.0.0";
+    # Ollama has no built-in authentication. Keep the API local unless an
+    # authenticated, explicitly scoped proxy is added later.
+    host = "127.0.0.1";
     port = 11434;
-    environmentVariables = {
-      OLLAMA_ORIGINS = "*";
-    };
   };
 
   environment.systemPackages = with pkgs; [

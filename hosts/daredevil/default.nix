@@ -28,8 +28,11 @@
     enable = true;
     reset = {
       enable = true;
-      device = "/dev/mapper/enc";
+      device = "/dev/disk/by-label/NixOS";
     };
+    extraSystemDirectories = [
+      "/var/lib/libvirt"
+    ];
   };
 
   # --- Default Drive ---

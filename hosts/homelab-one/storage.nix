@@ -17,22 +17,83 @@
   };
 
   systemd.services.backup-homelab-storage-one = {
-    description = "Backup /srv/ services + mirror StorageBox to B2";
+    description = "Backup homelab-one service state and mirror StorageBox to B2";
     wants = ["network-online.target"];
     after = ["network-online.target"];
     serviceConfig = {
       Type = "oneshot";
+      RuntimeDirectory = "backup-homelab-storage-one";
+      RuntimeDirectoryMode = "0700";
+      UMask = "0077";
+      PrivateTmp = true;
+      NoNewPrivileges = true;
+      ProtectSystem = "strict";
+      ProtectHome = "read-only";
+      ReadWritePaths = [
+        "/srv"
+        "/var/lib/caddy"
+      ];
+      TimeoutStartSec = "12h";
       ExecStart = let
         script = pkgs.writeShellScript "backup-homelab-srv" ''
           set -euo pipefail
+          source /etc/infra/backup-lib.sh
 
-          ${pkgs.rclone}/bin/rclone sync /srv/vaultwarden backups:/srv/vaultwarden/ \
-            --config=${config.sops.secrets."rclone-backup-node.conf".path} \
-            --fast-list --transfers 4 --checkers 8 --contimeout 1m
+          RUNTIME_DIR=/run/backup-homelab-storage-one
+          STAMP=$(date -u +%Y%m%dT%H%M%SZ)
+          CONFIG=${config.sops.secrets."rclone-backup-node.conf".path}
+          DEST="b2-storage:/disaster-recovery/homelab-one/services/$STAMP"
+          STAGING="$RUNTIME_DIR/sqlite"
 
+          cleanup() {
+            ${pkgs.coreutils}/bin/rm -rf -- "$STAGING"
+          }
+          trap cleanup EXIT
+
+          exec 9>"$RUNTIME_DIR/backup.lock"
+          if ! ${pkgs.util-linux}/bin/flock -n 9; then
+            echo "backup-homelab-storage-one is already running" >&2
+            exit 0
+          fi
+
+          for source in /srv/vaultwarden /var/lib/caddy; do
+          infra_require_dir "$source" || {
+            echo "required backup source is missing: $source" >&2
+              exit 1
+            }
+          done
+          ${pkgs.coreutils}/bin/mkdir -p "$STAGING"
+
+          # Vaultwarden's SQLite database is exported through SQLite's online
+          # backup API. The live database file is excluded from the ordinary
+          # tree copy; attachments, keys, and configuration files are copied.
+          infra_rclone_copy_checked /srv/vaultwarden "$DEST/vaultwarden" "$CONFIG" \
+            --fast-list --transfers 4 --checkers 8 \
+            --exclude '**/*.db' --exclude '**/*.db-*' \
+            --exclude '**/*.sqlite' --exclude '**/*.sqlite-*' \
+            --exclude '**/*.sqlite3'
+          infra_export_sqlite_tree /srv/vaultwarden "$STAGING" vaultwarden "$DEST/vaultwarden" "$CONFIG"
+          infra_rclone_copy_checked /var/lib/caddy "$DEST/caddy" "$CONFIG" \
+            --fast-list --transfers 4 --checkers 8
+
+          infra_prune_generations "b2-storage:/disaster-recovery/homelab-one/services" "$CONFIG" 90 "$RUNTIME_DIR/service-generations.list"
+
+          # Refuse to rotate the replica if the source unexpectedly appears
+          # empty or inaccessible. This is intentionally a mirror, while the
+          # backup-dir preserves overwritten/deleted generations.
+          SOURCE_LIST="$RUNTIME_DIR/source.list"
+          ${pkgs.rclone}/bin/rclone lsf homelab-storage-one:/ --recursive \
+            --config="$CONFIG" --log-level ERROR --stats 0 > "$SOURCE_LIST"
+          test -s "$SOURCE_LIST" || {
+            echo "homelab-storage-one source is empty; refusing replica sync" >&2
+            exit 1
+          }
           ${pkgs.rclone}/bin/rclone sync homelab-storage-one:/ b2-storage:homelab-storage-one-replica/ \
-            --config=${config.sops.secrets."rclone-backup-node.conf".path} \
-            --fast-list --transfers 4 --checkers 8 --contimeout 1m --low-level-retries 10
+            --config="$CONFIG" \
+            --backup-dir="b2-storage:homelab-storage-one-replica-history/$STAMP" \
+            --fast-list --transfers 4 --checkers 8 --contimeout 1m --low-level-retries 10 \
+            --retries 3 --retries-sleep 30s --log-level ERROR --stats 0
+          infra_prune_generations "b2-storage:homelab-storage-one-replica-history" "$CONFIG" 90 "$RUNTIME_DIR/replica-generations.list"
         '';
       in "${script}";
     };
