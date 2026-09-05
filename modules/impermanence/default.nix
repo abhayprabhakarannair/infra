@@ -320,7 +320,11 @@ in {
 
         sync
         log "subvolume reset complete"
-        ${pkgs.util-linuxMinimal}/bin/umount "$impermanence_btrfs_root"
+        # The initrd-to-host mount namespace handoff can briefly retain a
+        # reference to this private mount. Detach lazily if a regular unmount
+        # reports EBUSY; the subvolume reset is already complete at this point.
+        ${pkgs.util-linuxMinimal}/bin/umount "$impermanence_btrfs_root" \
+          || ${pkgs.util-linuxMinimal}/bin/umount --lazy "$impermanence_btrfs_root"
         log "unmounted top-level Btrfs"
       '';
     };
