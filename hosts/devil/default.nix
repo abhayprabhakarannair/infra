@@ -70,6 +70,8 @@
       ".local/share/backgrounds"
       ".local/share/icons"
       ".local/share/Steam/userdata"
+      ".local/state/nix"
+      ".ssh"
       ".codex"
     ];
   };
