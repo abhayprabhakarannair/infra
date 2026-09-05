@@ -14,7 +14,6 @@
     tela-icon-theme
     nodejs_24
     python314
-    pi-coding-agent
     pkgs.llm-agents.chatgpt
     deploy-rs
     gh
@@ -72,16 +71,8 @@
 
   programs.vivaldi = {
     enable = true;
-    # Vivaldi is installed by the desktop NixOS module; Home Manager manages
-    # its profile and extensions here.
+    # Vivaldi is installed by the desktop NixOS module. Its persisted profile
+    # remains mutable so extensions can be installed and removed in-browser.
     package = null;
-    extensions = [
-      # uBlock Origin
-      {id = "cjpalhdlnbpafiamejdnhcphjbkeiagm";}
-      # Private Internet Access (PIA) Extension
-      {id = "jplnlifepflhkbkgonidnobkakhmpnmh";}
-      # Official ChatGPT browser integration for Codex
-      {id = "hehggadaopoacecdllhhajmbjkdcmajg";}
-    ];
   };
 }

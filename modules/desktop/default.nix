@@ -65,9 +65,8 @@
     PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD = "1";
   };
 
-  # --- FISH across all desktops ---
-  programs.fish.enable = true;
-  users.defaultUserShell = pkgs.fish;
+  # --- Bash across all desktops ---
+  users.defaultUserShell = pkgs.bashInteractive;
 
   # --- Add firmware upgrades ---
   services.fwupd.enable = true;

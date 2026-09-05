@@ -52,7 +52,6 @@
     gnome-calculator
 
     # --- Extra Apps ---
-    unstable.opencode
     unstable.obsidian
   ];
 

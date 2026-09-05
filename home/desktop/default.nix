@@ -5,18 +5,9 @@
 }: {
   imports = ["${inputs.self}/home/core.nix"];
 
-  # --- FISH Configuration ---
-  programs.fish = {
+  # --- BASH Configuration ---
+  programs.bash = {
     enable = true;
-
-    functions = {
-      fish_prompt = ''
-        set_color cyan
-        echo -n (prompt_pwd)
-        set_color normal
-        echo -n " => "
-      '';
-    };
 
     shellAliases = {
       ll = "ls -larth";
@@ -24,10 +15,6 @@
       nrb = "sudo nixos-rebuild boot --flake ~/Projects/infra#$(cat /etc/hostname)";
       ve = "nvim .";
     };
-
-    interactiveShellInit = ''
-      set -g fish_greeting
-    '';
   };
 
   # --- DIR Env ---

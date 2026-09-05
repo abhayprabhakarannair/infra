@@ -64,7 +64,6 @@
       ".config/vivaldi"
       ".config/obsidian"
       ".config/Codex"
-      ".config/opencode"
       # Zed settings and user-managed project/editor state.
       ".config/zed"
       ".config/dconf"
