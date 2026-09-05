@@ -24,6 +24,10 @@
 
   myImpermanence = {
     enable = true;
+    reset = {
+      enable = true;
+      device = "/dev/sda2";
+    };
     extraSystemDirectories = [
       "/var/lib/caddy"
     ];

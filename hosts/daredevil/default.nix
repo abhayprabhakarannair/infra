@@ -26,6 +26,10 @@
 
   myImpermanence = {
     enable = true;
+    reset = {
+      enable = true;
+      device = "/dev/mapper/enc";
+    };
     homeDirectories = [
       "Sync"
       "Projects"
@@ -38,6 +42,7 @@
       ".config/Codex"
       ".config/zed"
       ".config/dconf"
+      ".config/sops/age"
       ".local/share/keyrings"
       ".local/share/zed"
       ".local/share/Steam/userdata"

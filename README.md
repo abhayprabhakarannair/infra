@@ -37,13 +37,27 @@ deploy .#                # all hosts
 
 ### First-boot SOPS setup
 
-After the first reboot, derive the SOPS age identity from the host SSH key:
+After the first boot, derive the SOPS age identity from the host SSH key. Run
+this as the normal `abhay` user on the newly installed host, before its first
+impermanence reset reboot:
 
 ```bash
-./scripts/after_install.sh <hostname> <luks-partition>
+./scripts/after_install.sh <hostname> [luks-partition]
 ```
 
-The script stores it at `~/.config/sops/age/keys.txt` with mode `0600`, validates and reuses an existing identity on reruns, and removes failed-run temporary files. Use `--replace-sops-key` only after rotating or re-encrypting the affected SOPS recipients and confirming the old identity is no longer required. TPM2 enrollment runs only after SOPS setup completes, so a failed TPM enrollment can be retried safely. If the identity is lost, restore it from the protected bootstrap backup or rotate the host's SOPS recipient before attempting decryption.
+Examples:
+
+```bash
+# Encrypted desktop hosts: also enroll TPM2.
+./scripts/after_install.sh daredevil /dev/nvme0n1p2
+./scripts/after_install.sh devil /dev/nvme1n1p2
+
+# Unencrypted server hosts: SOPS setup only; TPM2 is skipped.
+./scripts/after_install.sh old-devil
+./scripts/after_install.sh homelab-one
+```
+
+The script stores it at `~/.config/sops/age/keys.txt` with mode `0600`, validates and reuses an existing identity on reruns, and removes failed-run temporary files. That directory is persisted by the impermanence manifest. Use `--replace-sops-key` only after rotating or re-encrypting the affected SOPS recipients and confirming the old identity is no longer required. TPM2 enrollment runs only after SOPS setup completes, so a failed TPM enrollment can be retried safely. If the identity is lost, restore it from the protected bootstrap backup or rotate the host's SOPS recipient before attempting decryption.
 
 ## Storage
 

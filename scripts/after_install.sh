@@ -30,29 +30,54 @@ cleanup() {
 
 trap cleanup EXIT
 
-# Check if both arguments are provided
-if [ "$#" -lt 2 ] || [ "$#" -gt 3 ]; then
-    echo "Usage: ./after_install.sh <hostname> <luks_partition> [--replace-sops-key]"
+# The LUKS partition is optional for unencrypted hosts. The script always
+# prepares the SOPS age identity; TPM2 enrollment only applies to LUKS hosts.
+if [ "$#" -lt 1 ] || [ "$#" -gt 3 ]; then
+    echo "Usage: ./after_install.sh <hostname> [luks_partition] [--replace-sops-key]"
     echo "Example: ./after_install.sh daredevil /dev/nvme0n1p2"
     echo "Example: ./after_install.sh devil /dev/nvme1n1p2"
+    echo "Example: ./after_install.sh old-devil"
     exit 1
 fi
 
 HOSTNAME="$1"
-LUKS_PARTITION="$2"
+shift
+LUKS_PARTITION=""
 REPLACE_SOPS_KEY=false
 
-if [ "$#" -eq 3 ]; then
-    if [ "$3" != "--replace-sops-key" ]; then
-        echo "Error: Unknown option '$3'."
+if [ "$#" -gt 0 ]; then
+    if [ "$1" = "--replace-sops-key" ]; then
+        REPLACE_SOPS_KEY=true
+        shift
+    else
+        LUKS_PARTITION="$1"
+        shift
+    fi
+fi
+
+if [ "$#" -gt 0 ]; then
+    if [ "$1" != "--replace-sops-key" ]; then
+        echo "Error: Unknown option '$1'."
         exit 1
     fi
     REPLACE_SOPS_KEY=true
+    shift
+fi
+
+if [ "$#" -ne 0 ]; then
+    echo "Error: Too many arguments."
+    exit 1
 fi
 
 # Safety check: Verify the block device actually exists before changing anything.
-if [ ! -b "$LUKS_PARTITION" ]; then
+if [ -n "$LUKS_PARTITION" ] && [ ! -b "$LUKS_PARTITION" ]; then
     echo "Error: Partition '$LUKS_PARTITION' does not exist on this system."
+    exit 1
+fi
+
+if [ -z "$LUKS_PARTITION" ] && [ -e /dev/mapper/enc ]; then
+    echo "Error: An active LUKS mapping exists at /dev/mapper/enc."
+    echo "Pass the underlying LUKS partition explicitly for TPM2 enrollment."
     exit 1
 fi
 
@@ -113,8 +138,12 @@ if [ "${SOPS_KEY_READY}" != true ]; then
 fi
 echo "SOPS Setup completed."
 
-echo "Enrolling TPM2 for $HOSTNAME on partition $LUKS_PARTITION..."
-sudo systemd-cryptenroll --tpm2-device=auto --tpm2-pcrs=0+7 "$LUKS_PARTITION"
-echo "TPM2 enrollment complete."
+if [ -n "$LUKS_PARTITION" ]; then
+    echo "Enrolling TPM2 for $HOSTNAME on partition $LUKS_PARTITION..."
+    sudo systemd-cryptenroll --tpm2-device=auto --tpm2-pcrs=0+7 "$LUKS_PARTITION"
+    echo "TPM2 enrollment complete."
+else
+    echo "No LUKS partition supplied; skipping TPM2 enrollment for $HOSTNAME."
+fi
 
 echo "Setup completed."

@@ -67,6 +67,7 @@
       # Zed settings and user-managed project/editor state.
       ".config/zed"
       ".config/dconf"
+      ".config/sops/age"
       ".local/share/keyrings"
       ".local/share/zed"
       ".local/share/Steam/userdata"

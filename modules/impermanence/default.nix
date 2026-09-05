@@ -125,6 +125,7 @@ in {
         "Sync"
         ".config/syncthing"
         ".local/share/keyrings"
+        ".config/sops/age"
         ".local/state/nix"
         ".ssh"
       ];

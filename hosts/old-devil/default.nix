@@ -26,6 +26,10 @@
 
   myImpermanence = {
     enable = true;
+    reset = {
+      enable = true;
+      device = "/dev/sda2";
+    };
     serviceDirectories = [
       "/srv/home-assistant"
       "/srv/omada-controller"
