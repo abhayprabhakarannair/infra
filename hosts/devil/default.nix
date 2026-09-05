@@ -68,8 +68,6 @@
       ".config/zed"
       ".config/dconf"
       ".local/share/keyrings"
-      ".local/share/backgrounds"
-      ".local/share/icons"
       ".local/share/zed"
       ".local/share/Steam/userdata"
       ".local/state/nix"

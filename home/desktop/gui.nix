@@ -21,7 +21,6 @@
     zed-editor
     nil
     nixd
-    nixpkgs-fmt
   ];
 
   # Keep the selected wallpaper in the repository so a reset rebuilds it,
@@ -51,28 +50,4 @@
     };
   };
 
-  # --- WezTerm ---
-  programs.wezterm = {
-    enable = true;
-    extraConfig = ''
-      local wez = require('wezterm')
-      local config = wez.config_builder()
-
-      config.font = wez.font('JetBrainsMono Nerd Font', { weight = 'Medium' })
-      config.font_size = 13.0
-      config.color_scheme = 'Kanagawa (Gogh)'
-      config.window_padding = { left = 8, right = 8, top = 8, bottom = 8 }
-      config.enable_tab_bar = false
-      config.hide_mouse_cursor_when_typing = true
-
-      return config
-    '';
-  };
-
-  programs.vivaldi = {
-    enable = true;
-    # Vivaldi is installed by the desktop NixOS module. Its persisted profile
-    # remains mutable so extensions can be installed and removed in-browser.
-    package = null;
-  };
 }

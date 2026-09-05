@@ -33,6 +33,7 @@
 
   # --- System packages ---
   environment.systemPackages = with pkgs; [
+    ptyxis
     vivaldi
     gnome-browser-connector
 
