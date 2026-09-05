@@ -275,7 +275,7 @@ in {
 
     boot.initrd.systemd.services.impermanence-reset = lib.mkIf cfg.reset.enable {
       description = "Reset undeclared impermanent root and home state";
-      wantedBy = ["initrd-root-fs.target"];
+      wantedBy = ["initrd.target"];
       before = [
         "initrd-fs.target"
         "initrd-root-fs.target"
@@ -285,7 +285,10 @@ in {
         "sysroot-persist.mount"
       ];
       after = ["initrd-root-device.target"];
-      serviceConfig.Type = "oneshot";
+      serviceConfig = {
+        Type = "oneshot";
+        TimeoutStartSec = "infinity";
+      };
       script = ''
         set -eu
 
@@ -293,24 +296,32 @@ in {
         impermanence_btrfs_root=/run/impermanence-btrfs-root
         mkdir -p "$impermanence_btrfs_root"
         ${pkgs.util-linuxMinimal}/bin/mount -t btrfs -o subvolid=5 "$impermanence_btrfs_device" "$impermanence_btrfs_root"
+        impermanence_log="$impermanence_btrfs_root/@persist/.impermanence-reset.log"
+        exec 9>"$impermanence_log"
+        log() { echo "impermanence-reset: $*" >&9; }
+        log "mounted top-level Btrfs"
 
         # The marker is created only after the live migration has copied the
         # allowlisted state into @persist and the rollback snapshot exists.
         if [ ! -e "$impermanence_btrfs_root/@persist/.impermanence-ready" ]; then
-          echo "impermanence: migration marker absent; keeping existing subvolumes"
+          log "migration marker absent; keeping existing subvolumes"
           ${pkgs.util-linuxMinimal}/bin/umount "$impermanence_btrfs_root"
           exit 0
         fi
 
         for impermanence_subvolume in @ @home; do
+          log "deleting $impermanence_subvolume"
           if ${pkgs.btrfs-progs}/bin/btrfs subvolume show "$impermanence_btrfs_root/$impermanence_subvolume" >/dev/null 2>&1; then
             ${pkgs.btrfs-progs}/bin/btrfs subvolume delete "$impermanence_btrfs_root/$impermanence_subvolume"
           fi
           ${pkgs.btrfs-progs}/bin/btrfs subvolume create "$impermanence_btrfs_root/$impermanence_subvolume"
+          log "created $impermanence_subvolume"
         done
 
         sync
+        log "subvolume reset complete"
         ${pkgs.util-linuxMinimal}/bin/umount "$impermanence_btrfs_root"
+        log "unmounted top-level Btrfs"
       '';
     };
   };
