@@ -67,19 +67,7 @@
       ".config/opencode"
       ".local/share/keyrings"
       ".local/share/Steam/userdata"
-      ".codex/sqlite"
-      ".codex/sessions"
-      ".codex/automations"
-      ".codex/archived_sessions"
-      ".ssh"
-    ];
-    homeFiles = [
-      ".codex/auth.json"
-      ".codex/config.toml"
-      ".codex/installation_id"
-      ".codex/.codex-global-state.json"
-      ".codex/session_index.jsonl"
-      ".codex/transcription-history.jsonl"
+      ".codex"
     ];
   };
 

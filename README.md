@@ -6,7 +6,7 @@ Personal NixOS infrastructure.
 
 | Host | Role | Location |
 |------|------|----------|
-| `daredevil` | ThinkPad X1 Carbon | Daily driver |
+| `daredevil` | ThinkPad E14 Gen 6 AMD (21M4) | Daily driver |
 | `devil` | Gaming PC | Home |
 | `old-devil` | Home server | Home (UPS-backed) |
 | `homelab-one` | VPS | Hetzner Falkenstein |
