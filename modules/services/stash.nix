@@ -2,7 +2,18 @@
   config,
   pkgs,
   ...
-}: {
+}: let
+  hardening = [
+    "--security-opt=no-new-privileges"
+    "--cap-drop=ALL"
+    "--read-only"
+    "--tmpfs=/tmp:rw,noexec,nosuid,nodev"
+    "--tmpfs=/run:rw,nosuid,nodev"
+    "--pids-limit=1024"
+    "--memory=4g"
+    "--cpus=4"
+  ];
+in {
   systemd.tmpfiles.rules = [
     "d /srv/stash 0755 1000 1000 - -"
   ];
@@ -20,10 +31,14 @@
       "/mnt/homelab/media/.spice:/data:ro"
     ];
 
-    extraOptions = [
-      "--restart=always"
-      "--no-healthcheck"
-    ];
+    extraOptions =
+      [
+        "--restart=always"
+        # The image has no verified in-container probe available in this
+        # repository; systemd still restarts failed processes.
+        "--no-healthcheck"
+      ]
+      ++ hardening;
   };
 
   systemd.services.podman-stash = {

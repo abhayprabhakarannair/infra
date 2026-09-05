@@ -3,7 +3,21 @@
   pkgs,
   inputs,
   ...
-}: {
+}: let
+  # These services write state only to their declared bind mounts. Keep a
+  # writable /tmp and /run for s6-based images while making the image root
+  # immutable and bounding process count and memory.
+  hardened = [
+    "--security-opt=no-new-privileges"
+    "--cap-drop=ALL"
+    "--read-only"
+    "--tmpfs=/tmp:rw,noexec,nosuid,nodev"
+    "--tmpfs=/run:rw,nosuid,nodev"
+    "--pids-limit=512"
+    "--memory=1g"
+    "--cpus=2"
+  ];
+in {
   sops.secrets."gluetun/env" = {
     sopsFile = "${inputs.self}/secrets/service-secrets.yaml";
     mode = "0440";
@@ -44,9 +58,17 @@
       };
       extraOptions = [
         "--restart=always"
+        # Gluetun is the deliberate privilege boundary for the VPN network
+        # namespace. These are the only capabilities it needs. Keep its root
+        # filesystem and privilege transitions writable because it must
+        # initialize tunnel/routing state inside the container.
+        "--cap-drop=ALL"
         "--cap-add=NET_ADMIN"
         "--cap-add=NET_RAW"
         "--device=/dev/net/tun:/dev/net/tun"
+        "--pids-limit=512"
+        "--memory=1g"
+        "--cpus=2"
       ];
     };
 
@@ -60,7 +82,7 @@
         PGID = "1000";
         TZ = "Asia/Kolkata";
       };
-      extraOptions = ["--restart=always"];
+      extraOptions = hardened ++ ["--restart=always"];
     };
 
     sabnzbd = {
@@ -76,7 +98,7 @@
         PGID = "1000";
         TZ = "Asia/Kolkata";
       };
-      extraOptions = ["--restart=always"];
+      extraOptions = hardened ++ ["--restart=always"];
     };
 
     sonarr = {
@@ -93,7 +115,7 @@
         PGID = "1000";
         TZ = "Asia/Kolkata";
       };
-      extraOptions = ["--restart=always"];
+      extraOptions = hardened ++ ["--restart=always"];
     };
 
     radarr = {
@@ -110,7 +132,7 @@
         PGID = "1000";
         TZ = "Asia/Kolkata";
       };
-      extraOptions = ["--restart=always"];
+      extraOptions = hardened ++ ["--restart=always"];
     };
 
     whisparr = {
@@ -127,7 +149,7 @@
         PGID = "1000";
         TZ = "Asia/Kolkata";
       };
-      extraOptions = ["--restart=always"];
+      extraOptions = hardened ++ ["--restart=always"];
     };
 
     qbittorrent = {
@@ -144,6 +166,16 @@
         WEBUI_PORT = "8090";
       };
       extraOptions = [
+        # qBittorrent shares Gluetun's network namespace and needs a larger
+        # memory allowance for torrent metadata and active transfers.
+        "--security-opt=no-new-privileges"
+        "--cap-drop=ALL"
+        "--read-only"
+        "--tmpfs=/tmp:rw,noexec,nosuid,nodev"
+        "--tmpfs=/run:rw,nosuid,nodev"
+        "--pids-limit=1024"
+        "--memory=2g"
+        "--cpus=4"
         "--restart=always"
         "--network=container:gluetun"
       ];
@@ -160,7 +192,7 @@
         TZ = "Asia/Kolkata";
         LOG_LEVEL = "info";
       };
-      extraOptions = ["--restart=always"];
+      extraOptions = hardened ++ ["--restart=always"];
     };
 
     flaresolverr = {
@@ -170,7 +202,9 @@
       environment = {
         LOG_LEVEL = "info";
       };
-      extraOptions = ["--restart=always"];
+      # Flaresolverr has no declared writable state. Its temporary files are
+      # confined to the tmpfs supplied by `hardened`.
+      extraOptions = hardened ++ ["--restart=always"];
     };
   };
 

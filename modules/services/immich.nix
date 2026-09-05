@@ -10,6 +10,13 @@
   # Model data is reconstructible and should not be retained as service state.
   # Keep it outside /srv so the impermanence allowlist does not preserve it.
   modelCacheLocation = "/var/cache/immich-model";
+  hardened = [
+    "--security-opt=no-new-privileges"
+    "--cap-drop=ALL"
+    "--read-only"
+    "--tmpfs=/tmp:rw,noexec,nosuid,nodev"
+    "--tmpfs=/run:rw,nosuid,nodev"
+  ];
 in {
   sops.secrets."immich/db-password" = {
     sopsFile = "${inputs.self}/secrets/service-secrets.yaml";
@@ -45,6 +52,14 @@ in {
         "${dbDataLocation}:/var/lib/postgresql/data"
       ];
       extraOptions = [
+        # PostgreSQL manages runtime files and shared memory itself; its data
+        # directory is already isolated to the dedicated bind mount. Avoid a
+        # read-only root and tight memory cap for database safety.
+        "--security-opt=no-new-privileges"
+        "--cap-drop=ALL"
+        "--pids-limit=1024"
+        "--memory=4g"
+        "--cpus=4"
         "--shm-size=128mb"
         "--restart=always"
       ];
@@ -54,8 +69,20 @@ in {
       image = "docker.io/valkey/valkey:9@sha256:2f4a4b0a42a72569b40567fae9016dc54aa76736250be28120b5fced8050c0f0";
       autoRemoveOnStop = false;
       extraOptions = [
+        "--security-opt=no-new-privileges"
+        "--cap-drop=ALL"
+        "--read-only"
+        "--tmpfs=/tmp:rw,noexec,nosuid,nodev"
+        "--tmpfs=/run:rw,nosuid,nodev"
+        "--pids-limit=512"
+        "--memory=1g"
+        "--cpus=2"
         "--restart=always"
         "--health-cmd=redis-cli ping || exit 1"
+        "--health-interval=30s"
+        "--health-timeout=5s"
+        "--health-retries=3"
+        "--health-start-period=20s"
       ];
     };
 
@@ -79,6 +106,14 @@ in {
         "/etc/localtime:/etc/localtime:ro"
       ];
       extraOptions = [
+        # Immich needs its upload bind mount and device access. Keep the image
+        # root writable until the upstream image's runtime write set is
+        # verified against this pinned image digest.
+        "--security-opt=no-new-privileges"
+        "--cap-drop=ALL"
+        "--pids-limit=1024"
+        "--memory=4g"
+        "--cpus=4"
         "--restart=always"
         "--device=/dev/dri:/dev/dri"
       ];
@@ -90,11 +125,22 @@ in {
       volumes = [
         "${modelCacheLocation}:/cache"
       ];
-      extraOptions = [
-        "--restart=always"
-        "--shm-size=8gb"
-        "--security-opt=seccomp=unconfined"
-      ];
+      extraOptions =
+        hardened
+        ++ [
+          # Model workers can use substantial CPU/RAM and temporary runtime
+          # files, so only the root filesystem and capabilities are restricted.
+          "--pids-limit=1024"
+          "--memory=8g"
+          "--cpus=8"
+          "--restart=always"
+          "--shm-size=8gb"
+          # The pinned ML image's Python/native dependencies have not been
+          # runtime-tested under the default seccomp profile. Preserve this
+          # existing exception until an offline container smoke test proves it
+          # can be removed.
+          "--security-opt=seccomp=unconfined"
+        ];
     };
   };
 

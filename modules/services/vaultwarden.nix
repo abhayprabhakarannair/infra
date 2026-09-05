@@ -2,7 +2,18 @@
   config,
   pkgs,
   ...
-}: {
+}: let
+  hardening = [
+    "--security-opt=no-new-privileges"
+    "--cap-drop=ALL"
+    "--read-only"
+    "--tmpfs=/tmp:rw,noexec,nosuid,nodev"
+    "--tmpfs=/run:rw,nosuid,nodev"
+    "--pids-limit=512"
+    "--memory=1g"
+    "--cpus=2"
+  ];
+in {
   systemd.tmpfiles.rules = [
     "d /srv/vaultwarden 0750 root root -"
   ];
@@ -24,9 +35,13 @@
       "/srv/vaultwarden:/data"
     ];
 
-    extraOptions = [
-      "--restart=always"
-      "--no-healthcheck"
-    ];
+    extraOptions =
+      [
+        "--restart=always"
+        # The image's health endpoint is not guaranteed to include a probe
+        # utility; keep the known-safe no-healthcheck behavior.
+        "--no-healthcheck"
+      ]
+      ++ hardening;
   };
 }

@@ -2,7 +2,15 @@
   config,
   pkgs,
   ...
-}: {
+}: let
+  hardening = [
+    "--security-opt=no-new-privileges"
+    "--cap-drop=ALL"
+    "--pids-limit=2048"
+    # No memory/CPU ceiling: transcoding and large-library scans are
+    # workload-dependent and an artificial ceiling would degrade playback.
+  ];
+in {
   systemd.tmpfiles.rules = [
     "d /srv/jellyfin 0755 1000 1000 - -"
   ];
@@ -21,11 +29,18 @@
       "/mnt/homelab/media:/media"
     ];
 
-    extraOptions = [
-      "--restart=always"
-      "--device=/dev/dri:/dev/dri"
-      "--no-healthcheck"
-    ];
+    extraOptions =
+      [
+        "--restart=always"
+        "--device=/dev/dri:/dev/dri"
+        # No read-only root or CPU/memory ceiling: the image's cache/transcode
+        # paths are not separately mounted here, and playback/library scans
+        # are workload-dependent.
+        # The image's healthcheck is intentionally disabled because no
+        # in-container probe is guaranteed by this pinned image.
+        "--no-healthcheck"
+      ]
+      ++ hardening;
   };
 
   systemd.services.podman-jellyfin = {
