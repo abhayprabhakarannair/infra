@@ -37,7 +37,9 @@
   myImpermanence = {
     enable = true;
     reset = {
-      enable = true;
+      # Recovery boot: @ and @home were already recreated by the failed
+      # cutover. Leave them untouched while validating stage 2.
+      enable = false;
       device = "/dev/mapper/enc";
     };
     serviceDirectories = [
