@@ -34,6 +34,55 @@
     "${inputs.self}/users/abhay"
   ];
 
+  myImpermanence = {
+    enable = true;
+    reset = {
+      enable = true;
+      device = "/dev/mapper/enc";
+    };
+    serviceDirectories = [
+      "/srv/jellyfin"
+      "/srv/immich/postgres"
+      "/srv/prowlarr"
+      "/srv/sonarr"
+      "/srv/radarr"
+      "/srv/sabnzbd"
+      "/srv/downloads"
+      "/srv/whisparr"
+      "/srv/gluetun"
+      "/srv/qbittorrent"
+      "/srv/seerr"
+      "/srv/stash"
+    ];
+    homeDirectories = [
+      "Sync"
+      "Projects"
+      "Pictures"
+      "Documents"
+      "Downloads"
+      ".config/syncthing"
+      ".config/vivaldi"
+      ".config/obsidian"
+      ".config/Codex"
+      ".config/opencode"
+      ".local/share/keyrings"
+      ".local/share/Steam/userdata"
+      ".codex/sqlite"
+      ".codex/sessions"
+      ".codex/automations"
+      ".codex/archived_sessions"
+      ".ssh"
+    ];
+    homeFiles = [
+      ".codex/auth.json"
+      ".codex/config.toml"
+      ".codex/installation_id"
+      ".codex/.codex-global-state.json"
+      ".codex/session_index.jsonl"
+      ".codex/transcription-history.jsonl"
+    ];
+  };
+
   # --- Default Drive ---
   disko.devices.disk.main.device = "/dev/nvme1n1";
   disko.devices.disk.games.device = "/dev/nvme0n1";

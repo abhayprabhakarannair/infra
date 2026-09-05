@@ -24,6 +24,37 @@
     "${inputs.self}/users/abhay"
   ];
 
+  myImpermanence = {
+    enable = true;
+    homeDirectories = [
+      "Sync"
+      "Projects"
+      "Pictures"
+      "Documents"
+      "Downloads"
+      ".config/syncthing"
+      ".config/vivaldi"
+      ".config/obsidian"
+      ".config/Codex"
+      ".config/opencode"
+      ".local/share/keyrings"
+      ".local/share/Steam/userdata"
+      ".codex/sqlite"
+      ".codex/sessions"
+      ".codex/automations"
+      ".codex/archived_sessions"
+      ".ssh"
+    ];
+    homeFiles = [
+      ".codex/auth.json"
+      ".codex/config.toml"
+      ".codex/installation_id"
+      ".codex/.codex-global-state.json"
+      ".codex/session_index.jsonl"
+      ".codex/transcription-history.jsonl"
+    ];
+  };
+
   # --- Default Drive ---
   disko.devices.disk.main.device = "/dev/nvme0n1";
   myStorage.swapSize = "32G";

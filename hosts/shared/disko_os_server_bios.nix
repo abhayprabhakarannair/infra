@@ -45,8 +45,8 @@
                   mountOptions = ["noatime"];
                   swap.swapfile.size = config.myStorage.swapSize;
                 };
-                "@srv" = {
-                  mountpoint = "/srv";
+                "@persist" = {
+                  mountpoint = "/persist";
                   mountOptions = ["compress=zstd" "noatime"];
                 };
                 "@var_lib_portables" = {

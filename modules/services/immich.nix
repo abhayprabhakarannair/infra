@@ -7,7 +7,9 @@
   uploadLocation = "/mnt/homelab/immich/library";
 
   dbDataLocation = "/srv/immich/postgres";
-  modelCacheLocation = "/srv/immich/model-cache";
+  # Model data is reconstructible and should not be retained as service state.
+  # Keep it outside /srv so the impermanence allowlist does not preserve it.
+  modelCacheLocation = "/var/cache/immich-model";
 in {
   sops.secrets."immich/db-password" = {
     sopsFile = "${inputs.self}/secrets/service-secrets.yaml";

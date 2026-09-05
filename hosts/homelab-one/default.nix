@@ -22,6 +22,16 @@
     "${inputs.self}/users/abhay"
   ];
 
+  myImpermanence = {
+    enable = true;
+    extraSystemDirectories = [
+      "/var/lib/caddy"
+    ];
+    serviceDirectories = [
+      "/srv/vaultwarden"
+    ];
+  };
+
   # --- Default Drive ---
   disko.devices.disk.main.device = "/dev/sda";
 

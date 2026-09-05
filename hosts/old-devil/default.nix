@@ -24,6 +24,15 @@
     "${inputs.self}/users/abhay"
   ];
 
+  myImpermanence = {
+    enable = true;
+    serviceDirectories = [
+      "/srv/home-assistant"
+      "/srv/omada-controller"
+      "/srv/technitium"
+    ];
+  };
+
   # --- Default Drive ---
   disko.devices.disk.main.device = "/dev/sda";
 
