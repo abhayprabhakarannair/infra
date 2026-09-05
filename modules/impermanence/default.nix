@@ -156,6 +156,10 @@ in {
       };
     };
 
+    # The reset service runs before the normal system closure is available.
+    # Include the tools it invokes in the initrd explicitly.
+    boot.initrd.systemd.storePaths = [pkgs.util-linux pkgs.btrfs-progs];
+
     # A freshly reset @home is created by root. Home Manager activates as the
     # user and therefore needs its home directory owned by abhay first.
     systemd.tmpfiles.rules = ["z /home/abhay 0755 abhay users -"];
