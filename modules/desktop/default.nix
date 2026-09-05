@@ -58,6 +58,15 @@
   # Playwright channel:"chrome" looks for /opt/google/chrome/chrome
   systemd.tmpfiles.rules = [
     "L+ /opt/google/chrome/chrome - - - - ${pkgs.google-chrome}/bin/google-chrome-stable"
+    # Steam's client bootstrap writes into this directory. Keep the existing
+    # impermanence migration from leaving it root/nobody-owned after reset.
+    "z /home/abhay/.local/share/Steam 0755 abhay users -"
+    "z /home/abhay/.local/share/Steam/config 0755 abhay users -"
+    "z /home/abhay/.local/share/Steam/userdata 0755 abhay users -"
+    "z /persist/home/abhay/.local/share/Steam 0755 abhay users -"
+    "z /persist/home/abhay/.local/share/Steam/config 0755 abhay users -"
+    "z /persist/home/abhay/.local/share/Steam/userdata 0755 abhay users -"
+    "z /persist/home/abhay/.local/share/Steam/steamapps 0755 abhay users -"
   ];
 
   environment.sessionVariables = {
