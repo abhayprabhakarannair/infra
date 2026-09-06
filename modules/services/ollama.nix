@@ -13,6 +13,11 @@
     port = 11434;
   };
 
+  systemd.services.ollama.serviceConfig = {
+    DynamicUser = lib.mkForce false;
+    StateDirectory = lib.mkForce "";
+  };
+
   system.activationScripts.ollama-state-directory = {
     deps = ["createPersistentStorageDirs"];
     text = ''
