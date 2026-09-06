@@ -42,6 +42,8 @@ done
 
 grep -q 'migration_marker=/persist/.impermanence-state-seeded-v3' \
   "$repo_root/modules/impermanence/prepare-reset.sh"
+grep -q 'impermanence-reset-complete-v1' \
+  "$repo_root/modules/impermanence/reset-initrd.sh"
 grep -q 'impermanence-state-seeded-v3' \
   "$repo_root/modules/impermanence/reset-initrd.sh"
 grep -q '/dev/disk/by-label/NixOS' "$repo_root/hosts"/*/default.nix
@@ -51,6 +53,8 @@ if grep -q -- "-name '\*.db-\*'\|-name '\*.sqlite-\*'" \
   echo "SQLite sidecar patterns must not be used for sqlite3 export discovery" >&2
   exit 1
 fi
+grep -q -- "--exclude '\*\*/\*.sqlite3-\*'" "$repo_root/modules/storage/backup-lib.sh"
+grep -q -- 'srv/\*\*/\*.sqlite3-\*' "$repo_root/modules/storage/persist-backup.nix"
 grep -q '????????T??????Z)' "$repo_root/modules/storage/backup-lib.sh"
 grep -q '????????T??????Z)' "$repo_root/modules/storage/persist-backup.nix"
 grep -q 'environment.etc."infra/backup-lib.sh".source = ./backup-lib.sh' \

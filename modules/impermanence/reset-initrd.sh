@@ -5,6 +5,7 @@ impermanence_btrfs_device=@device@
 impermanence_btrfs_root=/run/impermanence-btrfs-root
 impermanence_subvolumes="@ @home"
 impermanence_reset_complete=no
+impermanence_reset_marker="$impermanence_btrfs_root/@persist/.impermanence-reset-complete-v1"
 mkdir -p "$impermanence_btrfs_root"
 
 cleanup() {
@@ -12,16 +13,19 @@ cleanup() {
 
   if [ "$impermanence_reset_complete" != yes ]; then
     for impermanence_subvolume in $impermanence_subvolumes; do
-      if @btrfs@ subvolume show "$impermanence_btrfs_root/$impermanence_subvolume.impermanence-old" >/dev/null 2>&1; then
-        if @btrfs@ subvolume show "$impermanence_btrfs_root/$impermanence_subvolume" >/dev/null 2>&1; then
-          @btrfs@ subvolume delete "$impermanence_btrfs_root/$impermanence_subvolume" >/dev/null 2>&1 || true
+      impermanence_current="$impermanence_btrfs_root/$impermanence_subvolume"
+      impermanence_old="$impermanence_current.impermanence-old"
+      impermanence_new="$impermanence_current.impermanence-new"
+      if @btrfs@ subvolume show "$impermanence_old" >/dev/null 2>&1; then
+        if @btrfs@ subvolume show "$impermanence_current" >/dev/null 2>&1; then
+          @btrfs@ subvolume delete "$impermanence_current" >/dev/null 2>&1 || true
         fi
-        @btrfs@ subvolume rename \
-          "$impermanence_btrfs_root/$impermanence_subvolume.impermanence-old" \
-          "$impermanence_btrfs_root/$impermanence_subvolume" >/dev/null 2>&1 || true
-      elif @btrfs@ subvolume show "$impermanence_btrfs_root/$impermanence_subvolume.impermanence-new" >/dev/null 2>&1; then
-        @btrfs@ subvolume delete \
-          "$impermanence_btrfs_root/$impermanence_subvolume.impermanence-new" >/dev/null 2>&1 || true
+        if @btrfs@ subvolume show "$impermanence_new" >/dev/null 2>&1; then
+          @btrfs@ subvolume delete "$impermanence_new" >/dev/null 2>&1 || true
+        fi
+        @btrfs@ subvolume rename "$impermanence_old" "$impermanence_current" >/dev/null 2>&1 || true
+      elif @btrfs@ subvolume show "$impermanence_new" >/dev/null 2>&1; then
+        @btrfs@ subvolume delete "$impermanence_new" >/dev/null 2>&1 || true
       fi
     done
   fi
@@ -49,15 +53,54 @@ exec 9>>"$impermanence_log"
 log() { echo "impermanence-reset: $*" >&9; }
 log "mounted top-level Btrfs"
 
-for impermanence_subvolume in @ @home; do
-  if @btrfs@ subvolume show "$impermanence_btrfs_root/$impermanence_subvolume.impermanence-old" >/dev/null 2>&1; then
-    if @btrfs@ subvolume show "$impermanence_btrfs_root/$impermanence_subvolume" >/dev/null 2>&1; then
-      @btrfs@ subvolume delete "$impermanence_btrfs_root/$impermanence_subvolume" >/dev/null 2>&1 || true
+if [ -e "$impermanence_reset_marker" ]; then
+  for impermanence_subvolume in $impermanence_subvolumes; do
+    impermanence_current="$impermanence_btrfs_root/$impermanence_subvolume"
+    if ! @btrfs@ subvolume show "$impermanence_current" >/dev/null 2>&1; then
+      log "completed reset is missing $impermanence_subvolume"
+      exit 1
     fi
-    @btrfs@ subvolume rename \
-      "$impermanence_btrfs_root/$impermanence_subvolume.impermanence-old" \
-      "$impermanence_btrfs_root/$impermanence_subvolume" >/dev/null 2>&1 || true
+  done
+  impermanence_reset_complete=yes
+  for impermanence_subvolume in $impermanence_subvolumes; do
+    impermanence_current="$impermanence_btrfs_root/$impermanence_subvolume"
+    for impermanence_suffix in impermanence-old impermanence-new; do
+      impermanence_leftover="$impermanence_current.$impermanence_suffix"
+      if @btrfs@ subvolume show "$impermanence_leftover" >/dev/null 2>&1; then
+        @btrfs@ subvolume delete "$impermanence_leftover"
+      fi
+    done
+  done
+  for impermanence_subvolume in $impermanence_subvolumes; do
+    impermanence_current="$impermanence_btrfs_root/$impermanence_subvolume"
+    for impermanence_suffix in impermanence-old impermanence-new; do
+      impermanence_leftover="$impermanence_current.$impermanence_suffix"
+      if @btrfs@ subvolume show "$impermanence_leftover" >/dev/null 2>&1; then
+        log "reset cleanup is still pending for $impermanence_subvolume"
+        exit 0
+      fi
+    done
+  done
+  @rm@ -f -- "$impermanence_reset_marker"
+  log "completed reset cleanup"
+  exit 0
+fi
+
+for impermanence_subvolume in @ @home; do
+  impermanence_current="$impermanence_btrfs_root/$impermanence_subvolume"
+  impermanence_old="$impermanence_current.impermanence-old"
+  impermanence_new="$impermanence_current.impermanence-new"
+  if @btrfs@ subvolume show "$impermanence_old" >/dev/null 2>&1; then
+    if @btrfs@ subvolume show "$impermanence_current" >/dev/null 2>&1; then
+      @btrfs@ subvolume delete "$impermanence_current"
+    fi
+    if @btrfs@ subvolume show "$impermanence_new" >/dev/null 2>&1; then
+      @btrfs@ subvolume delete "$impermanence_new"
+    fi
+    @btrfs@ subvolume rename "$impermanence_old" "$impermanence_current"
     log "recovered interrupted reset for $impermanence_subvolume"
+  elif @btrfs@ subvolume show "$impermanence_new" >/dev/null 2>&1; then
+    @btrfs@ subvolume delete "$impermanence_new"
   fi
 done
 
@@ -112,11 +155,7 @@ for impermanence_subvolume in $impermanence_subvolumes; do
   log "switched $impermanence_subvolume"
 done
 
-for impermanence_subvolume in $impermanence_subvolumes; do
-  @btrfs@ subvolume delete \
-    "$impermanence_btrfs_root/$impermanence_subvolume.impermanence-old"
-done
-
+@touch@ "$impermanence_reset_marker"
 sync
 impermanence_reset_complete=yes
-log "subvolume reset complete"
+log "subvolume reset complete; old subvolumes queued for cleanup"

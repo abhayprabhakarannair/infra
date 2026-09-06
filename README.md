@@ -55,7 +55,9 @@ The reset scripts are separate files under `modules/impermanence/` so their
 shell can be linted directly. They create read-only rollback snapshots, copy
 only missing declared state into `/persist`, verify markers and subvolumes on
 later boots, and switch to empty replacement subvolumes only after all checks
-pass. Old subvolumes remain recoverable until the switch succeeds.
+pass. A completion marker is written before old subvolumes are cleaned up on a
+later boot, so an interrupted switch can be recovered without deleting the
+previous state.
 
 `/etc/machine-id` is the systemd identity of the installation. It is not the
 Syncthing device ID. It is persisted so the machine remains the same system
@@ -64,8 +66,9 @@ NetworkManager connections, Tailscale state, Bluetooth state, journals, user
 configuration, and declared service state are persisted for the same reason.
 
 The SOPS age identity is derived from the host SSH key and stored in
-`~/.config/sops/age/keys.txt`. On impermanent hosts, the SOPS configuration
-reads the persisted host key at `/persist/etc/ssh/ssh_host_ed25519_key`.
+`~/.config/sops/age/keys.txt`. SOPS reads `/etc/ssh/ssh_host_ed25519_key`; on
+impermanent hosts that path is bind-mounted from `/persist` after the initial
+boot, while the original `/etc` key remains available for first-boot setup.
 
 This repository currently targets clean reinstalls for the `@srv` to
 `@persist` layout change. A clean `disko` install creates `@persist`; an old

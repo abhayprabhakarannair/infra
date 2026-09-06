@@ -50,7 +50,7 @@ infra_backup_sqlite_service() {
     --fast-list --transfers 4 --checkers 8 \
     --exclude '**/*.db' --exclude '**/*.db-*' \
     --exclude '**/*.sqlite' --exclude '**/*.sqlite-*' \
-    --exclude '**/*.sqlite3'
+    --exclude '**/*.sqlite3' --exclude '**/*.sqlite3-*'
   infra_export_sqlite_tree "$source" "$staging_root" "$relative_service" "$destination" "$rclone_config"
 }
 

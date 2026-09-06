@@ -24,7 +24,9 @@
     "srv/*.sqlite"
     "srv/*.sqlite-*"
     "srv/**/*.sqlite3"
+    "srv/**/*.sqlite3-*"
     "srv/*.sqlite3"
+    "srv/*.sqlite3-*"
   ];
   excludeArgs = lib.concatMapStringsSep " " (pattern: "--exclude ${lib.escapeShellArg pattern}") (excludedPaths ++ cfg.extraExcludedPaths);
 in {

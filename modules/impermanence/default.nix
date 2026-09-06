@@ -140,6 +140,8 @@
     mount = "${pkgs.util-linuxMinimal}/bin/mount";
     mountpoint = "${pkgs.util-linuxMinimal}/bin/mountpoint";
     preflightPersistentDirectories = preflightPersistentDirectories;
+    rm = "${pkgs.coreutils}/bin/rm";
+    touch = "${pkgs.coreutils}/bin/touch";
     umount = "${pkgs.util-linuxMinimal}/bin/umount";
   };
 in {
