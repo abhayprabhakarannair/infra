@@ -33,12 +33,10 @@ jobs:
           done
 
       - name: Check shell syntax
-        run: bash -n $(git ls-files 'scripts/*.sh' 'pkgs/install-infra/*.sh')
+        run: bash -n $(git ls-files '*.sh')
 
       - name: Check formatting (alejandra)
-        run: |
-          nix run .#nixosConfigurations.daredevil.pkgs.alejandra -- --check \
-            $(git ls-files '*.nix')
+        run: nix run nixpkgs#alejandra -- --check $(git ls-files '*.nix')
 
       - name: Validate persistence units
         run: bash tests/impermanence-validation.sh

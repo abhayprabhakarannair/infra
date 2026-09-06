@@ -29,7 +29,6 @@ in {
 
     extraOptions =
       [
-        "--restart=always"
         "--no-healthcheck"
       ]
       ++ hardening;

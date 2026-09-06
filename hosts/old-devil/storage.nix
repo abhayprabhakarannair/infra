@@ -1,18 +1,48 @@
 {
+  lib,
   config,
   pkgs,
   inputs,
   ...
-}: {
+}: let
+  serviceBackups = [
+    {
+      name = "home-assistant";
+      path = "/srv/home-assistant";
+      kind = "sqlite";
+    }
+    {
+      name = "omada-controller";
+      path = "/srv/omada-controller";
+      kind = "tree";
+    }
+    {
+      name = "technitium";
+      path = "/srv/technitium";
+      kind = "tree";
+    }
+  ];
+  serviceDirectories = map (entry: entry.path) serviceBackups;
+  backupSourceList = lib.concatStringsSep " " (map lib.escapeShellArg serviceDirectories);
+  backupOperation = entry:
+    if entry.kind == "sqlite"
+    then "          infra_backup_sqlite_service ${entry.path} \"$STAGING\" ${entry.name} \"$DEST/${entry.name}\" \"$CONFIG\""
+    else "          infra_backup_tree ${entry.path} \"$DEST/${entry.name}\" \"$CONFIG\"";
+  backupLiveOperations = lib.concatMapStringsSep "\n" backupOperation (builtins.filter (entry: entry.kind == "sqlite") serviceBackups);
+  backupStoppedOperations = lib.concatMapStringsSep "\n" backupOperation (builtins.filter (entry: entry.kind == "tree") serviceBackups);
+in {
   imports = [
     "${inputs.self}/modules/storage/main.nix"
     "${inputs.self}/modules/syncthing"
   ];
 
+  myImpermanence.serviceDirectories = serviceDirectories;
+
   systemd.services.sync-private-to-homelab-storage-one = {
     description = "Encrypt and Sync Local Private Folder to Homelab Storage One";
     after = ["network-online.target"];
     wants = ["network-online.target"];
+    path = with pkgs; [coreutils findutils gnugrep rclone sqlite util-linux];
     serviceConfig = {
       Type = "oneshot";
       RuntimeDirectory = "sync-private-to-homelab-storage-one";
@@ -65,6 +95,7 @@
     description = "Backup old-devil service state to StorageBox";
     wants = ["network-online.target"];
     after = ["network-online.target"];
+    path = with pkgs; [coreutils findutils gnugrep rclone sqlite util-linux];
     serviceConfig = {
       Type = "oneshot";
       RuntimeDirectory = "backup-old-devil-srv";
@@ -78,58 +109,54 @@
       TimeoutStartSec = "6h";
       ExecStart = let
         script = pkgs.writeShellScript "backup-old-devil-srv" ''
-          set -euo pipefail
-          source /etc/infra/backup-lib.sh
+                    set -euo pipefail
+                    source /etc/infra/backup-lib.sh
 
-          readonly CONFIG=${config.sops.secrets."rclone-main.conf".path}
-          RUNTIME_DIR=/run/backup-old-devil-srv
-          STAMP=$(date -u +%Y%m%dT%H%M%SZ)
-          DEST="backups:/disaster-recovery/old-devil/services/$STAMP"
-          STAGING="$RUNTIME_DIR/sqlite"
-          OMADA_WAS_ACTIVE=0
-          TECHNITIUM_WAS_ACTIVE=0
+                    readonly CONFIG=${config.sops.secrets."rclone-main.conf".path}
+                    RUNTIME_DIR=/run/backup-old-devil-srv
+                    STAMP=$(date -u +%Y%m%dT%H%M%SZ)
+                    DEST="backups:/disaster-recovery/old-devil/services/$STAMP"
+                    STAGING="$RUNTIME_DIR/sqlite"
+                    OMADA_WAS_ACTIVE=0
+                    TECHNITIUM_WAS_ACTIVE=0
 
-          cleanup() {
-            if [ "$OMADA_WAS_ACTIVE" -eq 1 ]; then
-              ${pkgs.systemd}/bin/systemctl start podman-omada-controller.service || true
-            fi
-            if [ "$TECHNITIUM_WAS_ACTIVE" -eq 1 ]; then
-              ${pkgs.systemd}/bin/systemctl start podman-technitium.service || true
-            fi
-            ${pkgs.coreutils}/bin/rm -rf -- "$STAGING"
-          }
-          trap cleanup EXIT
+                    cleanup() {
+                      if [ "$OMADA_WAS_ACTIVE" -eq 1 ]; then
+                        ${pkgs.systemd}/bin/systemctl start podman-omada-controller.service || true
+                      fi
+                      if [ "$TECHNITIUM_WAS_ACTIVE" -eq 1 ]; then
+                        ${pkgs.systemd}/bin/systemctl start podman-technitium.service || true
+                      fi
+                      ${pkgs.coreutils}/bin/rm -rf -- "$STAGING"
+                    }
+                    trap cleanup EXIT
 
-          exec 9>"$RUNTIME_DIR/backup.lock"
-          if ! ${pkgs.util-linux}/bin/flock -n 9; then
-            echo "backup-old-devil-srv is already running" >&2
-            exit 0
-          fi
+                    exec 9>"$RUNTIME_DIR/backup.lock"
+                    if ! ${pkgs.util-linux}/bin/flock -n 9; then
+                      echo "backup-old-devil-srv is already running" >&2
+                      exit 0
+                    fi
 
-          for source in /srv/home-assistant /srv/omada-controller /srv/technitium; do
-            infra_require_dir "$source" || {
-              echo "required backup source is missing: $source" >&2
-              exit 1
-            }
-          done
-          ${pkgs.coreutils}/bin/mkdir -p "$STAGING"
+                    for source in ${backupSourceList}; do
+                      infra_require_dir "$source" || {
+                        echo "required backup source is missing: $source" >&2
+                        exit 1
+                      }
+                    done
+                    ${pkgs.coreutils}/bin/mkdir -p "$STAGING"
 
-          infra_backup_sqlite_service /srv/home-assistant "$STAGING" home-assistant "$DEST/home-assistant" "$CONFIG"
+          ${backupLiveOperations}
 
-          if ${pkgs.systemd}/bin/systemctl is-active --quiet podman-omada-controller.service; then
-            OMADA_WAS_ACTIVE=1
-            ${pkgs.systemd}/bin/systemctl stop podman-omada-controller.service
-          fi
-          if ${pkgs.systemd}/bin/systemctl is-active --quiet podman-technitium.service; then
-            TECHNITIUM_WAS_ACTIVE=1
-            ${pkgs.systemd}/bin/systemctl stop podman-technitium.service
-          fi
-          infra_rclone_copy_checked /srv/omada-controller "$DEST/omada-controller" "$CONFIG" \
-            --fast-list --transfers 4 --checkers 8
-          infra_rclone_copy_checked /srv/technitium "$DEST/technitium" "$CONFIG" \
-            --fast-list --transfers 4 --checkers 8
-
-          infra_prune_generations "backups:/disaster-recovery/old-devil/services" "$CONFIG" 90 "$RUNTIME_DIR/generations.list"
+                    if ${pkgs.systemd}/bin/systemctl is-active --quiet podman-omada-controller.service; then
+                      OMADA_WAS_ACTIVE=1
+                      ${pkgs.systemd}/bin/systemctl stop podman-omada-controller.service
+                    fi
+                    if ${pkgs.systemd}/bin/systemctl is-active --quiet podman-technitium.service; then
+                      TECHNITIUM_WAS_ACTIVE=1
+                      ${pkgs.systemd}/bin/systemctl stop podman-technitium.service
+                    fi
+          ${backupStoppedOperations}
+                    infra_prune_generations "backups:/disaster-recovery/old-devil/services" "$CONFIG" 90 "$RUNTIME_DIR/generations.list"
         '';
       in "${script}";
     };

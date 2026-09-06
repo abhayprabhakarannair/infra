@@ -30,11 +30,6 @@
       enable = true;
       device = "/dev/disk/by-label/NixOS";
     };
-    serviceDirectories = [
-      "/srv/home-assistant"
-      "/srv/omada-controller"
-      "/srv/technitium"
-    ];
   };
 
   # --- Default Drive ---

@@ -25,7 +25,6 @@ in {
 
     extraOptions =
       [
-        "--restart=always"
         "--device=/dev/dri:/dev/dri"
         "--no-healthcheck"
       ]

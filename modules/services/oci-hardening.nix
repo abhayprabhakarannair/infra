@@ -20,7 +20,6 @@ in {
     "--cap-drop=ALL"
   ];
 
-  capDrop = ["--cap-drop=ALL"];
   inherit immutable withLimits;
   immutableWithLimits = limits: immutable ++ withLimits limits;
 }

@@ -31,9 +31,6 @@
     extraSystemDirectories = [
       "/var/lib/caddy"
     ];
-    serviceDirectories = [
-      "/srv/vaultwarden"
-    ];
   };
 
   # --- Default Drive ---

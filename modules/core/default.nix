@@ -50,8 +50,6 @@
   # --- Secrets ---
   sops.defaultSopsFile = "${inputs.self}/secrets/system-secrets.yaml";
   sops.defaultSopsFormat = "yaml";
-  # Impermanent hosts keep the age identity on the persistent filesystem so
-  # it remains available even when the root and home subvolumes are reset.
   sops.age.sshKeyPaths = lib.mkIf config.myImpermanence.enable [
     "/persist/etc/ssh/ssh_host_ed25519_key"
   ];

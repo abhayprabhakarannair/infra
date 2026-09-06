@@ -40,20 +40,6 @@
       enable = true;
       device = "/dev/disk/by-label/NixOS";
     };
-    serviceDirectories = [
-      "/srv/jellyfin"
-      "/srv/immich/postgres"
-      "/srv/prowlarr"
-      "/srv/sonarr"
-      "/srv/radarr"
-      "/srv/sabnzbd"
-      "/srv/downloads"
-      "/srv/whisparr"
-      "/srv/gluetun"
-      "/srv/qbittorrent"
-      "/srv/seerr"
-      "/srv/stash"
-    ];
     extraSystemDirectories = [
       "/var/lib/libvirt"
       "/var/lib/ollama"

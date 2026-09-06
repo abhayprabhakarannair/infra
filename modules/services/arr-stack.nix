@@ -50,8 +50,7 @@ in {
         OPENVPN_CUSTOM_OPTIONS = "--tun-mtu 1300 --mssfix 1260";
       };
       extraOptions =
-        ["--restart=always"]
-        ++ containerHardening.capDrop
+        containerHardening.baseline
         ++ [
           "--cap-add=NET_ADMIN"
           "--cap-add=NET_RAW"
@@ -72,7 +71,7 @@ in {
         PGID = "1000";
         TZ = "Asia/Kolkata";
       };
-      extraOptions = hardened ++ ["--restart=always"];
+      extraOptions = hardened;
     };
 
     sabnzbd = {
@@ -88,7 +87,7 @@ in {
         PGID = "1000";
         TZ = "Asia/Kolkata";
       };
-      extraOptions = hardened ++ ["--restart=always"];
+      extraOptions = hardened;
     };
 
     sonarr = {
@@ -105,7 +104,7 @@ in {
         PGID = "1000";
         TZ = "Asia/Kolkata";
       };
-      extraOptions = hardened ++ ["--restart=always"];
+      extraOptions = hardened;
     };
 
     radarr = {
@@ -122,7 +121,7 @@ in {
         PGID = "1000";
         TZ = "Asia/Kolkata";
       };
-      extraOptions = hardened ++ ["--restart=always"];
+      extraOptions = hardened;
     };
 
     whisparr = {
@@ -139,7 +138,7 @@ in {
         PGID = "1000";
         TZ = "Asia/Kolkata";
       };
-      extraOptions = hardened ++ ["--restart=always"];
+      extraOptions = hardened;
     };
 
     qbittorrent = {
@@ -164,7 +163,6 @@ in {
           cpus = 4;
         }
         ++ [
-          "--restart=always"
           "--network=container:gluetun"
         ];
     };
@@ -180,7 +178,7 @@ in {
         TZ = "Asia/Kolkata";
         LOG_LEVEL = "info";
       };
-      extraOptions = hardened ++ ["--restart=always"];
+      extraOptions = hardened;
     };
 
     flaresolverr = {
@@ -190,7 +188,7 @@ in {
       environment = {
         LOG_LEVEL = "info";
       };
-      extraOptions = hardened ++ ["--restart=always"];
+      extraOptions = hardened;
     };
   };
 

@@ -5,8 +5,6 @@
 }: {
   imports = ["${inputs.self}/home/core.nix"];
 
-  # after_install.sh runs after first boot and needs this tool on server
-  # profiles too; desktop-only packages are intentionally not imported here.
   home.packages = [pkgs.ssh-to-age];
 
   programs.git = {

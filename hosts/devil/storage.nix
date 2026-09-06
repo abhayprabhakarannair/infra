@@ -1,9 +1,79 @@
 {
+  lib,
   pkgs,
   inputs,
   config,
   ...
-}: {
+}: let
+  serviceBackups = [
+    {
+      name = "jellyfin";
+      path = "/srv/jellyfin";
+      kind = "sqlite";
+    }
+    {
+      name = "prowlarr";
+      path = "/srv/prowlarr";
+      kind = "tree";
+    }
+    {
+      name = "sonarr";
+      path = "/srv/sonarr";
+      kind = "sqlite";
+    }
+    {
+      name = "radarr";
+      path = "/srv/radarr";
+      kind = "sqlite";
+    }
+    {
+      name = "sabnzbd";
+      path = "/srv/sabnzbd";
+      kind = "tree";
+    }
+    {
+      name = "downloads";
+      path = "/srv/downloads";
+      kind = "tree";
+    }
+    {
+      name = "whisparr";
+      path = "/srv/whisparr";
+      kind = "sqlite";
+    }
+    {
+      name = "gluetun";
+      path = "/srv/gluetun";
+      kind = "tree";
+    }
+    {
+      name = "qbittorrent";
+      path = "/srv/qbittorrent";
+      kind = "tree";
+    }
+    {
+      name = "seerr";
+      path = "/srv/seerr";
+      kind = "sqlite";
+    }
+    {
+      name = "stash";
+      path = "/srv/stash";
+      kind = "sqlite";
+    }
+  ];
+  serviceDirectories = map (entry: entry.path) serviceBackups ++ ["/srv/immich/postgres"];
+  backupSources = serviceDirectories ++ ["/var/lib/libvirt"];
+  backupSourceList = lib.concatStringsSep " " (map lib.escapeShellArg backupSources);
+  backupOperations =
+    lib.concatMapStringsSep "\n" (
+      entry:
+        if entry.kind == "sqlite"
+        then "          infra_backup_sqlite_service ${entry.path} \"$STAGING\" ${entry.name} \"$DEST/${entry.name}\" \"$CONFIG\""
+        else "          infra_backup_tree ${entry.path} \"$DEST/${entry.name}\" \"$CONFIG\""
+    )
+    serviceBackups;
+in {
   imports = [
     "${inputs.self}/modules/storage/main.nix"
     "${inputs.self}/modules/syncthing"
@@ -12,6 +82,7 @@
   systemd.tmpfiles.rules = ["d /mnt/homelab 0750 1000 1000 -"];
 
   myStorage.persistBackup.extraExcludedPaths = ["var/lib/ollama/**"];
+  myImpermanence.serviceDirectories = serviceDirectories;
 
   systemd.services = {
     rclone-homelab = {
@@ -67,6 +138,7 @@
     wants = ["network-online.target"];
     after = ["network-online.target" "podman-immich-database.service"];
     requires = ["podman-immich-database.service"];
+    path = with pkgs; [coreutils findutils gnugrep rclone sqlite util-linux];
     serviceConfig = {
       Type = "oneshot";
       RuntimeDirectory = "backup-devil-srv";
@@ -83,72 +155,47 @@
       TimeoutStartSec = "12h";
       ExecStart = let
         script = pkgs.writeShellScript "backup-devil-srv" ''
-          set -euo pipefail
+                    set -euo pipefail
 
-          source /etc/infra/backup-lib.sh
+                    source /etc/infra/backup-lib.sh
 
-          readonly RCLONE=${pkgs.rclone}/bin/rclone
-          readonly SQLITE=${pkgs.sqlite}/bin/sqlite3
-          readonly CONFIG=${config.sops.secrets."rclone-main.conf".path}
-          RUNTIME_DIR=/run/backup-devil-srv
-          STAMP=$(date -u +%Y%m%dT%H%M%SZ)
-          DEST="backups:/disaster-recovery/devil/services/$STAMP"
-          STAGING="$RUNTIME_DIR/sqlite"
+                    readonly CONFIG=${config.sops.secrets."rclone-main.conf".path}
+                    RUNTIME_DIR=/run/backup-devil-srv
+                    STAMP=$(date -u +%Y%m%dT%H%M%SZ)
+                    DEST="backups:/disaster-recovery/devil/services/$STAMP"
+                    STAGING="$RUNTIME_DIR/sqlite"
 
-          cleanup() {
-            ${pkgs.coreutils}/bin/rm -rf -- "$STAGING"
-          }
-          trap cleanup EXIT
+                    cleanup() {
+                      ${pkgs.coreutils}/bin/rm -rf -- "$STAGING"
+                    }
+                    trap cleanup EXIT
 
-          exec 9>"$RUNTIME_DIR/backup.lock"
-          if ! ${pkgs.util-linux}/bin/flock -n 9; then
-            echo "backup-devil-srv is already running" >&2
-            exit 0
-          fi
+                    exec 9>"$RUNTIME_DIR/backup.lock"
+                    if ! ${pkgs.util-linux}/bin/flock -n 9; then
+                      echo "backup-devil-srv is already running" >&2
+                      exit 0
+                    fi
 
-          for source in \
-            /srv/jellyfin \
-            /srv/immich/postgres \
-            /srv/prowlarr \
-            /srv/sonarr \
-            /srv/radarr \
-            /srv/sabnzbd \
-            /srv/downloads \
-            /srv/whisparr \
-            /srv/gluetun \
-            /srv/qbittorrent \
-            /srv/seerr \
-            /srv/stash \
-            /var/lib/libvirt; do
-            infra_require_dir "$source" || {
-              echo "required backup source is missing: $source" >&2
-              exit 1
-            }
-          done
+                    for source in ${backupSourceList}; do
+                      infra_require_dir "$source" || {
+                        echo "required backup source is missing: $source" >&2
+                        exit 1
+                      }
+                    done
 
-          ${pkgs.coreutils}/bin/mkdir -p "$STAGING"
+                    ${pkgs.coreutils}/bin/mkdir -p "$STAGING"
 
-          DUMP="$RUNTIME_DIR/immich-db.sql.gz"
-          ${pkgs.podman}/bin/podman exec immich-database pg_dump -U postgres immich \
-            | ${pkgs.gzip}/bin/gzip > "$DUMP"
-          test -s "$DUMP"
-          ${pkgs.gzip}/bin/gzip -t "$DUMP"
-          infra_rclone_copy_checked "$DUMP" "$DEST/immich/postgres" "$CONFIG"
+                    DUMP="$RUNTIME_DIR/immich-db.sql.gz"
+                    ${pkgs.podman}/bin/podman exec immich-database pg_dump -U postgres immich \
+                      | ${pkgs.gzip}/bin/gzip > "$DUMP"
+                    test -s "$DUMP"
+                    ${pkgs.gzip}/bin/gzip -t "$DUMP"
+                    infra_rclone_copy_checked "$DUMP" "$DEST/immich/postgres" "$CONFIG"
 
-          infra_backup_sqlite_service /srv/jellyfin "$STAGING" jellyfin "$DEST/jellyfin" "$CONFIG"
-          infra_backup_tree /srv/prowlarr "$DEST/prowlarr" "$CONFIG"
-          infra_backup_sqlite_service /srv/sonarr "$STAGING" sonarr "$DEST/sonarr" "$CONFIG"
-          infra_backup_sqlite_service /srv/radarr "$STAGING" radarr "$DEST/radarr" "$CONFIG"
-          infra_backup_tree /srv/sabnzbd "$DEST/sabnzbd" "$CONFIG"
-          infra_backup_tree /srv/downloads "$DEST/downloads" "$CONFIG"
-          infra_backup_sqlite_service /srv/whisparr "$STAGING" whisparr "$DEST/whisparr" "$CONFIG"
-          infra_backup_tree /srv/gluetun "$DEST/gluetun" "$CONFIG"
-          infra_backup_tree /srv/qbittorrent "$DEST/qbittorrent" "$CONFIG"
-          infra_backup_sqlite_service /srv/seerr "$STAGING" seerr "$DEST/seerr" "$CONFIG"
-          infra_backup_sqlite_service /srv/stash "$STAGING" stash "$DEST/stash" "$CONFIG"
-          infra_backup_tree /var/lib/libvirt "$DEST/libvirt" "$CONFIG"
+          ${backupOperations}
+                    infra_backup_tree /var/lib/libvirt "$DEST/libvirt" "$CONFIG"
 
-          infra_prune_generations "backups:/disaster-recovery/devil/services" "$CONFIG" 90 "$RUNTIME_DIR/generations.list"
+                    infra_prune_generations "backups:/disaster-recovery/devil/services" "$CONFIG" 90 "$RUNTIME_DIR/generations.list"
         '';
       in "${script}";
     };

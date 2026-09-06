@@ -5,10 +5,6 @@
 }: {
   imports = ["${inputs.self}/modules/desktop/nixvim.nix"];
 
-  # Desktop persistence follows the XDG boundary instead of enumerating every
-  # application. Configuration and user data survive resets; ~/.cache and
-  # other transient top-level state remain ephemeral. The few non-XDG user
-  # directories below are standard credentials/data locations, not app lists.
   myImpermanence.homeDirectories = [
     "Desktop"
     "Documents"

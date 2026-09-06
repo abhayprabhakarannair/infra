@@ -4,13 +4,28 @@
   config,
   ...
 }: let
-  # Change this one line to select another repository wallpaper.
-  wallpaperSource = ../../assets/wallpapers/anime_axe_viking.png;
   wallpaperPath = "${config.home.homeDirectory}/.local/share/backgrounds/current-wallpaper";
+  setWallpaper = pkgs.writeShellApplication {
+    name = "set-wallpaper";
+    runtimeInputs = [pkgs.coreutils pkgs.glib];
+    text = ''
+      set -euo pipefail
+
+      if [ "$#" -ne 1 ] || [ ! -f "$1" ]; then
+        echo "Usage: set-wallpaper IMAGE" >&2
+        exit 1
+      fi
+
+      destination="$HOME/.local/share/backgrounds/current-wallpaper"
+      mkdir -p "$(dirname "$destination")"
+      install -m 0644 "$1" "$destination"
+      gsettings set org.gnome.desktop.background picture-uri "file://$destination"
+      gsettings set org.gnome.desktop.background picture-uri-dark "file://$destination"
+    '';
+  };
 in {
   imports = ["${inputs.self}/home/desktop"];
 
-  # --- Essential apps ---
   home.packages = with pkgs.unstable; [
     vlc
     fastfetch
@@ -25,13 +40,9 @@ in {
     zed-editor
     nil
     nixd
+    setWallpaper
   ];
 
-  # Keep the selected wallpaper in the repository behind a stable path so
-  # changing wallpapers only requires editing wallpaperSource above.
-  home.file.".local/share/backgrounds/current-wallpaper".source = wallpaperSource;
-
-  # --- Modern UI Fonts & Rendering ---
   dconf.settings = {
     "org/gnome/desktop/interface" = {
       color-scheme = "prefer-dark";

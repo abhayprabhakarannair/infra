@@ -50,7 +50,6 @@ in {
         "--memory=4g"
         "--cpus=4"
         "--shm-size=128mb"
-        "--restart=always"
       ];
     };
 
@@ -66,7 +65,6 @@ in {
         "--pids-limit=512"
         "--memory=1g"
         "--cpus=2"
-        "--restart=always"
         "--health-cmd=redis-cli ping || exit 1"
         "--health-interval=30s"
         "--health-timeout=5s"
@@ -100,7 +98,6 @@ in {
         "--pids-limit=1024"
         "--memory=4g"
         "--cpus=4"
-        "--restart=always"
         "--device=/dev/dri:/dev/dri"
       ];
     };
@@ -120,7 +117,6 @@ in {
           cpus = 8;
         }
         ++ [
-          "--restart=always"
           "--shm-size=8gb"
           "--security-opt=seccomp=unconfined"
         ];

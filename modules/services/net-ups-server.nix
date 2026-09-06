@@ -11,9 +11,6 @@
     nut
   ];
 
-  # old-devil monitors this UPS over Tailscale. Keep NUT's port off the WAN
-  # and other interfaces; the common firewall already trusts tailscale0.
-
   power.ups = {
     enable = true;
     mode = "netserver";

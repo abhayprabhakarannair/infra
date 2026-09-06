@@ -7,7 +7,7 @@
     isNormalUser = true;
     description = "Abhay Prabhakaran Nair";
     extraGroups =
-      ["wheel"]
+      ["wheel" "dialout"]
       ++ lib.optional config.networking.networkmanager.enable "networkmanager"
       ++ lib.optional config.virtualisation.podman.enable "podman"
       ++ lib.optional config.virtualisation.libvirtd.enable "libvirtd"

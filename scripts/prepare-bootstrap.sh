@@ -39,8 +39,6 @@ done
 mkdir -p "$KEY_DIR"
 chmod 700 "$BOOTSTRAP_ROOT" "$TARGET_ROOT" "$KEY_DIR"
 
-# Never overwrite key material. Require a complete, correctly protected
-# scaffold before allowing an existing target to be used.
 if [ -e "$PRIVATE_KEY" ] || [ -e "$PUBLIC_KEY" ]; then
     if [ ! -f "$PRIVATE_KEY" ] || [ ! -f "$PUBLIC_KEY" ]; then
         echo "Error: incomplete bootstrap key pair in '$KEY_DIR'."
@@ -60,8 +58,6 @@ fi
 
 echo "Creating bootstrap directory structure for $TARGET..."
 
-# Create placeholders with their final permissions. The private key is never
-# created with a caller-controlled mode.
 install -m 600 /dev/null "$PRIVATE_KEY"
 install -m 644 /dev/null "$PUBLIC_KEY"
 

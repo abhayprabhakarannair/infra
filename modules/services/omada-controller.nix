@@ -26,7 +26,6 @@ in {
     extraOptions =
       [
         "--network=host"
-        "--restart=always"
         "--no-healthcheck"
       ]
       ++ hardening;

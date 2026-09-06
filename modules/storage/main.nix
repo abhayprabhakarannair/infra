@@ -19,8 +19,6 @@
     RCLONE_CONFIG = config.sops.secrets."rclone-main.conf".path;
   };
 
-  # The main rclone config already contains the existing `backups:` remote.
-  # This is a host-loss recovery copy of /persist, not a live mount or mirror.
   myStorage.persistBackup = {
     enable = true;
     remote = "backups:/disaster-recovery/${config.networking.hostName}";

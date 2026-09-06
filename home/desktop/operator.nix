@@ -1,7 +1,4 @@
 {...}: {
-  # Desktop/operator-only credentials stay out of server Home Manager
-  # profiles. The corresponding SOPS declarations are guarded in
-  # modules/desktop/controlroom.nix.
   programs.git = {
     enable = true;
     settings = {
