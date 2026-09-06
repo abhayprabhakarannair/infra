@@ -37,7 +37,7 @@
   myImpermanence = {
     enable = true;
     reset = {
-      enable = true;
+      enable = false;
       device = "/dev/disk/by-label/NixOS";
     };
     extraSystemDirectories = [
@@ -85,7 +85,7 @@
 
       systemd-boot = {
         enable = true;
-        configurationLimit = 15;
+        configurationLimit = 50;
         consoleMode = "max";
       };
     };
