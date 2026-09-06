@@ -188,7 +188,7 @@ in {
       environment = {
         LOG_LEVEL = "info";
       };
-      extraOptions = hardened;
+      extraOptions = hardened ++ ["--tmpfs=/app/.local:rw,noexec,nosuid,nodev"];
     };
   };
 
