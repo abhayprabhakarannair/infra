@@ -32,6 +32,14 @@
         done
         rm -f /var/lib/ollama
       fi
+
+      if [ -d /persist/var/lib/ollama ]; then
+        expected_owner="$(${pkgs.coreutils}/bin/id -u ollama):$(${pkgs.coreutils}/bin/id -g ollama)"
+        actual_owner="$(${pkgs.coreutils}/bin/stat -c '%u:%g' /persist/var/lib/ollama)"
+        if [ "$actual_owner" != "$expected_owner" ]; then
+          ${pkgs.coreutils}/bin/chown -R ollama:ollama /persist/var/lib/ollama
+        fi
+      fi
     '';
   };
   system.activationScripts.persist-files.deps = lib.mkAfter ["ollama-state-directory"];
