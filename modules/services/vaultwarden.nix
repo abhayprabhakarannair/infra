@@ -2,7 +2,14 @@
   config,
   pkgs,
   ...
-}: {
+}: let
+  containerHardening = import ./oci-hardening.nix;
+  hardening = containerHardening.immutableWithLimits {
+    pidsLimit = 512;
+    memory = "1g";
+    cpus = 2;
+  };
+in {
   systemd.tmpfiles.rules = [
     "d /srv/vaultwarden 0750 root root -"
   ];
@@ -24,9 +31,10 @@
       "/srv/vaultwarden:/data"
     ];
 
-    extraOptions = [
-      "--restart=always"
-      "--no-healthcheck"
-    ];
+    extraOptions =
+      [
+        "--no-healthcheck"
+      ]
+      ++ hardening;
   };
 }

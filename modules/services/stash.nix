@@ -2,7 +2,14 @@
   config,
   pkgs,
   ...
-}: {
+}: let
+  containerHardening = import ./oci-hardening.nix;
+  hardening = containerHardening.immutableWithLimits {
+    pidsLimit = 1024;
+    memory = "4g";
+    cpus = 4;
+  };
+in {
   systemd.tmpfiles.rules = [
     "d /srv/stash 0755 1000 1000 - -"
   ];
@@ -20,10 +27,11 @@
       "/mnt/homelab/media/.spice:/data:ro"
     ];
 
-    extraOptions = [
-      "--restart=always"
-      "--no-healthcheck"
-    ];
+    extraOptions =
+      [
+        "--no-healthcheck"
+      ]
+      ++ hardening;
   };
 
   systemd.services.podman-stash = {

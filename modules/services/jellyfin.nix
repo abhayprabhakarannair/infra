@@ -2,7 +2,10 @@
   config,
   pkgs,
   ...
-}: {
+}: let
+  containerHardening = import ./oci-hardening.nix;
+  hardening = containerHardening.baseline ++ ["--pids-limit=2048"];
+in {
   systemd.tmpfiles.rules = [
     "d /srv/jellyfin 0755 1000 1000 - -"
   ];
@@ -17,15 +20,15 @@
 
     volumes = [
       "/srv/jellyfin:/config"
-      # The shared media mount includes the FLAC music library used by Symfonium.
       "/mnt/homelab/media:/media"
     ];
 
-    extraOptions = [
-      "--restart=always"
-      "--device=/dev/dri:/dev/dri"
-      "--no-healthcheck"
-    ];
+    extraOptions =
+      [
+        "--device=/dev/dri:/dev/dri"
+        "--no-healthcheck"
+      ]
+      ++ hardening;
   };
 
   systemd.services.podman-jellyfin = {

@@ -1,5 +1,8 @@
 name: CI
 
+permissions:
+  contents: read
+
 on:
   push:
     branches:
@@ -11,13 +14,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Install Nix
-        uses: DeterminateSystems/nix-installer-action@main
+        uses: DeterminateSystems/nix-installer-action@b67ad2f0e8376a0bc947db191e4484285b6f5b56 # main, 2026-09-05
 
       - name: Use Cachix binary cache
-        uses: cachix/cachix-action@v17
+        uses: cachix/cachix-action@38b082610b782e7e93e209c35fd730d399dee866 # v17
         with:
           name: abhay-infra
 
@@ -26,9 +29,14 @@ jobs:
           for host in daredevil devil old-devil homelab-one; do
             echo "=== Eval $host ==="
             nix eval .#nixosConfigurations.$host.config.system.build.toplevel.name \
-              --option accept-flake-config true
+              --no-update-lock-file
           done
 
+      - name: Check shell syntax
+        run: bash -n $(git ls-files '*.sh')
+
       - name: Check formatting (alejandra)
-        run: |
-          nix run nixpkgs#alejandra -- --check .
+        run: nix run nixpkgs#alejandra -- --check $(git ls-files '*.nix')
+
+      - name: Validate persistence units
+        run: bash tests/impermanence-validation.sh

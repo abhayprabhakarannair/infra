@@ -2,7 +2,16 @@
   config,
   pkgs,
   ...
-}: {
+}: let
+  containerHardening = import ./oci-hardening.nix;
+  hardening =
+    containerHardening.baseline
+    ++ containerHardening.withLimits {
+      pidsLimit = 2048;
+      memory = "4g";
+      cpus = 4;
+    };
+in {
   systemd.tmpfiles.rules = [
     "d /srv/omada-controller 0755 root root -"
     "d /srv/omada-controller/data 0755 root root -"
@@ -14,11 +23,12 @@
     image = "mbentley/omada-controller:latest@sha256:a26d3decc71a63ab8b8eb96d5c7d159bef75fcc790ea7d2fa803bccc6a71bf57";
     autoRemoveOnStop = false;
 
-    extraOptions = [
-      "--network=host"
-      "--restart=always"
-      "--no-healthcheck"
-    ];
+    extraOptions =
+      [
+        "--network=host"
+        "--no-healthcheck"
+      ]
+      ++ hardening;
 
     environment = {
       MANAGE_HTTP_PORT = "8088";

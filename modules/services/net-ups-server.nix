@@ -30,15 +30,13 @@
       ];
     };
 
-    # 1. NEW: Define the user on the server (upsd) side
     users = {
       admin = {
         passwordFile = "/run/secrets/ups-password";
-        upsmon = "primary"; # Grants this user permission to act as the primary monitor
+        upsmon = "primary";
       };
     };
 
-    # 2. upsmon (the client) logs in using those credentials
     upsmon = {
       enable = true;
       monitor = {

@@ -6,6 +6,7 @@
 }: {
   imports = [
     "${inputs.self}/modules/storage/core.nix"
+    "${inputs.self}/modules/storage/persist-backup.nix"
   ];
 
   sops.secrets."rclone-backup-node.conf" = {
@@ -17,5 +18,11 @@
 
   environment.variables = {
     RCLONE_CONFIG = config.sops.secrets."rclone-backup-node.conf".path;
+  };
+
+  myStorage.persistBackup = {
+    enable = true;
+    remote = "b2-storage:/disaster-recovery/${config.networking.hostName}";
+    configPath = config.sops.secrets."rclone-backup-node.conf".path;
   };
 }

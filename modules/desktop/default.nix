@@ -5,6 +5,28 @@
 }: {
   imports = ["${inputs.self}/modules/desktop/nixvim.nix"];
 
+  myImpermanence.homeDirectories = [
+    "Desktop"
+    "Documents"
+    "Downloads"
+    "Music"
+    "Pictures"
+    "Projects"
+    "Public"
+    "Sync"
+    "Templates"
+    "Videos"
+    ".config"
+    ".local/share"
+    ".local/state"
+    ".ssh"
+    ".gnupg"
+    ".pki"
+    ".var/app"
+    ".codex"
+  ];
+  myImpermanence.homeFiles = [".bash_history"];
+
   # --- Global fonts ---
   fonts = {
     packages = with pkgs; [
@@ -50,14 +72,22 @@
   ];
 
   xdg.mime.defaultApplications = {
-    "text/html" = "google-chrome.desktop";
-    "x-scheme-handler/http" = "google-chrome.desktop";
-    "x-scheme-handler/https" = "google-chrome.desktop";
+    "text/html" = "vivaldi-stable.desktop";
+    "x-scheme-handler/http" = "vivaldi-stable.desktop";
+    "x-scheme-handler/https" = "vivaldi-stable.desktop";
   };
 
   # Playwright channel:"chrome" looks for /opt/google/chrome/chrome
   systemd.tmpfiles.rules = [
     "L+ /opt/google/chrome/chrome - - - - ${pkgs.google-chrome}/bin/google-chrome-stable"
+    # Repair the top-level user state roots left by older generations. The
+    # one-time migration also normalizes their declared contents recursively.
+    "z /home/abhay/.config 0755 abhay users -"
+    "z /home/abhay/.local/share 0755 abhay users -"
+    "z /home/abhay/.local/state 0755 abhay users -"
+    "z /persist/home/abhay/.config 0755 abhay users -"
+    "z /persist/home/abhay/.local/share 0755 abhay users -"
+    "z /persist/home/abhay/.local/state 0755 abhay users -"
   ];
 
   environment.sessionVariables = {
@@ -65,9 +95,8 @@
     PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD = "1";
   };
 
-  # --- FISH across all desktops ---
-  programs.fish.enable = true;
-  users.defaultUserShell = pkgs.fish;
+  # --- Bash across all desktops ---
+  users.defaultUserShell = pkgs.bashInteractive;
 
   # --- Add firmware upgrades ---
   services.fwupd.enable = true;

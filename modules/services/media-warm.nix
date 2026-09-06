@@ -21,7 +21,7 @@
       "podman-jellyfin.service"
     ];
     wants = ["network-online.target"];
-    requires = ["rclone-homelab.service"];
+    requires = ["rclone-homelab.service" "podman-jellyfin.service"];
 
     path = with pkgs; [
       curl
@@ -38,6 +38,8 @@
       StateDirectoryMode = "0700";
       RuntimeDirectory = "media-warm";
       RuntimeDirectoryMode = "0700";
+      TimeoutStartSec = "12h";
+      TimeoutStopSec = "30s";
       Environment = [
         "JF_BASE=http://localhost:8096"
         # Bandwidth is not the constraint here; let one run warm a cache-sized
@@ -54,19 +56,25 @@
           trap 'rm -f "$CANDIDATES"' EXIT
           : > "$CANDIDATES"
 
+          exec 9>/run/media-warm/lock
+          if ! flock -n 9; then
+            echo "media-warm is already running" >&2
+            exit 0
+          fi
+
           # Resolve first user id
           UID_=$(curl -sf -H "X-Emby-Token: $KEY" \
-            "$JF_BASE/Users" | jq -r '.[0].Id // empty' || true)
-          [ -n "$UID_" ] || { echo "no jellyfin user"; exit 0; }
+            "$JF_BASE/Users" | jq -r '.[0].Id // empty')
+          [ -n "$UID_" ] || { echo "no Jellyfin user found" >&2; exit 1; }
 
           # Gather only likely-to-be-watched, unplayed candidate paths:
           # partially watched/resumable items and the user's Next Up queue.
           curl -sf -H "X-Emby-Token: $KEY" \
             "$JF_BASE/Users/$UID_/Items/Resume?Fields=Path&Limit=4&EnableUserData=true" \
-            | jq -r '.Items[]? | select(.UserData.Played != true) | .Path // empty' >> "$CANDIDATES" 2>/dev/null || true
+            | jq -r '.Items[]? | select(.UserData.Played != true) | .Path // empty' >> "$CANDIDATES"
           curl -sf -H "X-Emby-Token: $KEY" \
             "$JF_BASE/Shows/NextUp?UserId=$UID_&Fields=Path&Limit=4&EnableUserData=true&EnableRewatching=false&EnableResumable=true" \
-            | jq -r '.Items[]? | select(.UserData.Played != true) | .Path // empty' >> "$CANDIDATES" 2>/dev/null || true
+            | jq -r '.Items[]? | select(.UserData.Played != true) | .Path // empty' >> "$CANDIDATES"
 
           # Normalise container paths back to host paths
           sed -i \
@@ -100,7 +108,10 @@
             fi
             echo "warming: $p ($size bytes)"
             # force a full read through the VFS mount -> populates rclone cache
-            dd if="$p" of=/dev/null bs=4M 2>/dev/null || true
+            if ! dd if="$p" of=/dev/null bs=4M 2>/dev/null; then
+              echo "failed to warm: $p" >&2
+              exit 1
+            fi
             bytes=$((bytes + size))
             warmed=$((warmed + 1))
             jq --arg p "$p" --argjson s "$size" --argjson m "$mtime" --argjson t "$now" \

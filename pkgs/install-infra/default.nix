@@ -6,6 +6,7 @@ pkgs.writeShellApplication {
   runtimeInputs = [
     pkgs.nixos-anywhere
     pkgs.openssh
+    pkgs.coreutils
   ];
 
   # Read the bash file from disk

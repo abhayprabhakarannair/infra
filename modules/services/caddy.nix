@@ -1,9 +1,4 @@
-{
-  config,
-  pkgs,
-  inputs,
-  ...
-}: let
+{...}: let
   proxyServices = {
     "home.iamabhay.fyi" = "old-devil:8123";
 
@@ -21,20 +16,11 @@
     "vault.iamabhay.fyi" = "127.0.0.1:8222";
   };
 in {
-  sops.secrets."caddy/basic-auth-password" = {
-    sopsFile = "${inputs.self}/secrets/service-secrets.yaml";
-    owner = config.services.caddy.user;
-    group = config.services.caddy.group;
-    restartUnits = ["caddy.service"];
-  };
-
   services.caddy = {
     enable = true;
 
     virtualHosts =
       builtins.mapAttrs (domain: backend: {
-        # Disable the module's default per-vhost log block; we define our own
-        # below (with rotation) inside extraConfig instead.
         logFormat = null;
         extraConfig = ''
           reverse_proxy ${backend}

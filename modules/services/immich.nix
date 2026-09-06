@@ -7,7 +7,8 @@
   uploadLocation = "/mnt/homelab/immich/library";
 
   dbDataLocation = "/srv/immich/postgres";
-  modelCacheLocation = "/srv/immich/model-cache";
+  modelCacheLocation = "/var/cache/immich-model";
+  containerHardening = import ./oci-hardening.nix;
 in {
   sops.secrets."immich/db-password" = {
     sopsFile = "${inputs.self}/secrets/service-secrets.yaml";
@@ -43,8 +44,17 @@ in {
         "${dbDataLocation}:/var/lib/postgresql/data"
       ];
       extraOptions = [
+        "--security-opt=no-new-privileges"
+        "--cap-drop=ALL"
+        "--cap-add=CHOWN"
+        "--cap-add=DAC_OVERRIDE"
+        "--cap-add=FOWNER"
+        "--cap-add=SETGID"
+        "--cap-add=SETUID"
+        "--pids-limit=1024"
+        "--memory=4g"
+        "--cpus=4"
         "--shm-size=128mb"
-        "--restart=always"
       ];
     };
 
@@ -52,8 +62,21 @@ in {
       image = "docker.io/valkey/valkey:9@sha256:2f4a4b0a42a72569b40567fae9016dc54aa76736250be28120b5fced8050c0f0";
       autoRemoveOnStop = false;
       extraOptions = [
-        "--restart=always"
+        "--security-opt=no-new-privileges"
+        "--cap-drop=ALL"
+        "--cap-add=SETGID"
+        "--cap-add=SETUID"
+        "--read-only"
+        "--tmpfs=/tmp:rw,noexec,nosuid,nodev"
+        "--tmpfs=/run:rw,nosuid,nodev"
+        "--pids-limit=512"
+        "--memory=1g"
+        "--cpus=2"
         "--health-cmd=redis-cli ping || exit 1"
+        "--health-interval=30s"
+        "--health-timeout=5s"
+        "--health-retries=3"
+        "--health-start-period=20s"
       ];
     };
 
@@ -77,7 +100,11 @@ in {
         "/etc/localtime:/etc/localtime:ro"
       ];
       extraOptions = [
-        "--restart=always"
+        "--security-opt=no-new-privileges"
+        "--cap-drop=ALL"
+        "--pids-limit=1024"
+        "--memory=4g"
+        "--cpus=4"
         "--device=/dev/dri:/dev/dri"
       ];
     };
@@ -88,11 +115,18 @@ in {
       volumes = [
         "${modelCacheLocation}:/cache"
       ];
-      extraOptions = [
-        "--restart=always"
-        "--shm-size=8gb"
-        "--security-opt=seccomp=unconfined"
-      ];
+      extraOptions =
+        containerHardening.baseline
+        ++ containerHardening.immutable
+        ++ containerHardening.withLimits {
+          pidsLimit = 1024;
+          memory = "8g";
+          cpus = 8;
+        }
+        ++ [
+          "--shm-size=8gb"
+          "--security-opt=seccomp=unconfined"
+        ];
     };
   };
 

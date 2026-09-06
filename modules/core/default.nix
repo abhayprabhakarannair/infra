@@ -1,9 +1,27 @@
 {
+  lib,
   pkgs,
   inputs,
   config,
   ...
 }: {
+  imports = [
+    ../impermanence
+  ];
+
+  # Tailscale and the Gluetun VPN container both require the kernel TUN device.
+  boot.kernelModules = ["tun"];
+  systemd.services.load-tun-module = {
+    description = "Load the kernel TUN module";
+    wantedBy = ["sysinit.target"];
+    before = ["tailscaled.service" "podman-gluetun.service"];
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = "${pkgs.kmod}/bin/modprobe tun";
+      RemainAfterExit = true;
+    };
+  };
+
   # --- Timezone and Locale ---
   time.timeZone = "Asia/Kolkata";
   i18n.defaultLocale = "en_US.UTF-8";
@@ -32,7 +50,11 @@
   # --- Secrets ---
   sops.defaultSopsFile = "${inputs.self}/secrets/system-secrets.yaml";
   sops.defaultSopsFormat = "yaml";
-  sops.age.sshKeyPaths = ["/etc/ssh/ssh_host_ed25519_key"];
+  sops.age.sshKeyPaths = [
+    "/persist/etc/ssh/ssh_host_ed25519_key"
+    "/etc/ssh/ssh_host_ed25519_key"
+  ];
+  sops.gnupg.sshKeyPaths = [];
 
   # --- Passwords ---
   sops.secrets."abhay-password" = {

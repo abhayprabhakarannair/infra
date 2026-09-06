@@ -34,6 +34,18 @@
     "${inputs.self}/users/abhay"
   ];
 
+  myImpermanence = {
+    enable = true;
+    reset = {
+      enable = true;
+      device = "/dev/disk/by-label/NixOS";
+    };
+    extraSystemDirectories = [
+      "/var/lib/libvirt"
+      "/var/lib/ollama"
+    ];
+  };
+
   # --- Default Drive ---
   disko.devices.disk.main.device = "/dev/nvme1n1";
   disko.devices.disk.games.device = "/dev/nvme0n1";

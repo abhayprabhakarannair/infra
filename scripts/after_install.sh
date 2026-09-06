@@ -30,29 +30,77 @@ cleanup() {
 
 trap cleanup EXIT
 
-# Check if both arguments are provided
-if [ "$#" -lt 2 ] || [ "$#" -gt 3 ]; then
-    echo "Usage: ./after_install.sh <hostname> <luks_partition> [--replace-sops-key]"
+# The LUKS partition is optional for unencrypted hosts. The script always
+# prepares the SOPS age identity; TPM2 enrollment only applies to LUKS hosts.
+if [ "$#" -lt 1 ] || [ "$#" -gt 3 ]; then
+    echo "Usage: ./after_install.sh <hostname> [luks_partition] [--replace-sops-key]"
     echo "Example: ./after_install.sh daredevil /dev/nvme0n1p2"
     echo "Example: ./after_install.sh devil /dev/nvme1n1p2"
+    echo "Example: ./after_install.sh old-devil"
     exit 1
 fi
 
 HOSTNAME="$1"
-LUKS_PARTITION="$2"
+shift
+
+case "$HOSTNAME" in
+    daredevil|devil|old-devil|homelab-one) ;;
+    *)
+        echo "Error: unsupported host '$HOSTNAME'."
+        echo "Expected one of: daredevil, devil, old-devil, homelab-one."
+        exit 1
+        ;;
+esac
+
+LUKS_PARTITION=""
 REPLACE_SOPS_KEY=false
 
-if [ "$#" -eq 3 ]; then
-    if [ "$3" != "--replace-sops-key" ]; then
-        echo "Error: Unknown option '$3'."
+if [ "$#" -gt 0 ]; then
+    if [ "$1" = "--replace-sops-key" ]; then
+        REPLACE_SOPS_KEY=true
+        shift
+    else
+        LUKS_PARTITION="$1"
+        shift
+    fi
+fi
+
+if [ "$#" -gt 0 ]; then
+    if [ "$1" != "--replace-sops-key" ]; then
+        echo "Error: Unknown option '$1'."
         exit 1
     fi
     REPLACE_SOPS_KEY=true
+    shift
+fi
+
+if [ "$#" -ne 0 ]; then
+    echo "Error: Too many arguments."
+    exit 1
 fi
 
 # Safety check: Verify the block device actually exists before changing anything.
-if [ ! -b "$LUKS_PARTITION" ]; then
+if [ -n "$LUKS_PARTITION" ] && [ ! -b "$LUKS_PARTITION" ]; then
     echo "Error: Partition '$LUKS_PARTITION' does not exist on this system."
+    exit 1
+fi
+
+if [ -z "$LUKS_PARTITION" ] && [ -e /dev/mapper/enc ]; then
+    echo "Error: An active LUKS mapping exists at /dev/mapper/enc."
+    echo "Pass the underlying LUKS partition explicitly for TPM2 enrollment."
+    exit 1
+fi
+
+SSH_HOST_KEY=/etc/ssh/ssh_host_ed25519_key
+if ! sudo test -f "$SSH_HOST_KEY" || ! sudo test -r "$SSH_HOST_KEY"; then
+    echo "Error: required SSH host key '$SSH_HOST_KEY' is missing or unreadable."
+    exit 1
+fi
+
+SSH_TO_AGE=$(command -v ssh-to-age || true)
+if [ -z "$SSH_TO_AGE" ]; then
+    echo "Error: ssh-to-age is not installed or not available in PATH."
+    echo "Rebuild the host configuration with the server Home Manager role first."
     exit 1
 fi
 
@@ -93,7 +141,7 @@ if [ "${SOPS_KEY_READY}" != true ]; then
     # creates it before ssh-to-age writes, avoiding predictable paths and races.
     TEMP_SOPS_AGE_KEY=$(mktemp "${SOPS_AGE_DIR}/.keys.txt.XXXXXX")
     chmod 600 -- "${TEMP_SOPS_AGE_KEY}"
-    sudo ssh-to-age -private-key -i /etc/ssh/ssh_host_ed25519_key > "${TEMP_SOPS_AGE_KEY}"
+    sudo "$SSH_TO_AGE" -private-key -i "$SSH_HOST_KEY" > "${TEMP_SOPS_AGE_KEY}"
 
     if ! validate_age_identity "${TEMP_SOPS_AGE_KEY}"; then
         echo "Error: ssh-to-age did not produce a valid age identity."
@@ -113,8 +161,12 @@ if [ "${SOPS_KEY_READY}" != true ]; then
 fi
 echo "SOPS Setup completed."
 
-echo "Enrolling TPM2 for $HOSTNAME on partition $LUKS_PARTITION..."
-sudo systemd-cryptenroll --tpm2-device=auto --tpm2-pcrs=0+7 "$LUKS_PARTITION"
-echo "TPM2 enrollment complete."
+if [ -n "$LUKS_PARTITION" ]; then
+    echo "Enrolling TPM2 for $HOSTNAME on partition $LUKS_PARTITION..."
+    sudo systemd-cryptenroll --tpm2-device=auto --tpm2-pcrs=0+7 "$LUKS_PARTITION"
+    echo "TPM2 enrollment complete."
+else
+    echo "No LUKS partition supplied; skipping TPM2 enrollment for $HOSTNAME."
+fi
 
 echo "Setup completed."

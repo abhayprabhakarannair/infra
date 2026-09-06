@@ -3,7 +3,14 @@
   pkgs,
   inputs,
   ...
-}: {
+}: let
+  containerHardening = import ./oci-hardening.nix;
+  hardened = containerHardening.immutableWithLimits {
+    pidsLimit = 512;
+    memory = "1g";
+    cpus = 2;
+  };
+in {
   sops.secrets."gluetun/env" = {
     sopsFile = "${inputs.self}/secrets/service-secrets.yaml";
     mode = "0440";
@@ -42,12 +49,16 @@
         OPENVPN_MSSFIX = "1280";
         OPENVPN_CUSTOM_OPTIONS = "--tun-mtu 1300 --mssfix 1260";
       };
-      extraOptions = [
-        "--restart=always"
-        "--cap-add=NET_ADMIN"
-        "--cap-add=NET_RAW"
-        "--device=/dev/net/tun:/dev/net/tun"
-      ];
+      extraOptions =
+        containerHardening.baseline
+        ++ [
+          "--cap-add=NET_ADMIN"
+          "--cap-add=NET_RAW"
+          "--device=/dev/net/tun:/dev/net/tun"
+          "--pids-limit=512"
+          "--memory=1g"
+          "--cpus=2"
+        ];
     };
 
     prowlarr = {
@@ -60,7 +71,7 @@
         PGID = "1000";
         TZ = "Asia/Kolkata";
       };
-      extraOptions = ["--restart=always"];
+      extraOptions = hardened;
     };
 
     sabnzbd = {
@@ -76,7 +87,7 @@
         PGID = "1000";
         TZ = "Asia/Kolkata";
       };
-      extraOptions = ["--restart=always"];
+      extraOptions = hardened;
     };
 
     sonarr = {
@@ -93,7 +104,7 @@
         PGID = "1000";
         TZ = "Asia/Kolkata";
       };
-      extraOptions = ["--restart=always"];
+      extraOptions = hardened;
     };
 
     radarr = {
@@ -110,7 +121,7 @@
         PGID = "1000";
         TZ = "Asia/Kolkata";
       };
-      extraOptions = ["--restart=always"];
+      extraOptions = hardened;
     };
 
     whisparr = {
@@ -127,7 +138,7 @@
         PGID = "1000";
         TZ = "Asia/Kolkata";
       };
-      extraOptions = ["--restart=always"];
+      extraOptions = hardened;
     };
 
     qbittorrent = {
@@ -143,10 +154,17 @@
         TZ = "Asia/Kolkata";
         WEBUI_PORT = "8090";
       };
-      extraOptions = [
-        "--restart=always"
-        "--network=container:gluetun"
-      ];
+      extraOptions =
+        ["--security-opt=no-new-privileges"]
+        ++ containerHardening.immutable
+        ++ containerHardening.withLimits {
+          pidsLimit = 1024;
+          memory = "2g";
+          cpus = 4;
+        }
+        ++ [
+          "--network=container:gluetun"
+        ];
     };
 
     seerr = {
@@ -160,7 +178,7 @@
         TZ = "Asia/Kolkata";
         LOG_LEVEL = "info";
       };
-      extraOptions = ["--restart=always"];
+      extraOptions = hardened;
     };
 
     flaresolverr = {
@@ -170,7 +188,7 @@
       environment = {
         LOG_LEVEL = "info";
       };
-      extraOptions = ["--restart=always"];
+      extraOptions = hardened ++ ["--tmpfs=/app/.local:rw,noexec,nosuid,nodev"];
     };
   };
 

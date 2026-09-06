@@ -16,6 +16,12 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    impermanence = {
+      url = "github:nix-community/impermanence";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.home-manager.follows = "home-manager";
+    };
+
     sops-nix = {
       url = "github:Mic92/sops-nix";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -40,6 +46,7 @@
     nixpkgs,
     nixpkgs-unstable,
     home-manager,
+    impermanence,
     sops-nix,
     nixvim,
     deploy-rs,
@@ -69,6 +76,7 @@
       herdr = final.callPackage ./pkgs/herdr {};
     };
     globalConfig = {
+      imports = [impermanence.nixosModules.impermanence];
       nixpkgs.overlays = [systemOverlay];
       nixpkgs.config = sharedConfig;
       home-manager = {

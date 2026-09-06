@@ -1,20 +1,38 @@
 {
   pkgs,
   inputs,
+  config,
   ...
-}: {
+}: let
+  wallpaperPath = "${config.home.homeDirectory}/.local/share/backgrounds/current-wallpaper";
+  setWallpaper = pkgs.writeShellApplication {
+    name = "set-wallpaper";
+    runtimeInputs = [pkgs.coreutils pkgs.glib];
+    text = ''
+      set -euo pipefail
+
+      if [ "$#" -ne 1 ] || [ ! -f "$1" ]; then
+        echo "Usage: set-wallpaper IMAGE" >&2
+        exit 1
+      fi
+
+      destination="$HOME/.local/share/backgrounds/current-wallpaper"
+      mkdir -p "$(dirname "$destination")"
+      install -m 0644 "$1" "$destination"
+      gsettings set org.gnome.desktop.background picture-uri "file://$destination"
+      gsettings set org.gnome.desktop.background picture-uri-dark "file://$destination"
+    '';
+  };
+in {
   imports = ["${inputs.self}/home/desktop"];
 
-  # --- Essential apps ---
   home.packages = with pkgs.unstable; [
     vlc
-    discord
     fastfetch
     wl-clipboard
     tela-icon-theme
     nodejs_24
     python314
-    pi-coding-agent
     pkgs.llm-agents.chatgpt
     deploy-rs
     gh
@@ -22,50 +40,27 @@
     zed-editor
     nil
     nixd
-    nixpkgs-fmt
+    setWallpaper
   ];
 
-  # --- Modern UI Fonts & Rendering ---
   dconf.settings = {
     "org/gnome/desktop/interface" = {
+      color-scheme = "prefer-dark";
       font-name = "Inter 11";
       document-font-name = "Inter 11";
       monospace-font-name = "JetBrainsMono Nerd Font 10";
       font-antialiasing = "grayscale";
       font-hinting = "slight";
+      icon-theme = "Tela-dark";
     };
-  };
 
-  # --- WezTerm ---
-  programs.wezterm = {
-    enable = true;
-    extraConfig = ''
-      local wez = require('wezterm')
-      local config = wez.config_builder()
-
-      config.font = wez.font('JetBrainsMono Nerd Font', { weight = 'Medium' })
-      config.font_size = 13.0
-      config.color_scheme = 'Kanagawa (Gogh)'
-      config.window_padding = { left = 8, right = 8, top = 8, bottom = 8 }
-      config.enable_tab_bar = false
-      config.hide_mouse_cursor_when_typing = true
-
-      return config
-    '';
-  };
-
-  programs.vivaldi = {
-    enable = true;
-    # Vivaldi is installed by the desktop NixOS module; Home Manager manages
-    # its profile and extensions here.
-    package = null;
-    extensions = [
-      # uBlock Origin
-      {id = "cjpalhdlnbpafiamejdnhcphjbkeiagm";}
-      # Private Internet Access (PIA) Extension
-      {id = "jplnlifepflhkbkgonidnobkakhmpnmh";}
-      # Official ChatGPT browser integration for Codex
-      {id = "hehggadaopoacecdllhhajmbjkdcmajg";}
-    ];
+    "org/gnome/desktop/background" = {
+      color-shading-type = "solid";
+      picture-options = "zoom";
+      picture-uri = "file://${wallpaperPath}";
+      picture-uri-dark = "file://${wallpaperPath}";
+      primary-color = "#000000000000";
+      secondary-color = "#000000000000";
+    };
   };
 }

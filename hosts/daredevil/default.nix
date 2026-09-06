@@ -24,6 +24,17 @@
     "${inputs.self}/users/abhay"
   ];
 
+  myImpermanence = {
+    enable = true;
+    reset = {
+      enable = true;
+      device = "/dev/disk/by-label/NixOS";
+    };
+    extraSystemDirectories = [
+      "/var/lib/libvirt"
+    ];
+  };
+
   # --- Default Drive ---
   disko.devices.disk.main.device = "/dev/nvme0n1";
   myStorage.swapSize = "32G";
