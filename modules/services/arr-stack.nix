@@ -4,19 +4,12 @@
   inputs,
   ...
 }: let
-  # These services write state only to their declared bind mounts. Keep a
-  # writable /tmp and /run for s6-based images while making the image root
-  # immutable and bounding process count and memory.
-  hardened = [
-    "--security-opt=no-new-privileges"
-    "--cap-drop=ALL"
-    "--read-only"
-    "--tmpfs=/tmp:rw,noexec,nosuid,nodev"
-    "--tmpfs=/run:rw,nosuid,nodev"
-    "--pids-limit=512"
-    "--memory=1g"
-    "--cpus=2"
-  ];
+  containerHardening = import ./oci-hardening.nix;
+  hardened = containerHardening.immutableWithLimits {
+    pidsLimit = 512;
+    memory = "1g";
+    cpus = 2;
+  };
 in {
   sops.secrets."gluetun/env" = {
     sopsFile = "${inputs.self}/secrets/service-secrets.yaml";
@@ -56,20 +49,17 @@ in {
         OPENVPN_MSSFIX = "1280";
         OPENVPN_CUSTOM_OPTIONS = "--tun-mtu 1300 --mssfix 1260";
       };
-      extraOptions = [
-        "--restart=always"
-        # Gluetun is the deliberate privilege boundary for the VPN network
-        # namespace. These are the only capabilities it needs. Keep its root
-        # filesystem and privilege transitions writable because it must
-        # initialize tunnel/routing state inside the container.
-        "--cap-drop=ALL"
-        "--cap-add=NET_ADMIN"
-        "--cap-add=NET_RAW"
-        "--device=/dev/net/tun:/dev/net/tun"
-        "--pids-limit=512"
-        "--memory=1g"
-        "--cpus=2"
-      ];
+      extraOptions =
+        ["--restart=always"]
+        ++ containerHardening.capDrop
+        ++ [
+          "--cap-add=NET_ADMIN"
+          "--cap-add=NET_RAW"
+          "--device=/dev/net/tun:/dev/net/tun"
+          "--pids-limit=512"
+          "--memory=1g"
+          "--cpus=2"
+        ];
     };
 
     prowlarr = {
@@ -165,20 +155,18 @@ in {
         TZ = "Asia/Kolkata";
         WEBUI_PORT = "8090";
       };
-      extraOptions = [
-        # qBittorrent shares Gluetun's network namespace and needs a larger
-        # memory allowance for torrent metadata and active transfers.
-        "--security-opt=no-new-privileges"
-        "--cap-drop=ALL"
-        "--read-only"
-        "--tmpfs=/tmp:rw,noexec,nosuid,nodev"
-        "--tmpfs=/run:rw,nosuid,nodev"
-        "--pids-limit=1024"
-        "--memory=2g"
-        "--cpus=4"
-        "--restart=always"
-        "--network=container:gluetun"
-      ];
+      extraOptions =
+        ["--security-opt=no-new-privileges"]
+        ++ containerHardening.immutable
+        ++ containerHardening.withLimits {
+          pidsLimit = 1024;
+          memory = "2g";
+          cpus = 4;
+        }
+        ++ [
+          "--restart=always"
+          "--network=container:gluetun"
+        ];
     };
 
     seerr = {
@@ -202,8 +190,6 @@ in {
       environment = {
         LOG_LEVEL = "info";
       };
-      # Flaresolverr has no declared writable state. Its temporary files are
-      # confined to the tmpfs supplied by `hardened`.
       extraOptions = hardened ++ ["--restart=always"];
     };
   };

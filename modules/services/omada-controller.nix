@@ -3,13 +3,14 @@
   pkgs,
   ...
 }: let
-  hardening = [
-    "--security-opt=no-new-privileges"
-    "--cap-drop=ALL"
-    "--pids-limit=2048"
-    "--memory=4g"
-    "--cpus=4"
-  ];
+  containerHardening = import ./oci-hardening.nix;
+  hardening =
+    containerHardening.baseline
+    ++ containerHardening.withLimits {
+      pidsLimit = 2048;
+      memory = "4g";
+      cpus = 4;
+    };
 in {
   systemd.tmpfiles.rules = [
     "d /srv/omada-controller 0755 root root -"
@@ -24,10 +25,6 @@ in {
 
     extraOptions =
       [
-        # Omada's discovery/controller ports require host networking. Its Java
-        # process does not need broad Linux capabilities. Keep the root
-        # filesystem writable because this vendor image's Java runtime may use
-        # paths outside the explicitly mounted data/work/log directories.
         "--network=host"
         "--restart=always"
         "--no-healthcheck"

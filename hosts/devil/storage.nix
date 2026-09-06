@@ -11,10 +11,6 @@
 
   systemd.tmpfiles.rules = ["d /mnt/homelab 0750 1000 1000 -"];
 
-  # Ollama models are deliberately reconstructible: they are large, can be
-  # re-pulled from their declared source, and are not a recovery dependency.
-  # The /persist backup module excludes this tree while service metadata and
-  # all other declared durable state remain covered.
   myStorage.persistBackup.extraExcludedPaths = ["var/lib/ollama/**"];
 
   systemd.services = {
@@ -32,9 +28,6 @@
       serviceConfig = {
         Type = "notify";
         TimeoutStartSec = "600";
-        # Keep the reconstructible VFS cache out of /tmp and let systemd
-        # create it with a known owner/mode. The cache is still on the root
-        # filesystem, so the rclone limits below remain important.
         CacheDirectory = "rclone-homelab";
         CacheDirectoryMode = "0700";
         ExecStartPost = "${pkgs.bash}/bin/bash -c 'while ! ${pkgs.util-linux}/bin/mountpoint -q /mnt/homelab; do sleep 1; done'";
@@ -107,17 +100,12 @@
           }
           trap cleanup EXIT
 
-          # systemd normally serializes a oneshot service, but the lock also
-          # protects against manual starts and overlapping timer invocations.
           exec 9>"$RUNTIME_DIR/backup.lock"
           if ! ${pkgs.util-linux}/bin/flock -n 9; then
             echo "backup-devil-srv is already running" >&2
             exit 0
           fi
 
-          # These are the durable service paths declared by devil. A missing
-          # source is a failed backup, never an empty replacement. Empty
-          # directories are valid for a newly-installed or unused service.
           for source in \
             /srv/jellyfin \
             /srv/immich/postgres \
@@ -140,30 +128,6 @@
 
           ${pkgs.coreutils}/bin/mkdir -p "$STAGING"
 
-          # Database files are excluded from tree copies and exported with
-          # SQLite's online backup API. This covers the SQLite-backed Arr,
-          # Jellyfin, Stash, and Seerr state without copying live DB files.
-          backup_sqlite_service() {
-            local source="$1"
-            local destination="$2"
-            infra_rclone_copy_checked "$source" "$DEST/$destination" "$CONFIG" \
-              --fast-list --transfers 4 --checkers 8 \
-              --exclude '**/*.db' --exclude '**/*.db-*' \
-              --exclude '**/*.sqlite' --exclude '**/*.sqlite-*' \
-              --exclude '**/*.sqlite3'
-            infra_export_sqlite_tree "$source" "$STAGING" "$destination" "$DEST/$destination" "$CONFIG"
-          }
-
-          backup_plain_service() {
-            local source="$1"
-            local destination="$2"
-            infra_rclone_copy_checked "$source" "$DEST/$destination" "$CONFIG" \
-              --fast-list --transfers 4 --checkers 8
-          }
-
-          # Immich DB — clean dump via pg_dump (consistent snapshot, safe during writes)
-          # Restore:
-          #   gunzip -c immich-db.sql.gz | podman exec -i immich-database psql -U postgres immich
           DUMP="$RUNTIME_DIR/immich-db.sql.gz"
           ${pkgs.podman}/bin/podman exec immich-database pg_dump -U postgres immich \
             | ${pkgs.gzip}/bin/gzip > "$DUMP"
@@ -171,22 +135,19 @@
           ${pkgs.gzip}/bin/gzip -t "$DUMP"
           infra_rclone_copy_checked "$DUMP" "$DEST/immich/postgres" "$CONFIG"
 
-          backup_sqlite_service /srv/jellyfin jellyfin
-          backup_plain_service /srv/prowlarr prowlarr
-          backup_sqlite_service /srv/sonarr sonarr
-          backup_sqlite_service /srv/radarr radarr
-          backup_plain_service /srv/sabnzbd sabnzbd
-          backup_plain_service /srv/downloads downloads
-          backup_sqlite_service /srv/whisparr whisparr
-          backup_plain_service /srv/gluetun gluetun
-          backup_plain_service /srv/qbittorrent qbittorrent
-          backup_sqlite_service /srv/seerr seerr
-          backup_sqlite_service /srv/stash stash
-          backup_plain_service /var/lib/libvirt libvirt
+          infra_backup_sqlite_service /srv/jellyfin "$STAGING" jellyfin "$DEST/jellyfin" "$CONFIG"
+          infra_backup_tree /srv/prowlarr "$DEST/prowlarr" "$CONFIG"
+          infra_backup_sqlite_service /srv/sonarr "$STAGING" sonarr "$DEST/sonarr" "$CONFIG"
+          infra_backup_sqlite_service /srv/radarr "$STAGING" radarr "$DEST/radarr" "$CONFIG"
+          infra_backup_tree /srv/sabnzbd "$DEST/sabnzbd" "$CONFIG"
+          infra_backup_tree /srv/downloads "$DEST/downloads" "$CONFIG"
+          infra_backup_sqlite_service /srv/whisparr "$STAGING" whisparr "$DEST/whisparr" "$CONFIG"
+          infra_backup_tree /srv/gluetun "$DEST/gluetun" "$CONFIG"
+          infra_backup_tree /srv/qbittorrent "$DEST/qbittorrent" "$CONFIG"
+          infra_backup_sqlite_service /srv/seerr "$STAGING" seerr "$DEST/seerr" "$CONFIG"
+          infra_backup_sqlite_service /srv/stash "$STAGING" stash "$DEST/stash" "$CONFIG"
+          infra_backup_tree /var/lib/libvirt "$DEST/libvirt" "$CONFIG"
 
-          # Keep 90 days of complete service generations. Retention is based
-          # on generation directory names and is intentionally separate from
-          # the /persist recovery generations.
           infra_prune_generations "backups:/disaster-recovery/devil/services" "$CONFIG" 90 "$RUNTIME_DIR/generations.list"
         '';
       in "${script}";

@@ -3,17 +3,16 @@
   pkgs,
   ...
 }: let
-  hardening = [
-    "--security-opt=no-new-privileges"
-    "--cap-drop=ALL"
-    "--cap-add=NET_BIND_SERVICE"
-    "--read-only"
-    "--tmpfs=/tmp:rw,noexec,nosuid,nodev"
-    "--tmpfs=/run:rw,nosuid,nodev"
-    "--pids-limit=512"
-    "--memory=1g"
-    "--cpus=2"
-  ];
+  containerHardening = import ./oci-hardening.nix;
+  hardening =
+    containerHardening.baseline
+    ++ ["--cap-add=NET_BIND_SERVICE"]
+    ++ containerHardening.immutable
+    ++ containerHardening.withLimits {
+      pidsLimit = 512;
+      memory = "1g";
+      cpus = 2;
+    };
 in {
   systemd.tmpfiles.rules = [
     "d /srv/technitium 0755 root root -"
@@ -32,7 +31,6 @@ in {
     ];
     extraOptions =
       [
-        # Host networking is required for DNS service discovery and binding.
         "--network=host"
         "--restart=always"
         "--no-healthcheck"

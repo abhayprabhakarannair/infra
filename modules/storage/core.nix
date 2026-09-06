@@ -5,8 +5,6 @@
   ...
 }: {
   environment.etc."infra/backup-lib.sh".text = ''
-    # Shared, non-secret helpers for storage backup units. Callers must pass
-    # the already-declared rclone config path; this file never reads secrets.
     set -u
 
     infra_rclone_copy_checked() {
@@ -22,16 +20,11 @@
         --config="$rclone_config" --log-level ERROR --stats 0 "$@"
     }
 
-    # An empty declared directory is valid on a fresh or lightly-used host;
-    # the important fail-closed condition is that the mount/source exists.
     infra_require_dir() {
       local directory="$1"
       test -d "$directory"
     }
 
-    # Export every SQLite database below a service directory using SQLite's
-    # online backup API. The caller must exclude database files from the
-    # ordinary tree copy, then upload the returned staging tree.
     infra_export_sqlite_tree() {
       local source="$1"
       local staging_root="$2"
@@ -56,12 +49,30 @@
       infra_rclone_copy_checked "$staging_root/$relative_service" "$destination" "$rclone_config"
     }
 
-    # Generations are timestamped directories. Retention is evaluated from
-    # the directory name, so old source mtimes can never remove fresh data.
-    # Restore drills must copy one generation to a new temporary directory,
-    # run the database integrity checks there, and compare the manifest before
-    # any operator considers a live restore. No helper in this file writes to
-    # a service's live data directory.
+    infra_backup_sqlite_service() {
+      local source="$1"
+      local staging_root="$2"
+      local relative_service="$3"
+      local destination="$4"
+      local rclone_config="$5"
+
+      infra_rclone_copy_checked "$source" "$destination" "$rclone_config" \
+        --fast-list --transfers 4 --checkers 8 \
+        --exclude '**/*.db' --exclude '**/*.db-*' \
+        --exclude '**/*.sqlite' --exclude '**/*.sqlite-*' \
+        --exclude '**/*.sqlite3'
+      infra_export_sqlite_tree "$source" "$staging_root" "$relative_service" "$destination" "$rclone_config"
+    }
+
+    infra_backup_tree() {
+      local source="$1"
+      local destination="$2"
+      local rclone_config="$3"
+
+      infra_rclone_copy_checked "$source" "$destination" "$rclone_config" \
+        --fast-list --transfers 4 --checkers 8
+    }
+
     infra_prune_generations() {
       local base="$1"
       local rclone_config="$2"

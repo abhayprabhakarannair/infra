@@ -114,21 +114,8 @@
           done
           ${pkgs.coreutils}/bin/mkdir -p "$STAGING"
 
-          backup_sqlite_service() {
-            local source="$1"
-            local destination="$2"
-            infra_rclone_copy_checked "$source" "$DEST/$destination" "$CONFIG" \
-              --fast-list --transfers 4 --checkers 8 \
-              --exclude '**/*.db' --exclude '**/*.db-*' \
-              --exclude '**/*.sqlite' --exclude '**/*.sqlite-*' \
-              --exclude '**/*.sqlite3'
-            infra_export_sqlite_tree "$source" "$STAGING" "$destination" "$DEST/$destination" "$CONFIG"
-          }
+          infra_backup_sqlite_service /srv/home-assistant "$STAGING" home-assistant "$DEST/home-assistant" "$CONFIG"
 
-          backup_sqlite_service /srv/home-assistant home-assistant
-
-          # No supported export command for these containers is declared in
-          # the repository. Quiesce them before copying file-backed state.
           if ${pkgs.systemd}/bin/systemctl is-active --quiet podman-omada-controller.service; then
             OMADA_WAS_ACTIVE=1
             ${pkgs.systemd}/bin/systemctl stop podman-omada-controller.service

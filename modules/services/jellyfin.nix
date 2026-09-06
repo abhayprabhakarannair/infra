@@ -3,13 +3,8 @@
   pkgs,
   ...
 }: let
-  hardening = [
-    "--security-opt=no-new-privileges"
-    "--cap-drop=ALL"
-    "--pids-limit=2048"
-    # No memory/CPU ceiling: transcoding and large-library scans are
-    # workload-dependent and an artificial ceiling would degrade playback.
-  ];
+  containerHardening = import ./oci-hardening.nix;
+  hardening = containerHardening.baseline ++ ["--pids-limit=2048"];
 in {
   systemd.tmpfiles.rules = [
     "d /srv/jellyfin 0755 1000 1000 - -"
@@ -25,7 +20,6 @@ in {
 
     volumes = [
       "/srv/jellyfin:/config"
-      # The shared media mount includes the FLAC music library used by Symfonium.
       "/mnt/homelab/media:/media"
     ];
 
@@ -33,11 +27,6 @@ in {
       [
         "--restart=always"
         "--device=/dev/dri:/dev/dri"
-        # No read-only root or CPU/memory ceiling: the image's cache/transcode
-        # paths are not separately mounted here, and playback/library scans
-        # are workload-dependent.
-        # The image's healthcheck is intentionally disabled because no
-        # in-container probe is guaranteed by this pinned image.
         "--no-healthcheck"
       ]
       ++ hardening;

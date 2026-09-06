@@ -98,26 +98,17 @@ in {
               exit 0
             fi
 
-            # Each run is a separate restore point. Rollback snapshots and
-            # caches are deliberately excluded. Database files are excluded
-            # because their application-consistent exports are uploaded by
-            # the host-specific backup job.
             "$RCLONE" copy "$SOURCE" "$DEST" \
               --config="$CONFIG" \
               ${excludeArgs} \
               --fast-list --transfers 4 --checkers 8 \
               --retries 3 --retries-sleep 30s --log-level ERROR --stats 0
 
-            # A backup is not successful until the remote generation verifies
-            # against the source using the same exclusions.
             "$RCLONE" check "$SOURCE" "$DEST" \
               --config="$CONFIG" \
               ${excludeArgs} \
               --log-level ERROR --stats 0
 
-            # Retention is based on the generation directory name, never on
-            # source file mtimes. This cannot delete a newly uploaded file
-            # merely because the source file itself is old.
             "$RCLONE" lsf "$BASE" --dirs-only --config="$CONFIG" \
               --log-level ERROR --stats 0 > "$LIST"
             cutoff=$(date -u -d "-${toString cfg.retentionDays} days" +%s)

@@ -7,16 +7,8 @@
   uploadLocation = "/mnt/homelab/immich/library";
 
   dbDataLocation = "/srv/immich/postgres";
-  # Model data is reconstructible and should not be retained as service state.
-  # Keep it outside /srv so the impermanence allowlist does not preserve it.
   modelCacheLocation = "/var/cache/immich-model";
-  hardened = [
-    "--security-opt=no-new-privileges"
-    "--cap-drop=ALL"
-    "--read-only"
-    "--tmpfs=/tmp:rw,noexec,nosuid,nodev"
-    "--tmpfs=/run:rw,nosuid,nodev"
-  ];
+  containerHardening = import ./oci-hardening.nix;
 in {
   sops.secrets."immich/db-password" = {
     sopsFile = "${inputs.self}/secrets/service-secrets.yaml";
@@ -52,9 +44,6 @@ in {
         "${dbDataLocation}:/var/lib/postgresql/data"
       ];
       extraOptions = [
-        # PostgreSQL manages runtime files and shared memory itself; its data
-        # directory is already isolated to the dedicated bind mount. Avoid a
-        # read-only root and tight memory cap for database safety.
         "--security-opt=no-new-privileges"
         "--cap-drop=ALL"
         "--pids-limit=1024"
@@ -106,9 +95,6 @@ in {
         "/etc/localtime:/etc/localtime:ro"
       ];
       extraOptions = [
-        # Immich needs its upload bind mount and device access. Keep the image
-        # root writable until the upstream image's runtime write set is
-        # verified against this pinned image digest.
         "--security-opt=no-new-privileges"
         "--cap-drop=ALL"
         "--pids-limit=1024"
@@ -126,19 +112,16 @@ in {
         "${modelCacheLocation}:/cache"
       ];
       extraOptions =
-        hardened
+        containerHardening.baseline
+        ++ containerHardening.immutable
+        ++ containerHardening.withLimits {
+          pidsLimit = 1024;
+          memory = "8g";
+          cpus = 8;
+        }
         ++ [
-          # Model workers can use substantial CPU/RAM and temporary runtime
-          # files, so only the root filesystem and capabilities are restricted.
-          "--pids-limit=1024"
-          "--memory=8g"
-          "--cpus=8"
           "--restart=always"
           "--shm-size=8gb"
-          # The pinned ML image's Python/native dependencies have not been
-          # runtime-tested under the default seccomp profile. Preserve this
-          # existing exception until an offline container smoke test proves it
-          # can be removed.
           "--security-opt=seccomp=unconfined"
         ];
     };

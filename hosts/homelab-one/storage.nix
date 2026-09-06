@@ -64,23 +64,12 @@
           done
           ${pkgs.coreutils}/bin/mkdir -p "$STAGING"
 
-          # Vaultwarden's SQLite database is exported through SQLite's online
-          # backup API. The live database file is excluded from the ordinary
-          # tree copy; attachments, keys, and configuration files are copied.
-          infra_rclone_copy_checked /srv/vaultwarden "$DEST/vaultwarden" "$CONFIG" \
-            --fast-list --transfers 4 --checkers 8 \
-            --exclude '**/*.db' --exclude '**/*.db-*' \
-            --exclude '**/*.sqlite' --exclude '**/*.sqlite-*' \
-            --exclude '**/*.sqlite3'
-          infra_export_sqlite_tree /srv/vaultwarden "$STAGING" vaultwarden "$DEST/vaultwarden" "$CONFIG"
+          infra_backup_sqlite_service /srv/vaultwarden "$STAGING" vaultwarden "$DEST/vaultwarden" "$CONFIG"
           infra_rclone_copy_checked /var/lib/caddy "$DEST/caddy" "$CONFIG" \
             --fast-list --transfers 4 --checkers 8
 
           infra_prune_generations "b2-storage:/disaster-recovery/homelab-one/services" "$CONFIG" 90 "$RUNTIME_DIR/service-generations.list"
 
-          # Refuse to rotate the replica if the source unexpectedly appears
-          # empty or inaccessible. This is intentionally a mirror, while the
-          # backup-dir preserves overwritten/deleted generations.
           SOURCE_LIST="$RUNTIME_DIR/source.list"
           ${pkgs.rclone}/bin/rclone lsf homelab-storage-one:/ --recursive \
             --config="$CONFIG" --log-level ERROR --stats 0 > "$SOURCE_LIST"
