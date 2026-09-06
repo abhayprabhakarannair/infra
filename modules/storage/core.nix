@@ -41,8 +41,7 @@
         test -s "$output"
         ${pkgs.sqlite}/bin/sqlite3 "$output" "PRAGMA integrity_check;" | ${pkgs.gnugrep}/bin/grep -Fxq ok
       done < <(${pkgs.findutils}/bin/find "$source" -type f \( \
-        -name '*.db' -o -name '*.db-*' -o -name '*.sqlite' -o \
-        -name '*.sqlite-*' -o -name '*.sqlite3' \
+        -name '*.db' -o -name '*.sqlite' -o -name '*.sqlite3' \
       \) -print0)
 
       test -d "$staging_root/$relative_service" || return 0
@@ -86,7 +85,7 @@
       while IFS= read -r generation; do
         generation="''${generation%/}"
         case "$generation" in
-          20??????T??????Z)
+          ????????T??????Z)
             generation_epoch=$(date -u -d "''${generation:0:8} ''${generation:9:2}:''${generation:11:2}:''${generation:13:2}" +%s 2>/dev/null || true)
             if [ -n "$generation_epoch" ] && [ "$generation_epoch" -lt "$cutoff" ]; then
               ${pkgs.rclone}/bin/rclone delete "$base/$generation" \

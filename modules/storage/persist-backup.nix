@@ -115,7 +115,7 @@ in {
             while IFS= read -r generation; do
               generation=''${generation%/}
               case "$generation" in
-                20????????T??????Z)
+                ????????T??????Z)
                   generation_epoch=$(date -u -d "''${generation:0:8} ''${generation:9:2}:''${generation:11:2}:''${generation:13:2}" +%s 2>/dev/null || true)
                   if [ -n "$generation_epoch" ] && [ "$generation_epoch" -lt "$cutoff" ]; then
                     "$RCLONE" delete "$BASE/$generation" --config="$CONFIG" \
