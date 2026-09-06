@@ -46,6 +46,11 @@ in {
       extraOptions = [
         "--security-opt=no-new-privileges"
         "--cap-drop=ALL"
+        "--cap-add=CHOWN"
+        "--cap-add=DAC_OVERRIDE"
+        "--cap-add=FOWNER"
+        "--cap-add=SETGID"
+        "--cap-add=SETUID"
         "--pids-limit=1024"
         "--memory=4g"
         "--cpus=4"

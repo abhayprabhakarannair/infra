@@ -151,6 +151,7 @@ in {
       ReadWritePaths = [
         "/srv"
         "/var/lib/libvirt"
+        "/var/lib/containers"
       ];
       TimeoutStartSec = "12h";
       ExecStart = let

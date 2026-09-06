@@ -3,7 +3,7 @@ set -eu
 
 marker=/persist/.impermanence-ready
 rollback=/persist/rollback
-migration_marker=/persist/.impermanence-state-seeded-v3
+migration_marker=/persist/.impermanence-state-seeded-v4
 
 seed_file() {
   source="$1"

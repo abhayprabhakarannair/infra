@@ -66,9 +66,9 @@ NetworkManager connections, Tailscale state, Bluetooth state, journals, user
 configuration, and declared service state are persisted for the same reason.
 
 The SOPS age identity is derived from the host SSH key and stored in
-`~/.config/sops/age/keys.txt`. SOPS reads `/etc/ssh/ssh_host_ed25519_key`; on
-impermanent hosts that path is bind-mounted from `/persist` after the initial
-boot, while the original `/etc` key remains available for first-boot setup.
+`~/.config/sops/age/keys.txt`. SOPS reads the persisted host key when it is
+available and falls back to `/etc/ssh/ssh_host_ed25519_key` during first-boot
+setup.
 
 This repository currently targets clean reinstalls for the `@srv` to
 `@persist` layout change. A clean `disko` install creates `@persist`; an old

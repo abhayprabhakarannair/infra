@@ -50,7 +50,11 @@
   # --- Secrets ---
   sops.defaultSopsFile = "${inputs.self}/secrets/system-secrets.yaml";
   sops.defaultSopsFormat = "yaml";
-  sops.age.sshKeyPaths = ["/etc/ssh/ssh_host_ed25519_key"];
+  sops.age.sshKeyPaths = [
+    "/persist/etc/ssh/ssh_host_ed25519_key"
+    "/etc/ssh/ssh_host_ed25519_key"
+  ];
+  sops.gnupg.sshKeyPaths = [];
 
   # --- Passwords ---
   sops.secrets."abhay-password" = {

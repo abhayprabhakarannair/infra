@@ -109,8 +109,8 @@ if [ ! -e "$impermanence_btrfs_root/@persist/.impermanence-ready" ]; then
   exit 0
 fi
 
-if [ ! -e "$impermanence_btrfs_root/@persist/.impermanence-state-seeded-v3" ]; then
-  log "state migration marker v3 absent; refusing destructive reset"
+if [ ! -e "$impermanence_btrfs_root/@persist/.impermanence-state-seeded-v4" ]; then
+  log "state migration marker v4 absent; refusing destructive reset"
   exit 1
 fi
 

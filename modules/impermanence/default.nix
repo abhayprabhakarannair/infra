@@ -22,6 +22,7 @@
     "/etc/ssh/ssh_host_rsa_key"
     "/etc/ssh/ssh_host_rsa_key.pub"
     "/var/lib/systemd/random-seed"
+    "/var/lib/systemd/credential.secret"
   ];
 
   persistentSystemDirectories = commonSystemDirectories ++ cfg.extraSystemDirectories;
@@ -233,6 +234,7 @@ in {
             "persist-persist-etc-ssh-ssh_host_rsa_key.service"
             "persist-persist-etc-ssh-ssh_host_rsa_key.pub.service"
             "persist-persist-var-lib-systemd-random\x2dseed.service"
+            "persist-persist-var-lib-systemd-credential.secret.service"
           ];
           unitConfig.DefaultDependencies = false;
           serviceConfig = {

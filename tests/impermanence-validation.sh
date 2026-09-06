@@ -40,11 +40,11 @@ for host in daredevil devil old-devil homelab-one; do
   test "$service_count" -gt 0
 done
 
-grep -q 'migration_marker=/persist/.impermanence-state-seeded-v3' \
+grep -q 'migration_marker=/persist/.impermanence-state-seeded-v4' \
   "$repo_root/modules/impermanence/prepare-reset.sh"
 grep -q 'impermanence-reset-complete-v1' \
   "$repo_root/modules/impermanence/reset-initrd.sh"
-grep -q 'impermanence-state-seeded-v3' \
+grep -q 'impermanence-state-seeded-v4' \
   "$repo_root/modules/impermanence/reset-initrd.sh"
 grep -q '/dev/disk/by-label/NixOS' "$repo_root/hosts"/*/default.nix
 
