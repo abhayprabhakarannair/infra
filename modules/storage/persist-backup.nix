@@ -111,6 +111,9 @@ in {
               ${excludeArgs} \
               --log-level ERROR --stats 0
 
+            "$RCLONE" touch "$DEST/.complete" \
+              --config="$CONFIG" --log-level ERROR --stats 0
+
             "$RCLONE" lsf "$BASE" --dirs-only --config="$CONFIG" \
               --log-level ERROR --stats 0 > "$LIST"
             cutoff=$(date -u -d "-${toString cfg.retentionDays} days" +%s)
@@ -118,6 +121,10 @@ in {
               generation=''${generation%/}
               case "$generation" in
                 ????????T??????Z)
+                  if ! "$RCLONE" lsf "$BASE/$generation/.complete" --files-only \
+                    --config="$CONFIG" --log-level ERROR --stats 0 >/dev/null 2>&1; then
+                    continue
+                  fi
                   generation_epoch=$(date -u -d "''${generation:0:8} ''${generation:9:2}:''${generation:11:2}:''${generation:13:2}" +%s 2>/dev/null || true)
                   if [ -n "$generation_epoch" ] && [ "$generation_epoch" -lt "$cutoff" ]; then
                     "$RCLONE" delete "$BASE/$generation" --config="$CONFIG" \

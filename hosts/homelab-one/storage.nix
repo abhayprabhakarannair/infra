@@ -94,6 +94,7 @@ in {
 
           ${backupOperations}
 
+                    infra_mark_generation_complete "$DEST" "$CONFIG"
                     infra_prune_generations "b2-storage:/disaster-recovery/homelab-one/services" "$CONFIG" 90 "$RUNTIME_DIR/service-generations.list"
 
                     SOURCE_LIST="$RUNTIME_DIR/source.list"

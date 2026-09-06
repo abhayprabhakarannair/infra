@@ -196,6 +196,7 @@ in {
           ${backupOperations}
                     infra_backup_tree /var/lib/libvirt "$DEST/libvirt" "$CONFIG"
 
+                    infra_mark_generation_complete "$DEST" "$CONFIG"
                     infra_prune_generations "backups:/disaster-recovery/devil/services" "$CONFIG" 90 "$RUNTIME_DIR/generations.list"
         '';
       in "${script}";

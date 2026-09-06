@@ -63,6 +63,22 @@ infra_backup_tree() {
     --fast-list --transfers 4 --checkers 8
 }
 
+infra_mark_generation_complete() {
+  local destination="$1"
+  local rclone_config="$2"
+
+  rclone touch "$destination/.complete" \
+    --config="$rclone_config" --log-level ERROR --stats 0
+}
+
+infra_generation_complete() {
+  local destination="$1"
+  local rclone_config="$2"
+
+  rclone lsf "$destination/.complete" --files-only \
+    --config="$rclone_config" --log-level ERROR --stats 0 >/dev/null 2>&1
+}
+
 infra_prune_generations() {
   local base="$1"
   local rclone_config="$2"
@@ -77,6 +93,7 @@ infra_prune_generations() {
     generation="${generation%/}"
     case "$generation" in
       ????????T??????Z)
+        infra_generation_complete "$base/$generation" "$rclone_config" || continue
         generation_epoch=$(date -u -d "${generation:0:8} ${generation:9:2}:${generation:11:2}:${generation:13:2}" +%s 2>/dev/null || true)
         if [ -n "$generation_epoch" ] && [ "$generation_epoch" -lt "$cutoff" ]; then
           rclone delete "$base/$generation" \

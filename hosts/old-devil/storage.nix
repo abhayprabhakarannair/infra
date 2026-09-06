@@ -156,6 +156,7 @@ in {
                       ${pkgs.systemd}/bin/systemctl stop podman-technitium.service
                     fi
           ${backupStoppedOperations}
+                    infra_mark_generation_complete "$DEST" "$CONFIG"
                     infra_prune_generations "backups:/disaster-recovery/old-devil/services" "$CONFIG" 90 "$RUNTIME_DIR/generations.list"
         '';
       in "${script}";

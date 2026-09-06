@@ -57,6 +57,12 @@ grep -q -- "--exclude '\*\*/\*.sqlite3-\*'" "$repo_root/modules/storage/backup-l
 grep -q -- 'srv/\*\*/\*.sqlite3-\*' "$repo_root/modules/storage/persist-backup.nix"
 grep -q '????????T??????Z)' "$repo_root/modules/storage/backup-lib.sh"
 grep -q '????????T??????Z)' "$repo_root/modules/storage/persist-backup.nix"
+grep -q 'infra_mark_generation_complete' "$repo_root/modules/storage/backup-lib.sh"
+grep -q 'infra_generation_complete' "$repo_root/modules/storage/backup-lib.sh"
+grep -q 'touch "\$DEST/.complete"' "$repo_root/modules/storage/persist-backup.nix"
+grep -q 'infra_mark_generation_complete "\$DEST" "\$CONFIG"' "$repo_root/hosts/devil/storage.nix"
+grep -q 'infra_mark_generation_complete "\$DEST" "\$CONFIG"' "$repo_root/hosts/homelab-one/storage.nix"
+grep -q 'infra_mark_generation_complete "\$DEST" "\$CONFIG"' "$repo_root/hosts/old-devil/storage.nix"
 grep -q 'environment.etc."infra/backup-lib.sh".source = ./backup-lib.sh' \
   "$repo_root/modules/storage/core.nix"
 
