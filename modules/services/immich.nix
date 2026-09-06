@@ -64,6 +64,8 @@ in {
       extraOptions = [
         "--security-opt=no-new-privileges"
         "--cap-drop=ALL"
+        "--cap-add=SETGID"
+        "--cap-add=SETUID"
         "--read-only"
         "--tmpfs=/tmp:rw,noexec,nosuid,nodev"
         "--tmpfs=/run:rw,nosuid,nodev"
