@@ -29,7 +29,7 @@ cleanup() {
         if @btrfs@ subvolume show "$impermanence_new" >/dev/null 2>&1; then
           @btrfs@ subvolume delete "$impermanence_new" >/dev/null 2>&1 || true
         fi
-        @btrfs@ subvolume rename "$impermanence_old" "$impermanence_current" >/dev/null 2>&1 || true
+        @mv@ -- "$impermanence_old" "$impermanence_current" >/dev/null 2>&1 || true
       elif @btrfs@ subvolume show "$impermanence_new" >/dev/null 2>&1; then
         @btrfs@ subvolume delete "$impermanence_new" >/dev/null 2>&1 || true
       fi
@@ -106,7 +106,7 @@ for impermanence_subvolume in @ @home; do
     if @btrfs@ subvolume show "$impermanence_new" >/dev/null 2>&1; then
       @btrfs@ subvolume delete "$impermanence_new"
     fi
-    @btrfs@ subvolume rename "$impermanence_old" "$impermanence_current"
+    @mv@ -- "$impermanence_old" "$impermanence_current"
     log "recovered interrupted reset for $impermanence_subvolume"
   elif @btrfs@ subvolume show "$impermanence_new" >/dev/null 2>&1; then
     @btrfs@ subvolume delete "$impermanence_new"
@@ -163,11 +163,11 @@ done
 impermanence_phase="subvolume switch"
 for impermanence_subvolume in $impermanence_subvolumes; do
   log "renaming $impermanence_subvolume to $impermanence_subvolume.impermanence-old"
-  @btrfs@ subvolume rename \
+  @mv@ -- \
     "$impermanence_btrfs_root/$impermanence_subvolume" \
     "$impermanence_btrfs_root/$impermanence_subvolume.impermanence-old" 2>&9
   log "renaming $impermanence_subvolume.impermanence-new to $impermanence_subvolume"
-  @btrfs@ subvolume rename \
+  @mv@ -- \
     "$impermanence_btrfs_root/$impermanence_subvolume.impermanence-new" \
     "$impermanence_btrfs_root/$impermanence_subvolume" 2>&9
   log "switched $impermanence_subvolume"

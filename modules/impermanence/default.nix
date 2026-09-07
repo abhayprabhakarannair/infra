@@ -140,6 +140,7 @@
     device = lib.escapeShellArg cfg.reset.device;
     mount = "${pkgs.util-linuxMinimal}/bin/mount";
     mountpoint = "${pkgs.util-linuxMinimal}/bin/mountpoint";
+    mv = "${pkgs.coreutils}/bin/mv";
     preflightPersistentDirectories = preflightPersistentDirectories;
     rm = "${pkgs.coreutils}/bin/rm";
     touch = "${pkgs.coreutils}/bin/touch";
