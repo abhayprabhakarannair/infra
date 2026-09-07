@@ -59,7 +59,7 @@ in {
       enable = true;
       settings = {
         main = {
-          font = "JetBrainsMono Nerd Font Mono:size=11";
+          font = "JetBrainsMono Nerd Font Mono:size=10";
           pad = "12x10";
           dpi-aware = "yes";
           term = "xterm-256color";
@@ -73,6 +73,13 @@ in {
           blink = "yes";
         };
         mouse.hide-when-typing = "yes";
+        url = {
+          launch = ''
+            ${pkgs.xdg-utils}/bin/xdg-open ''${url}
+          '';
+          "show-urls-launch" = "Control+Shift+o";
+          "show-urls-copy" = "Control+Shift+y";
+        };
         "colors-dark" = {
           alpha = "0.96";
           background = kanagawa.sumiInk1;
@@ -215,6 +222,15 @@ in {
       videos = "/home/abhay/Videos";
     };
 
+    xdg.mimeApps = {
+      enable = true;
+      defaultApplications = {
+        "text/html" = ["firefox.desktop"];
+        "x-scheme-handler/http" = ["firefox.desktop"];
+        "x-scheme-handler/https" = ["firefox.desktop"];
+      };
+    };
+
     home.activation.seedZedSettings = inputs.home-manager.lib.hm.dag.entryAfter ["writeBoundary"] ''
       zedSettings="$HOME/.config/zed/settings.json"
       if [ -L "$zedSettings" ] && [[ "$(readlink "$zedSettings")" == /nix/store/* ]]; then
@@ -240,6 +256,19 @@ in {
       })} "$zedSettings"
       fi
     '';
+
+    home.file.".local/bin/toggle-microphone" = {
+      executable = true;
+      text = ''
+        #!/bin/sh
+        set -eu
+
+        wpctl="${pkgs.wireplumber}/bin/wpctl"
+        source="@DEFAULT_AUDIO_SOURCE@"
+        "$wpctl" get-volume "$source" >/dev/null
+        exec "$wpctl" set-mute "$source" toggle
+      '';
+    };
 
     home.file.".local/bin/power-menu" = {
       executable = true;
@@ -402,6 +431,10 @@ in {
       };
       gtk3.extraConfig.gtk-application-prefer-dark-theme = true;
       gtk4.extraConfig.gtk-application-prefer-dark-theme = true;
+      gtk3.extraConfig.gtk-theme-name = "Kanagawa";
+      gtk3.extraConfig.gtk-icon-theme-name = "Tela-dark";
+      gtk4.extraConfig.gtk-theme-name = "Kanagawa";
+      gtk4.extraConfig.gtk-icon-theme-name = "Tela-dark";
     };
 
     qt = {
@@ -569,7 +602,7 @@ in {
     home.sessionVariables = {
       ADW_DEBUG_COLOR_SCHEME = "prefer-dark";
       EDITOR = "nvim";
-      GTK_THEME = "Kanagawa:dark";
+      GTK_THEME = "Kanagawa";
       MOZ_ENABLE_WAYLAND = "0";
       QT_QPA_PLATFORMTHEME = "gtk3";
       QT_STYLE_OVERRIDE = "adwaita-dark";
@@ -635,7 +668,7 @@ in {
         Mod+Shift+P { spawn "/home/abhay/.local/bin/power-menu"; }
         Mod+Ctrl+V { spawn "${pkgs.pavucontrol}/bin/pavucontrol"; }
         Mod+Ctrl+O { spawn "${pkgs.wireplumber}/bin/wpctl" "set-mute" "@DEFAULT_AUDIO_SINK@" "toggle"; }
-        Mod+Ctrl+M { spawn "${pkgs.wireplumber}/bin/wpctl" "set-mute" "@DEFAULT_AUDIO_SOURCE@" "toggle"; }
+        Mod+Ctrl+M { spawn "/home/abhay/.local/bin/toggle-microphone"; }
         Mod+Q { close-window; }
         Mod+Shift+E { quit; }
         Mod+Alt+L { spawn "${pkgs.swaylock}/bin/swaylock" "-f"; }
@@ -664,7 +697,7 @@ in {
         XF86AudioRaiseVolume { spawn "${pkgs.wireplumber}/bin/wpctl" "--limit" "1.0" "set-volume" "@DEFAULT_AUDIO_SINK@" "5%+"; }
         XF86AudioLowerVolume { spawn "${pkgs.wireplumber}/bin/wpctl" "--limit" "1.0" "set-volume" "@DEFAULT_AUDIO_SINK@" "5%-"; }
         XF86AudioMute { spawn "${pkgs.wireplumber}/bin/wpctl" "set-mute" "@DEFAULT_AUDIO_SINK@" "toggle"; }
-        XF86AudioMicMute { spawn "${pkgs.wireplumber}/bin/wpctl" "set-mute" "@DEFAULT_AUDIO_SOURCE@" "toggle"; }
+        XF86AudioMicMute { spawn "/home/abhay/.local/bin/toggle-microphone"; }
         XF86AudioPlay { spawn "${pkgs.playerctl}/bin/playerctl" "play-pause"; }
         XF86AudioNext { spawn "${pkgs.playerctl}/bin/playerctl" "next"; }
         XF86AudioPrev { spawn "${pkgs.playerctl}/bin/playerctl" "previous"; }
@@ -687,7 +720,7 @@ in {
       spacing = 4;
       modules-left = ["niri/workspaces"];
       modules-center = ["niri/window"];
-      modules-right = ["network" "wireplumber" "wireplumber#source" "backlight" "battery" "clock" "custom/power" "tray"];
+      modules-right = ["network" "wireplumber" "wireplumber#source" "backlight" "battery" "clock" "tray" "custom/power"];
       "niri/workspaces" = {
         format = "{icon}";
         "format-icons" = {
@@ -727,7 +760,7 @@ in {
         format = "󰍬 {volume}%";
         "format-muted" = "󰍭 muted";
         "on-click" = "${pkgs.pavucontrol}/bin/pavucontrol";
-        "on-click-middle" = "${pkgs.wireplumber}/bin/wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle";
+        "on-click-middle" = "/home/abhay/.local/bin/toggle-microphone";
         "on-scroll-up" = "${pkgs.wireplumber}/bin/wpctl --limit 1.0 set-volume @DEFAULT_AUDIO_SOURCE@ 5%+";
         "on-scroll-down" = "${pkgs.wireplumber}/bin/wpctl --limit 1.0 set-volume @DEFAULT_AUDIO_SOURCE@ 5%-";
         "scroll-step" = 5;
@@ -759,6 +792,10 @@ in {
         "tooltip" = true;
         "tooltip-format" = "Power menu";
         "on-click" = "/home/abhay/.local/bin/power-menu";
+      };
+      tray = {
+        spacing = 6;
+        "icon-size" = 16;
       };
     };
 
@@ -923,6 +960,13 @@ in {
   ];
 
   security.polkit.enable = true;
+
+  xdg.portal = {
+    enable = true;
+    xdgOpenUsePortal = true;
+    extraPortals = [pkgs.xdg-desktop-portal-gtk];
+    config.common.default = "gtk";
+  };
   security.pam.services.swaylock.fprintAuth = true;
   security.pam.services.greetd.enableGnomeKeyring = true;
   security.pam.services.sudo.fprintAuth = true;
@@ -1113,6 +1157,7 @@ in {
     waybar
     wl-clipboard
     xwayland-satellite
+    xdg-utils
   ];
 
   nix.settings.experimental-features = ["nix-command" "flakes"];
