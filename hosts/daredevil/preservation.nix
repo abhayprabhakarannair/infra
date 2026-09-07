@@ -31,6 +31,10 @@
         mode = "0700";
       }
       {
+        directory = "/var/lib/systemd/backlight";
+        mode = "0755";
+      }
+      {
         directory = "/home/abhay";
         user = "abhay";
         group = "users";
