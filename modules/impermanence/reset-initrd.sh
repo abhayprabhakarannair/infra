@@ -5,11 +5,17 @@ impermanence_btrfs_device=@device@
 impermanence_btrfs_root=/run/impermanence-btrfs-root
 impermanence_subvolumes="@ @home"
 impermanence_reset_complete=no
+impermanence_phase=initialization
+impermanence_log_open=no
 impermanence_reset_marker="$impermanence_btrfs_root/@persist/.impermanence-reset-complete-v1"
 mkdir -p "$impermanence_btrfs_root"
 
 cleanup() {
   impermanence_status=$?
+
+  if [ "$impermanence_log_open" = yes ] && [ "$impermanence_status" -ne 0 ]; then
+    echo "impermanence-reset: failed during $impermanence_phase (status $impermanence_status)" >&9 || true
+  fi
 
   if [ "$impermanence_reset_complete" != yes ]; then
     for impermanence_subvolume in $impermanence_subvolumes; do
@@ -50,9 +56,11 @@ fi
 
 impermanence_log="$impermanence_btrfs_root/@persist/.impermanence-reset.log"
 exec 9>>"$impermanence_log"
+impermanence_log_open=yes
 log() { echo "impermanence-reset: $*" >&9; }
 log "mounted top-level Btrfs"
 
+impermanence_phase="completed-reset cleanup"
 if [ -e "$impermanence_reset_marker" ]; then
   for impermanence_subvolume in $impermanence_subvolumes; do
     impermanence_current="$impermanence_btrfs_root/$impermanence_subvolume"
@@ -86,6 +94,7 @@ if [ -e "$impermanence_reset_marker" ]; then
   exit 0
 fi
 
+impermanence_phase="interrupted-reset recovery"
 for impermanence_subvolume in @ @home; do
   impermanence_current="$impermanence_btrfs_root/$impermanence_subvolume"
   impermanence_old="$impermanence_current.impermanence-old"
@@ -104,6 +113,7 @@ for impermanence_subvolume in @ @home; do
   fi
 done
 
+impermanence_phase="migration checks"
 if [ ! -e "$impermanence_btrfs_root/@persist/.impermanence-ready" ]; then
   log "migration marker absent; keeping existing subvolumes"
   exit 0
@@ -114,6 +124,7 @@ if [ ! -e "$impermanence_btrfs_root/@persist/.impermanence-state-seeded-v4" ]; t
   exit 1
 fi
 
+impermanence_phase="rollback snapshot lookup"
 impermanence_latest_snapshot=
 for impermanence_candidate in "$impermanence_btrfs_root/@persist/rollback"/*; do
   if @btrfs@ subvolume show "$impermanence_candidate/root" >/dev/null 2>&1 && \
@@ -126,8 +137,10 @@ if [ -z "$impermanence_latest_snapshot" ]; then
   exit 1
 fi
 
+impermanence_phase="persistent-directory preflight"
 @preflightPersistentDirectories@
 
+impermanence_phase="target subvolume validation"
 for impermanence_subvolume in $impermanence_subvolumes; do
   if ! @btrfs@ subvolume show "$impermanence_btrfs_root/$impermanence_subvolume" >/dev/null 2>&1; then
     log "required subvolume is missing: $impermanence_subvolume"
@@ -140,11 +153,13 @@ for impermanence_subvolume in $impermanence_subvolumes; do
   fi
 done
 
+impermanence_phase="replacement subvolume creation"
 for impermanence_subvolume in $impermanence_subvolumes; do
   @btrfs@ subvolume create \
     "$impermanence_btrfs_root/$impermanence_subvolume.impermanence-new"
 done
 
+impermanence_phase="subvolume switch"
 for impermanence_subvolume in $impermanence_subvolumes; do
   @btrfs@ subvolume rename \
     "$impermanence_btrfs_root/$impermanence_subvolume" \
