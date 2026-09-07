@@ -318,9 +318,7 @@ in {
         "sysroot-nix.mount"
         "sysroot-persist.mount"
       ];
-      requiredBy = ["initrd-fs.target"];
       after = ["initrd-root-device.target"];
-      unitConfig.DefaultDependencies = false;
       serviceConfig = {
         Type = "oneshot";
         TimeoutStartSec = "infinity";

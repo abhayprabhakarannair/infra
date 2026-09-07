@@ -37,7 +37,7 @@
   myImpermanence = {
     enable = true;
     reset = {
-      enable = true;
+      enable = false;
       device = "/dev/disk/by-label/NixOS";
     };
     extraSystemDirectories = [
