@@ -1,5 +1,6 @@
 {
   config,
+  inputs,
   lib,
   pkgs,
   ...
@@ -17,6 +18,14 @@
 
     programs.home-manager.enable = true;
     programs.bash.enable = true;
+    programs.bash.shellAliases = {
+      ve = "nvim .";
+    };
+
+    home.sessionVariables = {
+      EDITOR = "nvim";
+      VISUAL = "nvim";
+    };
 
     xdg.configFile."niri/config.kdl".text = ''
       input {
@@ -27,6 +36,9 @@
         }
         touchpad {
           tap
+          dwt
+          drag true
+          click-method "clickfinger"
           natural-scroll
         }
       }
@@ -71,9 +83,16 @@
         Print { screenshot; }
         Ctrl+Print { screenshot-screen; }
         Alt+Print { screenshot-window; }
+        Mod+Shift+S { screenshot; }
         XF86AudioRaiseVolume { spawn "${pkgs.wireplumber}/bin/wpctl" "set-volume" "@DEFAULT_AUDIO_SINK@" "5%+"; }
         XF86AudioLowerVolume { spawn "${pkgs.wireplumber}/bin/wpctl" "set-volume" "@DEFAULT_AUDIO_SINK@" "5%-"; }
         XF86AudioMute { spawn "${pkgs.wireplumber}/bin/wpctl" "set-mute" "@DEFAULT_AUDIO_SINK@" "toggle"; }
+        XF86AudioMicMute { spawn "${pkgs.wireplumber}/bin/wpctl" "set-mute" "@DEFAULT_AUDIO_SOURCE@" "toggle"; }
+        XF86AudioPlay { spawn "${pkgs.playerctl}/bin/playerctl" "play-pause"; }
+        XF86AudioNext { spawn "${pkgs.playerctl}/bin/playerctl" "next"; }
+        XF86AudioPrev { spawn "${pkgs.playerctl}/bin/playerctl" "previous"; }
+        XF86MonBrightnessUp { spawn "${pkgs.brightnessctl}/bin/brightnessctl" "set" "5%+"; }
+        XF86MonBrightnessDown { spawn "${pkgs.brightnessctl}/bin/brightnessctl" "set" "5%-"; }
       }
     '';
 
@@ -150,21 +169,45 @@
   programs.niri.enable = true;
 
   hardware.graphics.enable = true;
+  hardware.bluetooth = {
+    enable = true;
+    powerOnBoot = true;
+  };
+
+  fonts.packages = with pkgs; [
+    nerd-fonts.jetbrains-mono
+    noto-fonts
+    noto-fonts-color-emoji
+    smc-chilanka
+    smc-manjari
+  ];
 
   security.polkit.enable = true;
   security.pam.services.swaylock = {};
   security.pam.services.greetd.enableGnomeKeyring = true;
+  security.pam.services.sudo.fprintAuth = true;
+  security.pam.services.polkit-1.fprintAuth = true;
 
   security.rtkit.enable = true;
 
   services.gnome.gnome-keyring.enable = true;
+
+  services.fprintd.enable = true;
+
+  services.fwupd.enable = true;
+
+  services.udisks2.enable = true;
+
+  services.upower.enable = true;
+
+  services.power-profiles-daemon.enable = true;
 
   services.greetd = {
     enable = true;
     useTextGreeter = true;
     settings = {
       default_session = {
-        command = "${lib.getExe pkgs.tuigreet} --time --cmd ${pkgs.niri}/bin/niri-session";
+        command = "${lib.getExe pkgs.tuigreet} --time --user abhay --cmd ${pkgs.niri}/bin/niri-session";
         user = "greeter";
       };
     };
@@ -185,6 +228,19 @@
   boot.initrd.systemd.enable = true;
   boot.initrd.availableKernelModules = ["tpm_tis"];
   boot.initrd.luks.devices.cryptroot.crypttabExtraOpts = ["tpm2-device=auto"];
+  boot.kernelParams = [
+    "amd_pstate=active"
+    "quiet"
+    "splash"
+    "rd.udev.log_level=3"
+    "rd.systemd.show_status=auto"
+  ];
+  boot.consoleLogLevel = 3;
+  boot.initrd.verbose = false;
+  boot.plymouth = {
+    enable = true;
+    theme = "spinner";
+  };
 
   boot.loader.efi.canTouchEfiVariables = true;
   boot.loader.timeout = 5;
@@ -236,8 +292,21 @@
     };
   };
 
+  programs.nixvim = {
+    enable = true;
+    defaultEditor = true;
+    viAlias = false;
+    vimAlias = false;
+    imports = [inputs.nixvim-config.nixvimModules.default];
+    extraConfigLua = ''
+      vim.opt.isfname:append("@-@")
+      vim.opt.undodir = os.getenv("HOME") .. "/.nvim/undodir"
+    '';
+  };
+
   environment.systemPackages = with pkgs; [
     btrfs-progs
+    brightnessctl
     cryptsetup
     git
     htop
@@ -247,6 +316,7 @@
     mako
     networkmanagerapplet
     pciutils
+    playerctl
     polkit_gnome
     slurp
     swaybg
@@ -254,7 +324,6 @@
     swaylock
     thunar
     usbutils
-    vim
     waybar
     wl-clipboard
     xwayland-satellite

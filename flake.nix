@@ -25,6 +25,15 @@
       url = "github:nix-community/home-manager/release-26.05";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    nixvim = {
+      url = "github:nix-community/nixvim";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    nixvim-config = {
+      url = "github:abhayprabhakarannair/nixvim-config";
+    };
   };
 
   outputs = inputs @ {
@@ -33,8 +42,10 @@
     disko,
     deploy-rs,
     home-manager,
+    nixvim,
     preservation,
     sops-nix,
+    nixvim-config,
     ...
   }: let
     system = "x86_64-linux";
@@ -46,6 +57,7 @@
       modules = [
         disko.nixosModules.disko
         home-manager.nixosModules.home-manager
+        nixvim.nixosModules.nixvim
         preservation.nixosModules.preservation
         sops-nix.nixosModules.sops
         ./hosts/daredevil
