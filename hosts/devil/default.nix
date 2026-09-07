@@ -85,7 +85,7 @@
 
       systemd-boot = {
         enable = true;
-        configurationLimit = 30;
+        configurationLimit = 40;
         consoleMode = "max";
       };
     };
