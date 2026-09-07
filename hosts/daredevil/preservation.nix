@@ -35,6 +35,10 @@
         mode = "0755";
       }
       {
+        directory = "/var/lib/fprint";
+        mode = "0700";
+      }
+      {
         directory = "/home/abhay";
         user = "abhay";
         group = "users";

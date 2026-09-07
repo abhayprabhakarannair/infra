@@ -21,6 +21,16 @@
     springGreen = "98bb6c";
     boatYellow = "e6c384";
   };
+  niriPackage = pkgs.niri.overrideAttrs (old: {
+    postPatch =
+      (old.postPatch or "")
+      + ''
+        substituteInPlace resources/niri-session \
+          --replace-fail \
+            'systemctl --user import-environment' \
+            'systemctl --user import-environment $(printenv | cut -d= -f1 | tr "\\n" " ")'
+      '';
+  });
 in {
   imports = [
     ./hardware.nix
@@ -49,7 +59,7 @@ in {
       enable = true;
       settings = {
         main = {
-          font = "JetBrains Mono:size=11";
+          font = "JetBrainsMono Nerd Font Mono:size=11";
           pad = "12x10";
           dpi-aware = "yes";
           term = "xterm-256color";
@@ -115,8 +125,44 @@ in {
     programs.ssh = {
       enable = true;
       enableDefaultConfig = false;
-      settings."*" = {
-        ServerAliveInterval = 60;
+      includes = ["/run/secrets/ssh-secret-ips"];
+      settings = {
+        "*" = {
+          ServerAliveInterval = 60;
+        };
+        homelab-one = {
+          User = "abhay";
+          Port = 2442;
+          IdentityFile = "/run/secrets/ssh-private-keys/homelab";
+          IdentitiesOnly = "yes";
+        };
+        old-devil = {
+          User = "abhay";
+          Port = 2442;
+          IdentityFile = "/run/secrets/ssh-private-keys/homelab";
+          IdentitiesOnly = "yes";
+        };
+        daredevil = {
+          User = "abhay";
+          Port = 22;
+          IdentityFile = "/run/secrets/ssh-private-keys/homelab";
+          IdentitiesOnly = "yes";
+        };
+        devil = {
+          User = "abhay";
+          Port = 2442;
+          IdentityFile = "/run/secrets/ssh-private-keys/homelab";
+          IdentitiesOnly = "yes";
+        };
+        homelab-storage-one = {
+          IdentityFile = "/run/secrets/ssh-private-keys/homelab";
+          IdentitiesOnly = "yes";
+        };
+        "github.com" = {
+          User = "abhay";
+          IdentityFile = "/run/secrets/ssh-private-keys/github";
+          IdentitiesOnly = "yes";
+        };
       };
     };
 
@@ -202,7 +248,7 @@ in {
             exec ${pkgs.systemd}/bin/systemctl suspend
             ;;
           'Log out')
-            exec ${pkgs.niri}/bin/niri msg action quit --skip-confirmation
+            exec ${niriPackage}/bin/niri msg action quit --skip-confirmation
             ;;
           Reboot)
             exec ${pkgs.systemd}/bin/systemctl reboot
@@ -333,8 +379,8 @@ in {
       enable = true;
       colorScheme = "dark";
       iconTheme = {
-        name = "Kanagawa";
-        package = pkgs.kanagawa-icon-theme;
+        name = "Tela-dark";
+        package = pkgs.tela-icon-theme;
       };
       theme = {
         name = "Kanagawa";
@@ -350,6 +396,17 @@ in {
       style = {
         name = "adwaita-dark";
         package = pkgs.adwaita-qt;
+      };
+    };
+
+    dconf.settings = {
+      "org/gnome/desktop/interface" = {
+        color-scheme = "prefer-dark";
+        document-font-name = "Inter 11";
+        font-name = "Inter 11";
+        gtk-theme = "Kanagawa";
+        icon-theme = "Tela-dark";
+        monospace-font-name = "JetBrainsMono Nerd Font Mono 11";
       };
     };
 
@@ -496,8 +553,12 @@ in {
     };
 
     home.sessionVariables = {
+      ADW_DEBUG_COLOR_SCHEME = "prefer-dark";
       EDITOR = "nvim";
+      GTK_THEME = "Kanagawa:dark";
       MOZ_ENABLE_WAYLAND = "0";
+      QT_QPA_PLATFORMTHEME = "gtk3";
+      QT_STYLE_OVERRIDE = "adwaita-dark";
       VISUAL = "nvim";
     };
 
@@ -521,7 +582,19 @@ in {
         gaps 8
         center-focused-column "never"
         default-column-width { proportion 0.5; }
+        focus-ring {
+          off
+        }
+        border {
+          on
+          width 2
+          active-color "#${kanagawa.crystalBlue}"
+          inactive-color "#${kanagawa.sumiInk3}"
+          urgent-color "#${kanagawa.autumnRed}"
+        }
       }
+
+      prefer-no-csd
 
       window-rule {
         match app-id="firefox$"
@@ -574,8 +647,8 @@ in {
         Ctrl+Print { screenshot-screen; }
         Alt+Print { screenshot-window; }
         Mod+Shift+S { screenshot; }
-        XF86AudioRaiseVolume { spawn "${pkgs.wireplumber}/bin/wpctl" "set-volume" "@DEFAULT_AUDIO_SINK@" "5%+"; }
-        XF86AudioLowerVolume { spawn "${pkgs.wireplumber}/bin/wpctl" "set-volume" "@DEFAULT_AUDIO_SINK@" "5%-"; }
+        XF86AudioRaiseVolume { spawn "${pkgs.wireplumber}/bin/wpctl" "--limit" "1.0" "set-volume" "@DEFAULT_AUDIO_SINK@" "5%+"; }
+        XF86AudioLowerVolume { spawn "${pkgs.wireplumber}/bin/wpctl" "--limit" "1.0" "set-volume" "@DEFAULT_AUDIO_SINK@" "5%-"; }
         XF86AudioMute { spawn "${pkgs.wireplumber}/bin/wpctl" "set-mute" "@DEFAULT_AUDIO_SINK@" "toggle"; }
         XF86AudioMicMute { spawn "${pkgs.wireplumber}/bin/wpctl" "set-mute" "@DEFAULT_AUDIO_SOURCE@" "toggle"; }
         XF86AudioPlay { spawn "${pkgs.playerctl}/bin/playerctl" "play-pause"; }
@@ -630,8 +703,8 @@ in {
         "format-icons" = ["" "" ""];
         "on-click" = "${pkgs.pavucontrol}/bin/pavucontrol";
         "on-click-middle" = "${pkgs.wireplumber}/bin/wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle";
-        "on-scroll-up" = "${pkgs.wireplumber}/bin/wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+";
-        "on-scroll-down" = "${pkgs.wireplumber}/bin/wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-";
+        "on-scroll-up" = "${pkgs.wireplumber}/bin/wpctl --limit 1.0 set-volume @DEFAULT_AUDIO_SINK@ 5%+";
+        "on-scroll-down" = "${pkgs.wireplumber}/bin/wpctl --limit 1.0 set-volume @DEFAULT_AUDIO_SINK@ 5%-";
         "scroll-step" = 5;
         "tooltip-format" = "Output: {volume}%";
       };
@@ -641,8 +714,8 @@ in {
         "format-muted" = "󰍭 muted";
         "on-click" = "${pkgs.pavucontrol}/bin/pavucontrol";
         "on-click-middle" = "${pkgs.wireplumber}/bin/wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle";
-        "on-scroll-up" = "${pkgs.wireplumber}/bin/wpctl set-volume @DEFAULT_AUDIO_SOURCE@ 5%+";
-        "on-scroll-down" = "${pkgs.wireplumber}/bin/wpctl set-volume @DEFAULT_AUDIO_SOURCE@ 5%-";
+        "on-scroll-up" = "${pkgs.wireplumber}/bin/wpctl --limit 1.0 set-volume @DEFAULT_AUDIO_SOURCE@ 5%+";
+        "on-scroll-down" = "${pkgs.wireplumber}/bin/wpctl --limit 1.0 set-volume @DEFAULT_AUDIO_SOURCE@ 5%-";
         "scroll-step" = 5;
         "tooltip-format" = "Input: {volume}%";
       };
@@ -809,7 +882,10 @@ in {
   networking.networkmanager.enable = true;
   networking.firewall.enable = true;
 
-  programs.niri.enable = true;
+  programs.niri = {
+    enable = true;
+    package = niriPackage;
+  };
 
   programs.thunar.enable = true;
 
@@ -833,7 +909,7 @@ in {
   ];
 
   security.polkit.enable = true;
-  security.pam.services.swaylock = {};
+  security.pam.services.swaylock.fprintAuth = true;
   security.pam.services.greetd.enableGnomeKeyring = true;
   security.pam.services.sudo.fprintAuth = true;
   security.pam.services.polkit-1.fprintAuth = true;
@@ -864,6 +940,7 @@ in {
     settings = {
       START_CHARGE_THRESH_BAT0 = 75;
       STOP_CHARGE_THRESH_BAT0 = 90;
+      RESTORE_THRESHOLDS_ON_BAT = 1;
     };
   };
 
@@ -879,7 +956,7 @@ in {
     useTextGreeter = true;
     settings = {
       default_session = {
-        command = "${lib.getExe pkgs.tuigreet} --time --user abhay --cmd ${pkgs.niri}/bin/niri-session";
+        command = "${lib.getExe pkgs.tuigreet} --time --user abhay --cmd ${niriPackage}/bin/niri-session";
         user = "greeter";
       };
     };
@@ -909,6 +986,7 @@ in {
   ];
   boot.consoleLogLevel = 3;
   boot.initrd.verbose = false;
+  boot.kernelModules = ["snd_ctl_led"];
   boot.plymouth = {
     enable = true;
     theme = "spinner";
@@ -943,11 +1021,33 @@ in {
   };
 
   security.sudo.wheelNeedsPassword = true;
+  security.sudo.extraConfig = ''
+    Defaults timestamp_timeout=15
+    Defaults timestamp_type=global
+    Defaults lecture=once
+    Defaults pwfeedback
+    Defaults insults
+  '';
 
   sops.defaultSopsFile = ../../secrets/system-secrets.yaml;
   sops.defaultSopsFormat = "yaml";
   sops.age.sshKeyPaths = ["/persistent/etc/ssh/ssh_host_ed25519_key"];
   sops.secrets."abhay-password".neededForUsers = true;
+  sops.secrets."ssh-secret-ips" = {
+    owner = "abhay";
+    group = "users";
+    mode = "0400";
+  };
+  sops.secrets."ssh-private-keys/github" = {
+    owner = "abhay";
+    group = "users";
+    mode = "0400";
+  };
+  sops.secrets."ssh-private-keys/homelab" = {
+    owner = "abhay";
+    group = "users";
+    mode = "0400";
+  };
 
   services.openssh = {
     enable = true;
