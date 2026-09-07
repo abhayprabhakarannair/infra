@@ -9,6 +9,11 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    deploy-rs = {
+      url = "github:serokell/deploy-rs";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     preservation.url = "github:nix-community/preservation";
 
     sops-nix = {
@@ -26,6 +31,7 @@
     self,
     nixpkgs,
     disko,
+    deploy-rs,
     home-manager,
     preservation,
     sops-nix,
@@ -52,9 +58,32 @@
       text = builtins.readFile ./scripts/install-infra.sh;
     };
 
-    apps.${system}.install-infra = {
-      type = "app";
-      program = "${self.packages.${system}.install-infra}/bin/install-infra";
+    apps.${system} = {
+      install-infra = {
+        type = "app";
+        program = "${self.packages.${system}.install-infra}/bin/install-infra";
+      };
+
+      deploy = {
+        type = "app";
+        program = "${deploy-rs.packages.${system}.deploy-rs}/bin/deploy";
+      };
     };
+
+    deploy.nodes.daredevil = {
+      hostname = "192.168.0.16";
+      profiles.system = {
+        sshUser = "abhay";
+        user = "root";
+        interactiveSudo = true;
+        remoteBuild = true;
+        fastConnection = false;
+        autoRollback = true;
+        magicRollback = false;
+        path = deploy-rs.lib.${system}.activate.nixos self.nixosConfigurations.daredevil;
+      };
+    };
+
+    checks = builtins.mapAttrs (system: deployLib: deployLib.deployChecks self.deploy) deploy-rs.lib;
   };
 }
