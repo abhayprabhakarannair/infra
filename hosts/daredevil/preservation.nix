@@ -27,7 +27,7 @@
         mode = "0700";
       }
       {
-        directory = "/home/abhay/.ssh";
+        directory = "/home/abhay";
         user = "abhay";
         group = "users";
         mode = "0700";
