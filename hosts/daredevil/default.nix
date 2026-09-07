@@ -1,95 +1,96 @@
 {
+  config,
   pkgs,
-  inputs,
   ...
 }: {
   imports = [
-    inputs.disko.nixosModules.disko
-    inputs.home-manager.nixosModules.home-manager
-    inputs.sops-nix.nixosModules.sops
-    inputs.nixvim.nixosModules.nixvim
-
     ./hardware.nix
-    "${inputs.self}/hosts/shared/disko_os_encrypted.nix"
-    ./storage.nix
-
-    "${inputs.self}/modules/core"
-    "${inputs.self}/modules/desktop"
-    "${inputs.self}/modules/desktop/variables.nix"
-    "${inputs.self}/modules/desktop/silentboot.nix"
-    "${inputs.self}/modules/desktop/gnome.nix"
-    "${inputs.self}/modules/desktop/virtualmachine.nix"
-    "${inputs.self}/modules/desktop/controlroom.nix"
-
-    "${inputs.self}/users/abhay"
+    ./disko.nix
+    ./preservation.nix
   ];
 
-  myImpermanence = {
+  home-manager.users.abhay = {
+    home.username = "abhay";
+    home.homeDirectory = "/home/abhay";
+    home.stateVersion = "26.05";
+
+    programs.home-manager.enable = true;
+    programs.bash.enable = true;
+  };
+
+  networking.hostName = "daredevil";
+  networking.networkmanager.enable = true;
+  networking.firewall.enable = true;
+
+  time.timeZone = "Asia/Kolkata";
+  i18n.defaultLocale = "en_US.UTF-8";
+  console.keyMap = "us";
+
+  boot.initrd.systemd.enable = true;
+  boot.initrd.availableKernelModules = ["tpm_tis"];
+  boot.initrd.luks.devices.cryptroot.crypttabExtraOpts = ["tpm2-device=auto"];
+
+  boot.loader.efi.canTouchEfiVariables = true;
+  boot.loader.timeout = 5;
+  boot.loader.systemd-boot = {
     enable = true;
-    reset = {
-      enable = true;
-      device = "/dev/disk/by-label/NixOS";
-    };
-    extraSystemDirectories = [
-      "/var/lib/libvirt"
+    configurationLimit = 10;
+  };
+
+  fileSystems."/" = {
+    device = "none";
+    fsType = "tmpfs";
+    options = ["mode=755" "size=25%"];
+  };
+  fileSystems."/nix".neededForBoot = true;
+  fileSystems."/persistent".neededForBoot = true;
+
+  systemd.suppressedSystemUnits = ["systemd-machine-id-commit.service"];
+
+  users.users.abhay = {
+    isNormalUser = true;
+    description = "Abhay Prabhakaran Nair";
+    extraGroups = ["wheel" "networkmanager"];
+    hashedPasswordFile = config.sops.secrets."abhay-password".path;
+    openssh.authorizedKeys.keys = [
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIF+mIhyn0WleD0sBHsS6IARv9y0KAXpi+0rTc0K0vZTD"
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGPgXwAtS1XN9OnFTlFoPToo2SDaNkooel5kReyOUzYT"
     ];
   };
 
-  # --- Default Drive ---
-  disko.devices.disk.main.device = "/dev/nvme0n1";
-  myStorage.swapSize = "32G";
-  systemd.tmpfiles.rules = [
-    "d /var/tmp 1777 root root -"
+  security.sudo.wheelNeedsPassword = true;
+
+  sops.defaultSopsFile = ../../secrets/system-secrets.yaml;
+  sops.defaultSopsFormat = "yaml";
+  sops.age.sshKeyPaths = ["/persistent/etc/ssh/ssh_host_ed25519_key"];
+  sops.secrets."abhay-password".neededForUsers = true;
+
+  services.openssh = {
+    enable = true;
+    hostKeys = [
+      {
+        path = "/etc/ssh/ssh_host_ed25519_key";
+        type = "ed25519";
+      }
+    ];
+    settings = {
+      KbdInteractiveAuthentication = false;
+      PasswordAuthentication = true;
+      PermitRootLogin = "no";
+    };
+  };
+
+  environment.systemPackages = with pkgs; [
+    btrfs-progs
+    cryptsetup
+    git
+    htop
+    pciutils
+    usbutils
+    vim
   ];
 
-  # --- Hostname ---
-  networking.hostName = "daredevil";
+  nix.settings.experimental-features = ["nix-command" "flakes"];
 
-  networking.networkmanager.enable = true;
-
-  # -- Boot & Kernel configurations ---
-  boot = {
-    kernelParams = ["amd_pstate=active"];
-    kernelPackages = pkgs.linuxPackages_zen;
-    loader = {
-      efi.canTouchEfiVariables = true;
-
-      systemd-boot = {
-        enable = true;
-        configurationLimit = 15;
-        consoleMode = "max";
-      };
-    };
-
-    # Needed for tpm2 to work properly with my encryption
-    initrd = {
-      systemd.enable = true;
-      availableKernelModules = ["tpm_tis"];
-      luks.devices."enc".crypttabExtraOpts = ["tpm2-device=auto"];
-    };
-  };
-
-  # --- File system & cleanups ---
-  services.btrfs.autoScrub = {
-    enable = true;
-    interval = "weekly";
-  };
-  services.udisks2.enable = true;
-
-  # --- Fingerprint Authentication (Disabled for cold boot) ---
-  services.fprintd.enable = true;
-  security.pam.services.sudo.fprintAuth = true;
-  security.pam.services.polkit-1.fprintAuth = true;
-  security.pam.services.login.fprintAuth = false;
-
-  # --- Enable Home Manager ---
-  home-manager = {
-    useGlobalPkgs = true;
-    useUserPackages = true;
-    extraSpecialArgs = {inherit inputs;};
-    users.abhay = import "${inputs.self}/home/desktop/gui.nix";
-  };
-
-  # --- State Version ---
   system.stateVersion = "26.05";
 }

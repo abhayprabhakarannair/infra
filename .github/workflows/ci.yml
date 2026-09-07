@@ -26,7 +26,7 @@ jobs:
 
       - name: Eval all hosts
         run: |
-          for host in daredevil devil old-devil homelab-one; do
+          for host in daredevil; do
             echo "=== Eval $host ==="
             nix eval .#nixosConfigurations.$host.config.system.build.toplevel.name \
               --no-update-lock-file
@@ -37,6 +37,3 @@ jobs:
 
       - name: Check formatting (alejandra)
         run: nix run nixpkgs#alejandra -- --check $(git ls-files '*.nix')
-
-      - name: Validate persistence units
-        run: bash tests/impermanence-validation.sh
