@@ -155,18 +155,21 @@ done
 
 impermanence_phase="replacement subvolume creation"
 for impermanence_subvolume in $impermanence_subvolumes; do
+  log "creating $impermanence_btrfs_root/$impermanence_subvolume.impermanence-new"
   @btrfs@ subvolume create \
-    "$impermanence_btrfs_root/$impermanence_subvolume.impermanence-new"
+    "$impermanence_btrfs_root/$impermanence_subvolume.impermanence-new" 2>&9
 done
 
 impermanence_phase="subvolume switch"
 for impermanence_subvolume in $impermanence_subvolumes; do
+  log "renaming $impermanence_subvolume to $impermanence_subvolume.impermanence-old"
   @btrfs@ subvolume rename \
     "$impermanence_btrfs_root/$impermanence_subvolume" \
-    "$impermanence_btrfs_root/$impermanence_subvolume.impermanence-old"
+    "$impermanence_btrfs_root/$impermanence_subvolume.impermanence-old" 2>&9
+  log "renaming $impermanence_subvolume.impermanence-new to $impermanence_subvolume"
   @btrfs@ subvolume rename \
     "$impermanence_btrfs_root/$impermanence_subvolume.impermanence-new" \
-    "$impermanence_btrfs_root/$impermanence_subvolume"
+    "$impermanence_btrfs_root/$impermanence_subvolume" 2>&9
   log "switched $impermanence_subvolume"
 done
 
