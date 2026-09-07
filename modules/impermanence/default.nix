@@ -319,7 +319,14 @@ in {
         "sysroot-nix.mount"
         "sysroot-persist.mount"
       ];
-      requiredBy = ["initrd-fs.target" "initrd-root-fs.target"];
+      requiredBy = [
+        "initrd-fs.target"
+        "initrd-root-fs.target"
+        "sysroot.mount"
+        "sysroot-home.mount"
+        "sysroot-nix.mount"
+        "sysroot-persist.mount"
+      ];
       after = ["initrd-root-device.target"];
       unitConfig.DefaultDependencies = false;
       serviceConfig = {
