@@ -169,7 +169,9 @@ in {
     home.packages = with pkgs; [
       age
       alejandra
+      bubblewrap
       curl
+      codex
       evince
       fastfetch
       file-roller
@@ -197,6 +199,7 @@ in {
       wget
       wdisplays
       zed-editor
+      inputs.llm-agents.packages.${pkgs.system}.chatgpt
     ];
 
     xdg.userDirs = {
@@ -212,20 +215,31 @@ in {
       videos = "/home/abhay/Videos";
     };
 
-    home.file.".config/zed/settings.json".text = builtins.toJSON {
-      theme = "Kanagawa";
-      buffer_font_family = "JetBrains Mono";
-      buffer_font_size = 15;
-      ui_font_family = "Inter";
-      ui_font_size = 14;
-      autosave = "on_focus_change";
-      format_on_save = "on";
-      terminal = {
-        shell = {
-          program = "bash";
+    home.activation.seedZedSettings = inputs.home-manager.lib.hm.dag.entryAfter ["writeBoundary"] ''
+      zedSettings="$HOME/.config/zed/settings.json"
+      if [ -L "$zedSettings" ] && [[ "$(readlink "$zedSettings")" == /nix/store/* ]]; then
+        rm "$zedSettings"
+      fi
+      if [ ! -e "$zedSettings" ]; then
+        install -Dm644 ${pkgs.writeText "zed-settings.json" (builtins.toJSON {
+        theme = "Kanagawa";
+        vim_mode = true;
+        buffer_font_family = "JetBrains Mono";
+        buffer_font_size = 15;
+        ui_font_family = "Inter";
+        ui_font_size = 14;
+        autosave = "on_focus_change";
+        format_on_save = "on";
+        terminal = {
+          font_family = "JetBrains Mono";
+          font_size = 13;
+          shell = {
+            program = "bash";
+          };
         };
-      };
-    };
+      })} "$zedSettings"
+      fi
+    '';
 
     home.file.".local/bin/power-menu" = {
       executable = true;

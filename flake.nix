@@ -34,6 +34,8 @@
     nixvim-config = {
       url = "github:abhayprabhakarannair/nixvim-config";
     };
+
+    llm-agents.url = "github:numtide/llm-agents.nix";
   };
 
   outputs = inputs @ {
