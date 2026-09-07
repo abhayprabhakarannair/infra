@@ -27,6 +27,10 @@
         mode = "0700";
       }
       {
+        directory = "/var/lib/tailscale";
+        mode = "0700";
+      }
+      {
         directory = "/home/abhay";
         user = "abhay";
         group = "users";

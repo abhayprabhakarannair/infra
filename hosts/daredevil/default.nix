@@ -196,6 +196,8 @@
 
   services.fwupd.enable = true;
 
+  services.tailscale.enable = true;
+
   services.udisks2.enable = true;
 
   services.upower.enable = true;
