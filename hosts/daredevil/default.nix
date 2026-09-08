@@ -8,11 +8,11 @@
     XF86SelectiveScreenshot { screenshot; }
     XF86LinkPhone { spawn "/home/abhay/.local/bin/power-menu"; }
     XF86Favorites { spawn "${pkgs.thunar}/bin/thunar"; }
-    Super+Shift+XF86Assistant { spawn "${pkgs.fuzzel}/bin/fuzzel"; }
+    Ctrl+Alt+Shift+F12 { spawn "${pkgs.fuzzel}/bin/fuzzel"; }
     XF86MonBrightnessUp { spawn "${pkgs.brightnessctl}/bin/brightnessctl" "set" "5%+"; }
     XF86MonBrightnessDown { spawn "${pkgs.brightnessctl}/bin/brightnessctl" "set" "5%-"; }
-    Mod+Space { spawn-sh "current=$(${pkgs.brightnessctl}/bin/brightnessctl -m -d tpacpi::kbd_backlight | ${pkgs.coreutils}/bin/cut -d, -f4); max=$(${pkgs.brightnessctl}/bin/brightnessctl -m -d tpacpi::kbd_backlight | ${pkgs.coreutils}/bin/cut -d, -f5); if [ \"$current\" -ge \"$max\" ]; then ${pkgs.brightnessctl}/bin/brightnessctl -d tpacpi::kbd_backlight set 0; else ${pkgs.brightnessctl}/bin/brightnessctl -d tpacpi::kbd_backlight set 1+; fi"; }
-    XF86Display { spawn-sh "exec ${pkgs.util-linux}/bin/flock -n \"$XDG_RUNTIME_DIR/wdisplays.lock\" ${pkgs.wdisplays}/bin/wdisplays"; }
+    Mod+Space { spawn-sh "current=$(${pkgs.brightnessctl}/bin/brightnessctl -d tpacpi::kbd_backlight get); max=$(${pkgs.brightnessctl}/bin/brightnessctl -d tpacpi::kbd_backlight max); if [ \"$current\" -ge \"$max\" ]; then ${pkgs.brightnessctl}/bin/brightnessctl -d tpacpi::kbd_backlight set 0; else ${pkgs.brightnessctl}/bin/brightnessctl -d tpacpi::kbd_backlight set 1+; fi"; }
+    XF86Display { spawn-sh "lock=\"$XDG_RUNTIME_DIR/wdisplays.lock\"; mkdir \"$lock\" 2>/dev/null || exit 0; trap 'rmdir \"$lock\"' EXIT; ${pkgs.wdisplays}/bin/wdisplays"; }
   '';
 
   imports = [

@@ -16,6 +16,16 @@
     powerOnBoot = true;
   };
 
+  services.keyd = {
+    enable = true;
+    keyboards.thinkpad = {
+      ids = [ "0001:0001:09b4e68d" ];
+      settings.main = {
+        "leftshift+leftmeta+f23" = "C-A-S-f12";
+      };
+    };
+  };
+
   services.tlp = {
     enable = true;
     settings = {

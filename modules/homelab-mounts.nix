@@ -17,9 +17,9 @@ let
     {
       description = "Rclone mount for ${remote}";
       wants = ["network-online.target"];
-      requires = ["sops-install-secrets.service"];
-      after = ["network-online.target" "sops-install-secrets.service"];
+      after = ["network-online.target"];
       wantedBy = ["multi-user.target"];
+      unitConfig.ConditionPathExists = rcloneConfig;
       preStart = ''
         ${pkgs.util-linux}/bin/umount -l ${mountpoint} || true
         ${pkgs.coreutils}/bin/mkdir -p ${mountpoint}
