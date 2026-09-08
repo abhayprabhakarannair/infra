@@ -1,0 +1,79 @@
+{
+  pkgs,
+  inputs,
+  ...
+}:
+{
+  imports = [
+    ../../modules/apps/theme.nix
+    ../../modules/apps/terminal.nix
+    ../../modules/apps/development.nix
+    ../../modules/apps/desktop-core.nix
+    ../../modules/apps/browsers.nix
+    ../../modules/apps/wayland-ui.nix
+  ];
+
+  environment.systemPackages = with pkgs; [
+    # System tools
+    btrfs-progs
+    brightnessctl
+    cryptsetup
+    git
+    htop
+    fuzzel
+    foot
+    grim
+    mako
+    networkmanagerapplet
+    pciutils
+    playerctl
+    polkit_gnome
+    slurp
+    swaybg
+    swayidle
+    swaylock
+    thunar
+    usbutils
+    waybar
+    wl-clipboard
+    xwayland-satellite
+    xdg-utils
+  ];
+
+  home-manager.users.abhay.home.packages = with pkgs; [
+    # Desktop and development applications
+    age
+    alejandra
+    bubblewrap
+    curl
+    codex
+    evince
+    fastfetch
+    file-roller
+    gcc
+    gh
+    gnumake
+    gnome-calculator
+    gnome-text-editor
+    inter
+    jq
+    loupe
+    nil
+    nixd
+    nodejs
+    pavucontrol
+    python3
+    ripgrep
+    rustup
+    sops
+    ssh-to-age
+    stylua
+    tree
+    unzip
+    vlc
+    wget
+    wdisplays
+    zed-editor
+    inputs.llm-agents.packages.${pkgs.system}.chatgpt
+  ];
+}

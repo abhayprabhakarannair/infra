@@ -1,15 +1,10 @@
 {
-  config,
-  inputs,
-  lib,
   pkgs,
   ...
 }:
 {
   networking.networkmanager.enable = true;
   networking.firewall.enable = true;
-
-  programs.thunar.enable = true;
 
   services.gvfs.enable = true;
 
@@ -31,7 +26,7 @@
   xdg.portal = {
     enable = true;
     xdgOpenUsePortal = true;
-    extraPortals = [pkgs.xdg-desktop-portal-gtk];
+    extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
     config.common.default = "gtk";
   };
 
@@ -56,7 +51,6 @@
 
   services.power-profiles-daemon.enable = false;
 
-
   services.pipewire = {
     enable = true;
     alsa.enable = true;
@@ -76,50 +70,27 @@
     configurationLimit = 10;
   };
 
-  programs.nixvim = {
-    enable = true;
-    defaultEditor = true;
-    viAlias = false;
-    vimAlias = false;
-    imports = [inputs.nixvim-config.nixvimModules.default];
-    extraConfigLua = ''
-      vim.opt.isfname:append("@-@")
-      vim.opt.undodir = os.getenv("HOME") .. "/.nvim/undodir"
-    '';
-  };
-
-  environment.systemPackages = with pkgs; [
-    btrfs-progs
-    brightnessctl
-    cryptsetup
-    git
-    htop
-    fuzzel
-    foot
-    grim
-    mako
-    networkmanagerapplet
-    pciutils
-    playerctl
-    polkit_gnome
-    slurp
-    swaybg
-    swayidle
-    swaylock
-    thunar
-    usbutils
-    waybar
-    wl-clipboard
-    xwayland-satellite
-    xdg-utils
+  nix.settings.experimental-features = [
+    "nix-command"
+    "flakes"
   ];
-
-  nix.settings.experimental-features = ["nix-command" "flakes"];
   nix.settings.auto-optimise-store = true;
   nix.gc = {
     automatic = true;
     dates = "weekly";
     options = "--delete-older-than 14d";
+  };
+
+  programs.nix-ld = {
+    enable = true;
+    libraries = with pkgs; [
+      stdenv.cc.cc
+      zlib
+      openssl
+      curl
+      glibc
+      libffi
+    ];
   };
 
   system.stateVersion = "26.05";

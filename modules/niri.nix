@@ -14,6 +14,8 @@
       '';
   });
 in {
+  _module.args.niriPackage = niriPackage;
+
   programs.niri = {
     enable = true;
     package = niriPackage;
