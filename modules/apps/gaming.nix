@@ -29,7 +29,7 @@
     name = "Steam";
     genericName = "Game platform";
     comment = "Steam with native Wayland rendering";
-    exec = "steam -system-composer --enable-features=UseOzonePlatform --ozone-platform=wayland %U";
+    exec = "steam -cef-disable-gpu --enable-features=UseOzonePlatform --ozone-platform=wayland %U";
     icon = "steam";
     terminal = false;
     type = "Application";
