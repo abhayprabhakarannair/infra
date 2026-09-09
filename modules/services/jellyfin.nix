@@ -20,7 +20,11 @@
         "/persistent/services/jellyfin"
         "/mnt/homelab-storage-one/media"
       ];
-      serviceConfig.SupplementaryGroups = [ "users" "render" "video" ];
+      serviceConfig = {
+        PrivateUsers = lib.mkForce false;
+        SupplementaryGroups = [ "users" "render" "video" ];
+        ReadOnlyPaths = [ "/mnt/homelab-storage-one/media" ];
+      };
     };
   };
 }
