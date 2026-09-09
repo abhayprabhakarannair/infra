@@ -4,8 +4,9 @@
   niriPackage ? pkgs.niri,
   pkgs,
   ...
-}:
-{
+}: {
+  environment.systemPackages = [pkgs.adwaita-icon-theme];
+
   home-manager.users.abhay = {
     home.file.".local/bin/power-menu" = {
       executable = true;
@@ -74,6 +75,11 @@
 
       prefer-no-csd
 
+      cursor {
+        xcursor-theme "Adwaita"
+        xcursor-size 24
+      }
+
       window-rule {
         match app-id="firefox$"
         exclude title="^Bitwarden"
@@ -140,8 +146,8 @@
       position = "top";
       height = 30;
       spacing = 4;
-      modules-left = [ "niri/workspaces" ];
-      modules-center = [ "niri/window" ];
+      modules-left = ["niri/workspaces"];
+      modules-center = ["niri/window"];
       modules-right = [
         "network"
         "wireplumber"
@@ -203,11 +209,9 @@
         "on-click" = "${pkgs.pavucontrol}/bin/pavucontrol";
         "on-click-middle" = "/home/abhay/.local/bin/toggle-microphone";
         "on-scroll-up" = "${pkgs.wireplumber}/bin/wpctl set-volume --limit 1.0 @DEFAULT_AUDIO_SOURCE@ 5%+";
-        "on-scroll-down" =
-          "${pkgs.wireplumber}/bin/wpctl set-volume --limit 1.0 @DEFAULT_AUDIO_SOURCE@ 5%-";
+        "on-scroll-down" = "${pkgs.wireplumber}/bin/wpctl set-volume --limit 1.0 @DEFAULT_AUDIO_SOURCE@ 5%-";
         "scroll-step" = 5;
-        "tooltip-format" =
-          "Microphone gain: {volume}% (not a sound meter). Scroll to adjust; middle-click to mute.";
+        "tooltip-format" = "Microphone gain: {volume}% (not a sound meter). Scroll to adjust; middle-click to mute.";
       };
       backlight = {
         format = "{icon} {percent}%";

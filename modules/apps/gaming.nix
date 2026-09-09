@@ -21,6 +21,7 @@
     gamescope-wsi
     goverlay
     mangohud
+    pulseaudio
   ];
 
   hardware.graphics.enable = true;

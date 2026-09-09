@@ -1,6 +1,11 @@
 {pkgs, ...}: {
   nixpkgs.config.allowUnfree = true;
-  imports = [../../modules/base.nix ../../modules/niri.nix ../../modules/persistence.nix];
+  imports = [
+    ../../modules/base.nix
+    ../../modules/silentboot.nix
+    ../../modules/niri.nix
+    ../../modules/persistence.nix
+  ];
   boot.kernelPackages = pkgs.linuxPackages_zen;
   boot.kernelModules = ["tun" "amdgpu"];
   boot.kernelParams = ["amd_pstate=active"];

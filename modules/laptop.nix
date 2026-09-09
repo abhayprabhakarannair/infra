@@ -2,8 +2,7 @@
   config,
   pkgs,
   ...
-}:
-{
+}: {
   # Password success ends authentication; empty/incorrect input falls back
   # to the enrolled fingerprint instead of delaying a correct password.
   security.pam.services.swaylock = {
@@ -19,7 +18,7 @@
   services.keyd = {
     enable = true;
     keyboards.thinkpad = {
-      ids = [ "0001:0001:09b4e68d" ];
+      ids = ["0001:0001:09b4e68d"];
       settings.main = {
         "leftshift+leftmeta+f23" = "C-A-S-f12";
       };
@@ -38,15 +37,7 @@
   boot.initrd.systemd.enable = true;
   boot.initrd.availableKernelModules = ["tpm_tis"];
   boot.initrd.luks.devices.cryptroot.crypttabExtraOpts = ["tpm2-device=auto"];
-  boot.kernelParams = [
-    "amd_pstate=active"
-    "quiet"
-    "splash"
-    "rd.udev.log_level=3"
-    "rd.systemd.show_status=auto"
-  ];
-  boot.consoleLogLevel = 3;
-  boot.initrd.verbose = false;
+  boot.kernelParams = ["amd_pstate=active"];
   boot.kernelModules = ["snd_ctl_led"];
   # This ThinkPad's digital microphone is software-muted by PipeWire, while
   # audio-micmute follows a different ALSA capture control. Use the same
@@ -82,9 +73,5 @@
       RestartSec = 3;
     };
     Install.WantedBy = ["graphical-session.target"];
-  };
-  boot.plymouth = {
-    enable = true;
-    theme = "spinner";
   };
 }

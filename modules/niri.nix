@@ -16,6 +16,10 @@
 in {
   _module.args.niriPackage = niriPackage;
 
+  # Let Chromium/CEF applications select their native Wayland backend when
+  # they support it. This is also used by Steam's web helper.
+  environment.sessionVariables.NIXOS_OZONE_WL = "1";
+
   programs.niri = {
     enable = true;
     package = niriPackage;
