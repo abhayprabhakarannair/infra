@@ -26,6 +26,18 @@
   };
 
   security.sudo.wheelNeedsPassword = true;
+  security.sudo.extraRules = [
+    {
+      users = ["abhay"];
+      commands = [
+        {
+          # deploy-rs activates each NixOS generation through this generated wrapper.
+          command = "/nix/store/*-activatable-nixos-system-*/activate-rs";
+          options = ["NOPASSWD"];
+        }
+      ];
+    }
+  ];
   security.sudo.extraConfig = ''
     Defaults timestamp_timeout=15
     Defaults timestamp_type=global

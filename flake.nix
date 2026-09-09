@@ -3,6 +3,7 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
+    nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
 
     disko = {
       url = "github:nix-community/disko";
@@ -41,6 +42,7 @@
   outputs = inputs @ {
     self,
     nixpkgs,
+    nixpkgs-unstable,
     disko,
     deploy-rs,
     home-manager,
@@ -52,10 +54,14 @@
   }: let
     system = "x86_64-linux";
     pkgs = import nixpkgs {inherit system;};
+    unstablePkgs = import nixpkgs-unstable {
+      inherit system;
+      config.allowUnfree = true;
+    };
   in {
     nixosConfigurations.daredevil = nixpkgs.lib.nixosSystem {
       inherit system;
-      specialArgs = {inherit inputs;};
+      specialArgs = {inherit inputs unstablePkgs;};
       modules = [
         disko.nixosModules.disko
         home-manager.nixosModules.home-manager
@@ -68,7 +74,7 @@
 
     nixosConfigurations.devil = nixpkgs.lib.nixosSystem {
       inherit system;
-      specialArgs = {inherit inputs;};
+      specialArgs = {inherit inputs unstablePkgs;};
       modules = [
         disko.nixosModules.disko
         home-manager.nixosModules.home-manager
@@ -103,7 +109,7 @@
       profiles.system = {
         sshUser = "abhay";
         user = "root";
-        interactiveSudo = true;
+        interactiveSudo = false;
         remoteBuild = true;
         fastConnection = false;
         autoRollback = true;
@@ -118,7 +124,7 @@
       profiles.system = {
         sshUser = "abhay";
         user = "root";
-        interactiveSudo = true;
+        interactiveSudo = false;
         remoteBuild = true;
         fastConnection = false;
         autoRollback = true;
