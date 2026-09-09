@@ -118,7 +118,7 @@
         };
         daredevil = {
           User = "abhay";
-          Port = 22;
+          Port = 2442;
           IdentityFile = "/run/secrets/ssh-private-keys/homelab";
           IdentitiesOnly = "yes";
         };

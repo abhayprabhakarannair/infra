@@ -187,7 +187,7 @@
         "format-icons" = [
           ""
           ""
-          ""
+          " "
         ];
         "on-click" = "${pkgs.pavucontrol}/bin/pavucontrol";
         "on-click-middle" = "${pkgs.wireplumber}/bin/wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle";

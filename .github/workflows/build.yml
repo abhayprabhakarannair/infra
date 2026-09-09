@@ -26,7 +26,7 @@ jobs:
 
       - name: Build all hosts
         run: |
-          for host in daredevil devil old-devil homelab-one; do
+          for host in daredevil devil; do
             echo "=== Building $host ==="
             nix build .#nixosConfigurations.$host.config.system.build.toplevel \
               --print-build-logs \

@@ -1,5 +1,5 @@
 {
-  description = "Minimal NixOS foundation for daredevil";
+  description = "Declarative NixOS infrastructure for Daredevil and Devil";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
@@ -66,6 +66,19 @@
       ];
     };
 
+    nixosConfigurations.devil = nixpkgs.lib.nixosSystem {
+      inherit system;
+      specialArgs = {inherit inputs;};
+      modules = [
+        disko.nixosModules.disko
+        home-manager.nixosModules.home-manager
+        nixvim.nixosModules.nixvim
+        preservation.nixosModules.preservation
+        sops-nix.nixosModules.sops
+        ./hosts/devil
+      ];
+    };
+
     packages.${system}.install-infra = pkgs.writeShellApplication {
       name = "install-infra";
       runtimeInputs = [pkgs.nixos-anywhere pkgs.openssh pkgs.coreutils];
@@ -86,6 +99,7 @@
 
     deploy.nodes.daredevil = {
       hostname = "192.168.0.16";
+      sshOpts = ["-p" "2442"];
       profiles.system = {
         sshUser = "abhay";
         user = "root";
@@ -95,6 +109,21 @@
         autoRollback = true;
         magicRollback = false;
         path = deploy-rs.lib.${system}.activate.nixos self.nixosConfigurations.daredevil;
+      };
+    };
+
+    deploy.nodes.devil = {
+      hostname = "devil";
+      sshOpts = ["-p" "2442"];
+      profiles.system = {
+        sshUser = "abhay";
+        user = "root";
+        interactiveSudo = true;
+        remoteBuild = true;
+        fastConnection = false;
+        autoRollback = true;
+        magicRollback = false;
+        path = deploy-rs.lib.${system}.activate.nixos self.nixosConfigurations.devil;
       };
     };
 

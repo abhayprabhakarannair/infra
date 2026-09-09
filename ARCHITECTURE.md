@@ -55,6 +55,21 @@ hosts/
 differences should be visible in their host files: hardware, disks, enabled
 workloads, and performance policy.
 
+### Headless boot and Wake-on-LAN
+
+`devil` is configured as a home server that can also run the gaming desktop.
+Its wired NIC accepts magic packets, sleep and hibernate targets are disabled,
+and its encrypted root is configured for TPM2 auto-unlock after the TPM slot is
+enrolled by `scripts/after-install.sh`. Services declared for Devil must be
+systemd or OCI services that start from `multi-user.target`; they cannot depend
+on an interactive login.
+
+The WoL packet still needs an always-on device on the home LAN. The legacy
+`old-devil` configuration already provides the Tailscale-to-LAN UDP relay. Keep
+that relay online until it is migrated to the current always-on host. Putting
+the relay on Devil would not wake Devil because a powered-off machine cannot
+run it.
+
 ## Persistence model
 
 The new model uses an ephemeral root and explicit persistent filesystems.
@@ -122,6 +137,45 @@ not cause unnecessary copies:
 The service configuration is persistent. The containers are disposable.
 Gluetun, qBittorrent, and dependent services need explicit systemd ordering
 and network relationships.
+
+#### Configuration management decision
+
+The ARR stack must be declarative from the host configuration: rebuilding
+Devil and running `nrs` should start the services with their required paths,
+secrets, permissions, and dependencies. A web UI should not be required to
+recreate the stack.
+
+Use the following layers:
+
+- Native NixOS modules for service processes, users, storage paths, systemd
+  ordering, networking, and container or package selection.
+- Recyclarr for Sonarr and Radarr quality profiles, custom formats, and
+  related TRaSH-Guides policy.
+- A small idempotent Prowlarr API reconciler for indexers, download clients,
+  applications, tags, and sync settings. Its desired state belongs in a
+  SOPS-encrypted YAML file, with API credentials supplied as secrets.
+
+Buildarr is intentionally excluded from the foundation. Its latest core
+release is old and its plugin ecosystem is not active enough to justify making
+it a dependency of a rebuildable host. The Prowlarr reconciler should remain
+narrow: read the declared state, wait for Prowlarr to become ready, create or
+update only the declared objects, and return a failure that is visible in
+systemd when reconciliation cannot complete. It must not delete unmanaged
+objects until an explicit ownership policy is designed.
+
+The implementation order is:
+
+1. Establish the shared `/media` and `/persistent/services/arr` path contract
+   and mount permissions.
+2. Declare the service processes and systemd relationships.
+3. Add encrypted credentials and the Prowlarr reconciliation schema.
+4. Add Recyclarr policy for Sonarr and Radarr.
+5. Restore or import existing service state only after the new paths and
+   backup coverage are verified.
+
+Relevant upstream references: [Buildarr](https://github.com/buildarr/buildarr),
+[Recyclarr](https://recyclarr.dev/), and the [Prowlarr API
+documentation](https://prowlarr.com/docs/api/).
 
 ### Immich
 

@@ -56,6 +56,8 @@
 
   services.openssh = {
     enable = true;
+    openFirewall = true;
+    ports = [2442];
     hostKeys = [
       {
         path = "/etc/ssh/ssh_host_ed25519_key";
@@ -64,8 +66,9 @@
     ];
     settings = {
       KbdInteractiveAuthentication = false;
-      PasswordAuthentication = true;
+      PasswordAuthentication = false;
       PermitRootLogin = "no";
+      PubkeyAuthentication = true;
     };
   };
 }
