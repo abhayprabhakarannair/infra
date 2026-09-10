@@ -28,8 +28,8 @@
   home-manager.users.abhay.xdg.desktopEntries.steam = {
     name = "Steam";
     genericName = "Game platform";
-    comment = "Steam with native Wayland rendering";
-    exec = "steam -cef-disable-gpu --enable-features=UseOzonePlatform --ozone-platform=wayland %U";
+    comment = "Steam through XWayland for UI compatibility";
+    exec = "env -u NIXOS_OZONE_WL steam --ozone-platform=x11 %U";
     icon = "steam";
     terminal = false;
     type = "Application";

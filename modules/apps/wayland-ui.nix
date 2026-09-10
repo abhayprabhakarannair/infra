@@ -4,8 +4,9 @@
   niriPackage ? pkgs.niri,
   pkgs,
   ...
-}: {
-  environment.systemPackages = [pkgs.adwaita-icon-theme];
+}:
+{
+  environment.systemPackages = [ pkgs.adwaita-icon-theme ];
 
   home-manager.users.abhay = {
     home.file.".local/bin/power-menu" = {
@@ -146,8 +147,8 @@
       position = "top";
       height = 30;
       spacing = 4;
-      modules-left = ["niri/workspaces"];
-      modules-center = ["niri/window"];
+      modules-left = [ "niri/workspaces" ];
+      modules-center = [ "niri/window" ];
       modules-right = [
         "network"
         "wireplumber"
@@ -209,9 +210,11 @@
         "on-click" = "${pkgs.pavucontrol}/bin/pavucontrol";
         "on-click-middle" = "/home/abhay/.local/bin/toggle-microphone";
         "on-scroll-up" = "${pkgs.wireplumber}/bin/wpctl set-volume --limit 1.0 @DEFAULT_AUDIO_SOURCE@ 5%+";
-        "on-scroll-down" = "${pkgs.wireplumber}/bin/wpctl set-volume --limit 1.0 @DEFAULT_AUDIO_SOURCE@ 5%-";
+        "on-scroll-down" =
+          "${pkgs.wireplumber}/bin/wpctl set-volume --limit 1.0 @DEFAULT_AUDIO_SOURCE@ 5%-";
         "scroll-step" = 5;
-        "tooltip-format" = "Microphone gain: {volume}% (not a sound meter). Scroll to adjust; middle-click to mute.";
+        "tooltip-format" =
+          "Microphone gain: {volume}% (not a sound meter). Scroll to adjust; middle-click to mute.";
       };
       backlight = {
         format = "{icon} {percent}%";
@@ -225,6 +228,8 @@
         "on-scroll-down" = "${pkgs.brightnessctl}/bin/brightnessctl set 5%-";
       };
       battery = {
+        bat = "BAT0";
+        adapter = "AC";
         format = "{icon} {capacity}%";
         "format-charging" = "󰂄 {capacity}%";
         "format-plugged" = "󰚥 {capacity}%";
