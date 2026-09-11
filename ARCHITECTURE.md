@@ -114,13 +114,15 @@ recreate the container runtime declaratively.
 
 ### ARR
 
-ARR services should share a consistent path namespace so imports and moves do
-not cause unnecessary copies:
+ARR services use a consistent container path namespace while keeping active
+downloads off the rclone mount:
 
 ```text
-/media
-  downloads/
-  movies/
+/persistent/work/arr
+  downloads/                 # local download and staging area
+
+/mnt/homelab-storage-one/media
+  movies/                    # authoritative library
   tv/
   music/
 
@@ -134,9 +136,12 @@ not cause unnecessary copies:
   whisparr/
 ```
 
-The service configuration is persistent. The containers are disposable.
-Gluetun, qBittorrent, and dependent services need explicit systemd ordering
-and network relationships.
+qBittorrent and the *arr services see `/downloads`; Sonarr, Radarr, and
+Whisparr also see the authoritative library as `/media`. Imports therefore
+copy from local staging to the remote library rather than relying on a rename
+through rclone/FUSE. The service configuration and staging area are persistent
+while containers are disposable. Gluetun, qBittorrent, and dependent services
+need explicit systemd ordering and network relationships.
 
 #### Configuration management decision
 
@@ -165,8 +170,8 @@ objects until an explicit ownership policy is designed.
 
 The implementation order is:
 
-1. Establish the shared `/media` and `/persistent/services/arr` path contract
-   and mount permissions.
+1. Establish the local `/downloads`, authoritative `/media`, and
+   `/persistent/services/arr` path contract and mount permissions.
 2. Declare the service processes and systemd relationships.
 3. Add encrypted credentials and the Prowlarr reconciliation schema.
 4. Add Recyclarr policy for Sonarr and Radarr.

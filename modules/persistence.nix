@@ -1,9 +1,9 @@
 {
   config,
   inputs,
+  lib,
   ...
-}:
-{
+}: {
   fileSystems."/" = {
     device = "none";
     fsType = "tmpfs";
@@ -16,6 +16,7 @@
 
   users.users.abhay = {
     isNormalUser = true;
+    uid = lib.mkDefault 1000;
     description = "Abhay Prabhakaran Nair";
     extraGroups = ["wheel" "networkmanager"];
     hashedPasswordFile = config.sops.secrets."abhay-password".path;

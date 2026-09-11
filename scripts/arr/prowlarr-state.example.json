@@ -1,0 +1,60 @@
+{
+  "tags": [
+    { "label": "movies" },
+    { "label": "tv" }
+  ],
+  "indexers": [
+    {
+      "name": "Example Newznab",
+      "implementation": "Newznab",
+      "configContract": "NewznabSettings",
+      "enable": true,
+      "priority": 25,
+      "appProfileName": "Movies",
+      "tagLabels": ["movies", "tv"],
+      "fields": [
+        { "name": "baseUrl", "value": "${ENV:EXAMPLE_NEWZNAB_URL}" },
+        { "name": "apiPath", "value": "/api" },
+        { "name": "apiKey", "value": "${ENV:EXAMPLE_NEWZNAB_API_KEY}" }
+      ]
+    }
+  ],
+  "downloadClients": [
+    {
+      "name": "qBittorrent",
+      "implementation": "QBittorrent",
+      "configContract": "QBittorrentSettings",
+      "enable": true,
+      "tagLabels": ["movies", "tv"],
+      "fields": [
+        { "name": "host", "value": "gluetun" },
+        { "name": "port", "value": 8090 },
+        { "name": "username", "value": "${ENV:QBITTORRENT_USERNAME}" },
+        { "name": "password", "value": "${ENV:QBITTORRENT_PASSWORD}" }
+      ]
+    }
+  ],
+  "applications": [
+    {
+      "name": "Radarr",
+      "implementation": "Radarr",
+      "configContract": "RadarrSettings",
+      "syncLevel": "fullSync",
+      "tagLabels": ["movies"],
+      "fields": [
+        { "name": "prowlarrUrl", "value": "http://prowlarr:9696" },
+        { "name": "baseUrl", "value": "http://radarr:7878" },
+        { "name": "apiKey", "value": "${ENV:RADARR_API_KEY}" }
+      ]
+    }
+  ],
+  "appProfiles": [
+    {
+      "name": "Movies",
+      "enableRss": true,
+      "enableAutomaticSearch": true,
+      "enableInteractiveSearch": true,
+      "minimumSeeders": 1
+    }
+  ]
+}

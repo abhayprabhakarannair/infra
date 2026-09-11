@@ -54,6 +54,7 @@ echo "Testing repository secrets..."
 sops -d "$repo_dir/secrets/system-secrets.yaml" >/dev/null
 sops -d "$repo_dir/secrets/rclone/rclone-main.conf" >/dev/null
 sops -d "$repo_dir/secrets/rclone/secrets.yaml" >/dev/null
+sops -d "$repo_dir/secrets/service-secrets.yaml" >/dev/null
 echo "SOPS decryption works."
 
 crypt_device=$(sudo cryptsetup status cryptroot 2>/dev/null | awk '/device:/ {print $2}')

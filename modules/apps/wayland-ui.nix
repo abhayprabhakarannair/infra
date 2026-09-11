@@ -250,7 +250,7 @@
           warning = 30;
           critical = 15;
         };
-        "tooltip-format" = "Battery: {capacity}% — {status}";
+        "tooltip-format" = "Battery: {capacity}%";
       };
       clock = {
         format = " {:%H:%M}";
@@ -271,9 +271,9 @@
     xdg.configFile."waybar/style.css".text = ''
       * {
         border: none;
-        border-radius: 0;
+        border-radius: 7px;
         font-family: "JetBrainsMono Nerd Font", "Inter", sans-serif;
-        font-size: 13px;
+        font-size: 12px;
         min-height: 0;
       }
 
@@ -281,6 +281,20 @@
         background: #${kanagawa.sumiInk1};
         border-bottom: 1px solid #${kanagawa.sumiInk3};
         color: #${kanagawa.fujiWhite};
+      }
+
+      #modules-right,
+      #modules-left,
+      #modules-center {
+        margin: 3px 7px;
+      }
+
+      #modules-right > widget > *,
+      #modules-left > widget > *,
+      #modules-center > widget > * {
+        margin: 0 2px;
+        padding: 2px 8px;
+        background: #${kanagawa.sumiInk2};
       }
 
       #workspaces button {
@@ -294,7 +308,7 @@
       }
 
       #workspaces button:hover {
-        background: #${kanagawa.sumiInk3};
+        background: #${kanagawa.sumiInk2};
         border-radius: 6px;
         box-shadow: none;
         text-shadow: none;
@@ -303,7 +317,7 @@
 
       #workspaces button.active,
       #workspaces button.active:hover {
-        background: #${kanagawa.sumiInk2};
+        background: #${kanagawa.waveBlue2};
         border-radius: 6px;
         color: #${kanagawa.crystalBlue};
       }
@@ -326,6 +340,9 @@
 
       #window {
         color: #${kanagawa.oldWhite};
+        background: transparent;
+        padding-left: 10px;
+        padding-right: 10px;
       }
 
       #network,
@@ -348,9 +365,16 @@
         color: #${kanagawa.autumnRed};
       }
 
+      #custom-power:hover {
+        background: #${kanagawa.autumnRed};
+        color: #${kanagawa.sumiInk1};
+      }
+
       tooltip {
         background: #${kanagawa.sumiInk1};
         border: 1px solid #${kanagawa.crystalBlue};
+        border-radius: 7px;
+        padding: 6px 9px;
         color: #${kanagawa.fujiWhite};
       }
 
