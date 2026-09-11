@@ -129,6 +129,8 @@ downloads off the rclone mount:
 /persistent/services/arr
   gluetun/
   qbittorrent/
+  sabnzbd/
+  flaresolverr/
   prowlarr/
   sonarr/
   radarr/
@@ -136,12 +138,16 @@ downloads off the rclone mount:
   whisparr/
 ```
 
-qBittorrent and the *arr services see `/downloads`; Sonarr, Radarr, and
-Whisparr also see the authoritative library as `/media`. Imports therefore
+qBittorrent, SABnzbd, and the *arr services see `/downloads`; Sonarr, Radarr,
+and Whisparr also see the authoritative library as `/media`. Imports therefore
 copy from local staging to the remote library rather than relying on a rename
 through rclone/FUSE. The service configuration and staging area are persistent
 while containers are disposable. Gluetun, qBittorrent, and dependent services
 need explicit systemd ordering and network relationships.
+
+qBittorrent uses Gluetun's network namespace. SABnzbd deliberately remains on
+the normal Podman network and is published on port 8080; Usenet traffic is not
+routed through the VPN.
 
 #### Configuration management decision
 
