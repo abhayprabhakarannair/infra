@@ -47,6 +47,12 @@
     '';
   };
 
+  qbittorrentRecoveryScript = pkgs.writeShellScript "arr-restart-qbittorrent-after-gluetun" ''
+    if ${pkgs.systemd}/bin/systemctl is-active --quiet podman-gluetun.service; then
+      ${pkgs.systemd}/bin/systemctl --no-block start podman-qbittorrent.service
+    fi
+  '';
+
   mediaService = {
     after = ["rclone-homelab-storage-one.service"];
     requires = ["rclone-homelab-storage-one.service"];
@@ -197,7 +203,7 @@ in {
 
     systemd.tmpfiles.rules = [
       "d ${cfg.configRoot} 0750 ${toString cfg.uid} ${toString cfg.gid} -"
-      "d ${cfg.configRoot}/gluetun 0750 ${toString cfg.uid} ${toString cfg.gid} -"
+      "d ${cfg.configRoot}/gluetun 0700 root root -"
       "d ${cfg.configRoot}/qbittorrent 0750 ${toString cfg.uid} ${toString cfg.gid} -"
       "d ${cfg.configRoot}/prowlarr 0750 ${toString cfg.uid} ${toString cfg.gid} -"
       "d ${cfg.configRoot}/sonarr 0750 ${toString cfg.uid} ${toString cfg.gid} -"
@@ -215,6 +221,7 @@ in {
           autoStart = false;
           autoRemoveOnStop = true;
           ports = ["127.0.0.1:8090:8090"];
+          user = "0:0";
           volumes = ["${cfg.configRoot}/gluetun:/gluetun"];
           environment = cfg.gluetun.environment;
           environmentFiles = [config.sops.secrets.${cfg.gluetun.envSecretName}.path];
@@ -365,7 +372,7 @@ in {
           "-${pkgs.systemd}/bin/systemctl --no-block start arr-stack.target"
         ];
         podman-gluetun.serviceConfig.ExecStartPost = lib.mkAfter [
-          "${pkgs.systemd}/bin/systemctl --no-block start podman-qbittorrent.service"
+          qbittorrentRecoveryScript
         ];
       }
       (lib.mkIf cfg.reconcile.enable {
