@@ -179,6 +179,10 @@ in {
           VPN_TYPE = "openvpn";
           SERVER_REGIONS = "Netherlands";
           VPN_PORT_FORWARDING = "on";
+          # Keep the forwarded-port status in the mounted Gluetun state
+          # directory. Some Gluetun builds create /tmp/gluetun without the
+          # execute bit, which prevents even root from reading the file.
+          VPN_PORT_FORWARDING_STATUS_FILE = "/gluetun/forwarded_port";
           # PIA assigns this port dynamically. Gluetun updates qBittorrent's
           # listening port and network interface whenever the VPN forwards or
           # withdraws it. qBittorrent's localhost WebUI bypass is required.
@@ -268,18 +272,19 @@ in {
           volumes = ["${cfg.configRoot}/gluetun:/gluetun"];
           environment = cfg.gluetun.environment;
           environmentFiles = [config.sops.secrets.${cfg.gluetun.envSecretName}.path];
-          extraOptions =
-            hardened {
-              pidsLimit = 512;
-              memory = "1g";
-              cpus = 2;
-            }
-            ++ [
-              "--cap-add=NET_ADMIN"
-              "--cap-add=NET_RAW"
-              "--cap-add=CHOWN"
-              "--device=/dev/net/tun:/dev/net/tun"
-            ];
+          # Gluetun is the network-boundary container. It must retain its
+          # normal root capabilities so OpenVPN can read auth.conf, rewrite
+          # target.ovpn, configure the tunnel, and manage the firewall. Keep
+          # resource limits, but do not apply the application hardening
+          # profile here; that profile drops capabilities Gluetun requires.
+          extraOptions = [
+            "--pids-limit=512"
+            "--memory=1g"
+            "--cpus=2"
+            "--cap-add=NET_ADMIN"
+            "--cap-add=NET_RAW"
+            "--device=/dev/net/tun:/dev/net/tun"
+          ];
         };
 
         # This container has no host ports or normal Podman network. Its only
