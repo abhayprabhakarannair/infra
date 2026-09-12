@@ -1,28 +1,13 @@
 {
-  description = "Abhay's Infrastructure";
+  description = "Declarative NixOS infrastructure for Daredevil and Devil";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-26.05";
-    nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
-    llm-agents.url = "github:numtide/llm-agents.nix";
-
-    home-manager = {
-      url = "github:nix-community/home-manager/release-26.05";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
+    nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
 
     disko = {
       url = "github:nix-community/disko";
       inputs.nixpkgs.follows = "nixpkgs";
-    };
-
-    sops-nix = {
-      url = "github:Mic92/sops-nix";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
-    nixvim = {
-      url = "github:nix-community/nixvim";
     };
 
     deploy-rs = {
@@ -30,156 +15,121 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    preservation.url = "github:nix-community/preservation";
+
+    sops-nix = {
+      url = "github:Mic92/sops-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    home-manager = {
+      url = "github:nix-community/home-manager/release-26.05";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    nixvim = {
+      url = "github:nix-community/nixvim";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     nixvim-config = {
       url = "github:abhayprabhakarannair/nixvim-config";
     };
+
+    llm-agents.url = "github:numtide/llm-agents.nix";
   };
 
-  outputs = {
+  outputs = inputs @ {
     self,
     nixpkgs,
     nixpkgs-unstable,
-    home-manager,
-    sops-nix,
-    nixvim,
+    disko,
     deploy-rs,
+    home-manager,
+    nixvim,
+    preservation,
+    sops-nix,
     nixvim-config,
     ...
-  } @ inputs: let
-    # --- Default username ---
-    supportedSystems = ["x86_64-linux"];
-    forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
-
-    # --- SHARED NIXPKGS CONFIGURATION ---
-    sharedConfig = {
-      allowUnfree = true;
-    };
-
-    # --- THE OVERLAY (Unstable and custom packages w/non-free) ---
-    systemOverlay = final: prev: {
-      unstable = import nixpkgs-unstable {
-        system = prev.stdenv.hostPlatform.system;
-        config = sharedConfig;
-        overlays = [];
-      };
-
-      llm-agents = (inputs.llm-agents.overlays.shared-nixpkgs final prev).llm-agents;
-
-      install-infra = final.callPackage ./pkgs/install-infra {};
-      herdr = final.callPackage ./pkgs/herdr {};
-    };
-    globalConfig = {
-      nixpkgs.overlays = [systemOverlay];
-      nixpkgs.config = sharedConfig;
-      home-manager = {
-        useGlobalPkgs = true;
-        useUserPackages = true;
-      };
+  }: let
+    system = "x86_64-linux";
+    pkgs = import nixpkgs {inherit system;};
+    unstablePkgs = import nixpkgs-unstable {
+      inherit system;
+      config.allowUnfree = true;
     };
   in {
-    # --- CUSTOM PACKAGES EXPORT ---
-    # Makes `nix run .#install-infra` work on any architecture
-    packages = forAllSystems (
-      system: let
-        pkgs = import nixpkgs {
-          inherit system;
-          config = sharedConfig;
-          overlays = [systemOverlay];
-        };
-      in {
-        inherit (pkgs) install-infra;
-        deploy-rs = pkgs.deploy-rs;
-      }
-    );
+    nixosConfigurations.daredevil = nixpkgs.lib.nixosSystem {
+      inherit system;
+      specialArgs = {inherit inputs unstablePkgs;};
+      modules = [
+        disko.nixosModules.disko
+        home-manager.nixosModules.home-manager
+        nixvim.nixosModules.nixvim
+        preservation.nixosModules.preservation
+        sops-nix.nixosModules.sops
+        ./hosts/daredevil
+      ];
+    };
 
-    # --- APPS ---
-    apps = forAllSystems (system: {
+    nixosConfigurations.devil = nixpkgs.lib.nixosSystem {
+      inherit system;
+      specialArgs = {inherit inputs unstablePkgs;};
+      modules = [
+        disko.nixosModules.disko
+        home-manager.nixosModules.home-manager
+        nixvim.nixosModules.nixvim
+        preservation.nixosModules.preservation
+        sops-nix.nixosModules.sops
+        ./hosts/devil
+      ];
+    };
+
+    packages.${system}.install-infra = pkgs.writeShellApplication {
+      name = "install-infra";
+      runtimeInputs = [pkgs.nixos-anywhere pkgs.openssh pkgs.coreutils];
+      text = builtins.readFile ./scripts/install-infra.sh;
+    };
+
+    apps.${system} = {
+      install-infra = {
+        type = "app";
+        program = "${self.packages.${system}.install-infra}/bin/install-infra";
+      };
+
       deploy = {
         type = "app";
-        program = "${self.packages.${system}.deploy-rs}/bin/deploy";
-        meta.description = "Deploy NixOS configurations with auto-rollback";
-      };
-    });
-
-    # --- NIXOS CONFIGURATIONS ---
-    nixosConfigurations = {
-      # ThinkPad
-      daredevil = nixpkgs.lib.nixosSystem {
-        system = "x86_64-linux";
-        specialArgs = {inherit inputs;};
-        modules = [
-          globalConfig
-          ./hosts/daredevil/default.nix
-        ];
-      };
-
-      # Gaming PC
-      devil = nixpkgs.lib.nixosSystem {
-        system = "x86_64-linux";
-        specialArgs = {inherit inputs;};
-        modules = [
-          globalConfig
-          ./hosts/devil/default.nix
-        ];
-      };
-
-      # Old Laptop
-      old-devil = nixpkgs.lib.nixosSystem {
-        system = "x86_64-linux";
-        specialArgs = {inherit inputs;};
-        modules = [
-          globalConfig
-          ./hosts/old-devil/default.nix
-        ];
-      };
-
-      # Homelab One (Hetzner alpha node)
-      homelab-one = nixpkgs.lib.nixosSystem {
-        system = "x86_64-linux";
-        specialArgs = {inherit inputs;};
-        modules = [
-          globalConfig
-          ./hosts/homelab-one/default.nix
-        ];
+        program = "${deploy-rs.packages.${system}.deploy-rs}/bin/deploy";
       };
     };
 
-    # --- DEPLOYMENTS ---
-    deploy.nodes = {
-      daredevil = {
-        hostname = "daredevil";
-        sshUser = "root";
-        profiles.system = {
-          sshUser = "root";
-          path = deploy-rs.lib.x86_64-linux.activate.nixos self.nixosConfigurations.daredevil;
-        };
+    deploy.nodes.daredevil = {
+      hostname = "192.168.0.16";
+      sshOpts = ["-p" "2442"];
+      profiles.system = {
+        sshUser = "abhay";
+        user = "root";
+        interactiveSudo = false;
+        remoteBuild = true;
+        fastConnection = false;
+        autoRollback = true;
+        magicRollback = false;
+        path = deploy-rs.lib.${system}.activate.nixos self.nixosConfigurations.daredevil;
       };
+    };
 
-      devil = {
-        hostname = "devil";
-        sshUser = "root";
-        profiles.system = {
-          sshUser = "root";
-          path = deploy-rs.lib.x86_64-linux.activate.nixos self.nixosConfigurations.devil;
-        };
-      };
-
-      old-devil = {
-        hostname = "old-devil";
-        sshUser = "root";
-        profiles.system = {
-          sshUser = "root";
-          path = deploy-rs.lib.x86_64-linux.activate.nixos self.nixosConfigurations.old-devil;
-        };
-      };
-
-      homelab-one = {
-        hostname = "homelab-one";
-        sshUser = "root";
-        profiles.system = {
-          sshUser = "root";
-          path = deploy-rs.lib.x86_64-linux.activate.nixos self.nixosConfigurations.homelab-one;
-        };
+    deploy.nodes.devil = {
+      hostname = "devil";
+      sshOpts = ["-p" "2442"];
+      profiles.system = {
+        sshUser = "abhay";
+        user = "root";
+        interactiveSudo = false;
+        remoteBuild = true;
+        fastConnection = false;
+        autoRollback = true;
+        magicRollback = false;
+        path = deploy-rs.lib.${system}.activate.nixos self.nixosConfigurations.devil;
       };
     };
 

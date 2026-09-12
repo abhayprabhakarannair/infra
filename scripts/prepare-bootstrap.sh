@@ -1,47 +1,39 @@
 #!/usr/bin/env bash
-set -e
+set -euo pipefail
 
-if [ -z "$1" ]; then
-    echo "Usage: ./prepare-bootstrap.sh <host-target>"
-    echo "Example: ./prepare-bootstrap.sh daredevil"
-    exit 1
+if [ "$#" -gt 1 ]; then
+  echo "Usage: prepare-bootstrap.sh [daredevil|devil]" >&2
+  exit 2
 fi
 
-TARGET=$1
-KEY_DIR="$HOME/.server-bootstrap/$TARGET/etc/ssh"
-PRIVATE_KEY="$KEY_DIR/ssh_host_ed25519_key"
-PUBLIC_KEY="${PRIVATE_KEY}.pub"
+target_name="${1:-daredevil}"
+case "$target_name" in
+  daredevil|devil) ;;
+  *)
+    echo "Error: unsupported host '$target_name'. Expected daredevil or devil." >&2
+    exit 2
+    ;;
+esac
 
-# Check if we already scaffolded this host
-if [ -f "$PRIVATE_KEY" ]; then
-    echo "⚠️  Bootstrap files already exist for $TARGET at $KEY_DIR!"
-    exit 0
+bootstrap_dir="${HOME:?}/.server-bootstrap/${target_name}/persistent/etc/ssh"
+private_key="$bootstrap_dir/ssh_host_ed25519_key"
+public_key="$private_key.pub"
+
+if [ -e "$private_key" ] || [ -e "$public_key" ]; then
+  echo "Bootstrap key files already exist at $bootstrap_dir." >&2
+  exit 1
 fi
 
-echo "Creating bootstrap directory structure for $TARGET..."
+mkdir -p "$bootstrap_dir"
+chmod 700 "${HOME:?}/.server-bootstrap" "${HOME:?}/.server-bootstrap/${target_name}" "$bootstrap_dir"
+install -m 600 /dev/null "$private_key"
+install -m 644 /dev/null "$public_key"
 
-# 1. Create the exact folder structure
-mkdir -p "$KEY_DIR"
+cat >&2 <<EOF
+Restore the existing ${target_name} SSH host-key pair into:
 
-# 2. Create the empty files
-touch "$PRIVATE_KEY"
-touch "$PUBLIC_KEY"
+  $private_key
+  $public_key
 
-# 3. Lock down the permissions immediately (SSH strictly requires 600 for private keys)
-chmod 600 "$PRIVATE_KEY"
-chmod 644 "$PUBLIC_KEY"
-
-echo "✅ Folder structure created successfully."
-echo ""
-echo "========================================================"
-echo " 🛑 ACTION REQUIRED: PASTE YOUR KEYS FROM BITWARDEN 🛑"
-echo "========================================================"
-echo "1. Open your private key in nano:"
-echo "   nano $PRIVATE_KEY"
-echo ""
-echo "2. Open your public key in nano:"
-echo "   nano $PUBLIC_KEY"
-echo ""
-echo "Once you have saved both files, run this command to get the AGE key for your .sops.yaml:"
-echo "cat $PUBLIC_KEY | nix-shell -p ssh-to-age --run ssh-to-age"
-echo "========================================================"
+The private key must be mode 600 and the public key mode 644.
+EOF

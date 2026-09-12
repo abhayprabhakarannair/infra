@@ -1,0 +1,31 @@
+{
+  lib,
+  config,
+  ...
+}:
+lib.mkIf config.services.desktopManager.gnome.enable {
+  sops.secrets."ssh-secret-ips" = {
+    owner = config.users.users.abhay.name;
+    group = config.users.users.abhay.group;
+    mode = "0400";
+  };
+
+  sops.secrets."ssh-private-keys/github" = {
+    owner = config.users.users.abhay.name;
+    group = config.users.users.abhay.group;
+    mode = "0400";
+  };
+
+  sops.secrets."ssh-private-keys/homelab" = {
+    owner = config.users.users.abhay.name;
+    group = config.users.users.abhay.group;
+    mode = "0400";
+  };
+
+  environment.etc."git/allowed_signers".text = ''
+    # Personal Devices
+    abhayprabhakarannair@gmail.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIP0W8o0Bw9wa67ymsVVpspRXsFPcAk5yl9wFlZKecXpC
+    abhayprabhakarannair@gmail.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHoYs1Roi/73zj8Pzw5nEc5snHBPNRCLpzBkMRRU50FR
+
+  '';
+}

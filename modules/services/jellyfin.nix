@@ -1,35 +1,39 @@
 {
   config,
-  pkgs,
+  lib,
+  unstablePkgs,
   ...
 }: {
-  systemd.tmpfiles.rules = [
-    "d /srv/jellyfin 0755 1000 1000 - -"
-  ];
+  options.my.services.jellyfin.enable = lib.mkEnableOption "Jellyfin media server";
 
-  virtualisation.oci-containers.containers.jellyfin = {
-    image = "jellyfin/jellyfin:latest@sha256:0b901391a662862eddb5dc55d244d7883cbb6236ef5b9a6ea82abc78a89819f0";
-    autoRemoveOnStop = false;
+  config = lib.mkIf config.my.services.jellyfin.enable {
+    services.jellyfin = {
+      enable = true;
+      package = unstablePkgs.jellyfin;
+      dataDir = "/persistent/services/jellyfin";
+    };
 
-    ports = [
-      "8096:8096"
+    # Seerr runs in the rootful Podman bridge namespace and reaches the
+    # host-side Jellyfin listener through host.containers.internal. Permit
+    # that bridge traffic without opening a new public listener.
+    networking.firewall.interfaces.podman0.allowedTCPPorts = [8096];
+
+    systemd.tmpfiles.rules = [
+      "d /persistent/services/jellyfin 0750 jellyfin jellyfin -"
     ];
 
-    volumes = [
-      "/srv/jellyfin:/config"
-      # The shared media mount includes the FLAC music library used by Symfonium.
-      "/mnt/homelab/media:/media"
-    ];
-
-    extraOptions = [
-      "--restart=always"
-      "--device=/dev/dri:/dev/dri"
-      "--no-healthcheck"
-    ];
-  };
-
-  systemd.services.podman-jellyfin = {
-    after = ["rclone-homelab.service"];
-    requires = ["rclone-homelab.service"];
+    systemd.services.jellyfin = {
+      after = ["rclone-homelab-storage-one.service"];
+      requires = ["rclone-homelab-storage-one.service"];
+      unitConfig.RequiresMountsFor = [
+        "/persistent/services/jellyfin"
+        "/mnt/homelab-storage-one/media"
+      ];
+      serviceConfig = {
+        PrivateUsers = lib.mkForce false;
+        SupplementaryGroups = ["users" "render" "video"];
+        ReadOnlyPaths = ["/mnt/homelab-storage-one/media"];
+      };
+    };
   };
 }
