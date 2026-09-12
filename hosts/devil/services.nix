@@ -3,6 +3,7 @@
     ../../modules/homelab-mounts.nix
     ../../modules/podman.nix
     ../../modules/services/arr.nix
+    ../../modules/services/immich.nix
     ../../modules/services/jellyfin.nix
   ];
   my.services.podman.enable = true;
@@ -17,5 +18,8 @@
   my.services.arr.hostGatewayAddress = "10.88.0.1";
   # Enable only after arr/prowlarr-state and arr/prowlarr/env are added there.
   my.services.arr.reconcile.enable = false;
+  my.services.immich.enable = true;
+  my.services.immich.listenAddress = "0.0.0.0";
+  my.services.immich.startOnBoot = true;
   my.services.jellyfin.enable = true;
 }
